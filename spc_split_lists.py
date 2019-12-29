@@ -91,9 +91,10 @@ def split_list(lst, n=1, option_ordered=1):
             lst_batches[nbatch].append(x)
             
             nbatch += 1
+    
             
-    return lst_batches    
- 
+    return lst_batches   
+
 
 if __name__ == '__main__':
     parser = getparser()

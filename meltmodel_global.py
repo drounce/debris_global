@@ -67,6 +67,7 @@ import pandas as pd
 import xarray as xr
 # Local libraries
 import globaldebris_input as input
+from spc_split_lists import split_list
 
 
 #%% FUNCTIONS
@@ -107,59 +108,7 @@ def getparser():
                         help='switch to keep lists ordered or not')
     parser.add_argument('-debug', action='store', type=int, default=0,
                         help='Boolean for debugging to turn it on or off (default 0 is off')
-    return parser
-
-
-def split_list(lst, n=1, option_ordered=1):
-    """
-    Split list into batches for the supercomputer.
-    
-    Parameters
-    ----------
-    lst : list
-        List that you want to split into separate batches
-    n : int
-        Number of batches to split glaciers into.
-    
-    Returns
-    -------
-    lst_batches : list
-        list of n lists that have sequential values in each list
-    """
-    # If batches is more than list, then there will be one glacier in each batch
-    if option_ordered == 1:
-        if n > len(lst):
-            n = len(lst)
-        n_perlist_low = int(len(lst)/n)
-        n_perlist_high = int(np.ceil(len(lst)/n))
-        lst_copy = lst.copy()
-        count = 0
-        lst_batches = []
-        for x in np.arange(n):
-            count += 1
-            if count <= len(lst) % n:
-                lst_subset = lst_copy[0:n_perlist_high]
-                lst_batches.append(lst_subset)
-                [lst_copy.remove(i) for i in lst_subset]
-            else:
-                lst_subset = lst_copy[0:n_perlist_low]
-                lst_batches.append(lst_subset)
-                [lst_copy.remove(i) for i in lst_subset]
-    else:
-        if n > len(lst):
-            n = len(lst)
-    
-        lst_batches = [[] for x in np.arange(n)]
-        nbatch = 0
-        for count, x in enumerate(lst):
-            if count%n == 0:
-                nbatch = 0
-    
-            lst_batches[nbatch].append(x)
-            
-            nbatch += 1
-            
-    return lst_batches    
+    return parser 
 
 
 def pickle_data(fn, data):
@@ -837,7 +786,6 @@ def main(list_packed_vars):
         if debug:
             print(nlatlon, latlon)
         
-        # ===== Meteorological data =====
         lat_deg = latlon[0]
         lon_deg = latlon[1]
 
@@ -845,6 +793,7 @@ def main(list_packed_vars):
 #        Aspect_AWS_rad = 0
 #        P_AWS = input.P0*np.exp(-0.0289644*9.81*input.Elev_AWS/(8.31447*288.15))  # Pressure at Pyramid Station
         
+        # ===== Meteorological data =====
         metdata_fn = input.metdata_fn_sample.replace('XXXX', 
                                                      str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E-')
         ds = xr.open_dataset(input.metdata_fp + metdata_fn)
