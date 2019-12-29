@@ -1,0 +1,22 @@
+name: debris_thickness_global
+channels:
+        - conda-forge
+dependencies:
+        - python=3.6
+        - gdal>=2.2.3
+        - rasterio>=1.0
+        - cython
+        - jupyter
+        - matplotlib
+        - netcdf4
+        - numpy
+        - pyproj
+        - shapely
+        - pandas
+        - geopandas
+        - descartes
+        - scipy
+        - xarray
+        - pip:
+            - pygeotools
+            - pygeoprocessing
