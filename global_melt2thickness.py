@@ -20,260 +20,245 @@ import xarray as xr
 
 # Local libraries
 import globaldebris_input as input
+from meltcurves import debris_frommelt_func
 
 #%% ===== SCRIPT SPECIFIC INFORMATION =====
-debug = True
-eb_fp = input.main_directory + '/../output/exp3/'
-eb_fn = input.fn_prefix + 'YYYYN-' + 'XXXXE-' + input.date_start + '.nc'
-ostrem_fp = input.main_directory + '/../output/ostrem_curves/'
+stats_idx = 0
 
-#elev_cns2analyze = ['zmean']
-elev_cns2analyze = ['zmean', 'zstdlow', 'zstdhigh']
-
-#%% ===== FUNCTIONS =====
-# fit curve
-# NOTE: two ways of writing the 2nd order reaction rate equations
-#  1 / A = 1 / A0 + kt  (here we replaced t with h)
-#def melt_fromdebris_func(h, a, k):
-#    """ estimate melt from debris thickness (h is debris thickness, a and k are coefficients) """
-#    return a / (1 + 2 * k * a * h)
-#def debris_frommelt_func(b, a, k):
-#    """ estimate debris thickness from melt (b is melt, a and k are coefficients) """
-#    return (a - b) / (2*k*a*b)
-def melt_fromdebris_func(h, a, k):
-    """ Second order reaction rate equation used to estimate melt from debris thickness
-    The standard form is 1/A = 1/A0 + kt
-      1/b = 1/a + k*h  derived from the standard form: 
-    where b is melt, h is debris thickness, and k and a are constants. """
-    return 1 / (1 / a + k * h)
-
-
-def debris_frommelt_func(b, a, k):
-    """ estimate debris thickness from melt (b is melt, a and k are coefficients) """
-    return 1 / k * (1 / b - 1 / a)
-
-
-def create_xrdataset_ostrem(ds):
+#%% ===== FUNCTIONS ====
+def selectglaciersrgitable(glac_no=None,
+                           rgi_regionsO1=None,
+                           rgi_regionsO2=None,
+                           rgi_glac_number=None,
+#                            rgi_fp=input.rgi_fp,
+                           rgi_fp = '/Users/davidrounce/Documents/Dave_Rounce/HiMAT/RGI/rgi60/00_rgi60_attribs/',
+                           rgi_cols_drop=['GLIMSId','BgnDate','EndDate','Status','Connect','Linkages','Name'],
+                           rgi_O1Id_colname='glacno',
+                           rgi_glacno_float_colname='RGIId_float',
+                           indexname='GlacNo'):
     """
-    Create empty xarray dataset that will be used to record simulation runs.
+    Select all glaciers to be used in the model run according to the regions and glacier numbers defined by the RGI
+    glacier inventory. This function returns the rgi table associated with all of these glaciers.
 
-    Parameters
-    ----------
-    main_glac_rgi : pandas dataframe
-        dataframe containing relevant rgi glacier information
-    dates_table : pandas dataframe
-        table of the dates, months, days in month, etc.
-    sim_iters : int
-        number of simulation runs included
-    stat_cns : list
-        list of strings containing statistics that will be used on simulations
-    record_stats : int
-        Switch to change from recording simulations to statistics
+    glac_no : list of strings
+        list of strings of RGI glacier numbers (e.g., ['1.00001', '13.00001'])
+    rgi_regionsO1 : list of integers
+        list of integers of RGI order 1 regions (e.g., [1, 13])
+    rgi_regionsO2 : list of integers or 'all'
+        list of integers of RGI order 2 regions or simply 'all' for all the order 2 regions
+    rgi_glac_number : list of strings
+        list of RGI glacier numbers without the region (e.g., ['00001', '00002'])
 
-    Returns
-    -------
-    output_ds_all : xarray Dataset
-        empty xarray dataset that contains variables and attributes to be filled in by simulation runs
-    encoding : dictionary
-        encoding used with exporting xarray dataset to netcdf
+    Output: Pandas DataFrame of the glacier statistics for each glacier in the model run
+    (rows = GlacNo, columns = glacier statistics)
     """
-    # Create empty datasets for each variable and merge them
-    # Variable coordinates dictionary
-    output_coords_dict = {
-            'melt_mwea': collections.OrderedDict(
-                    [('hd_cm', ds.hd_cm.values), ('stats', ds.stats.values), ('elev_cns', ds.elev_cns.values)]),
-            'b0': collections.OrderedDict(
-                    [('stats', ds.stats.values), ('elev_cns', ds.elev_cns.values)]),
-            'k': collections.OrderedDict(
-                    [('stats', ds.stats.values), ('elev_cns', ds.elev_cns.values)]),
-            'elev': collections.OrderedDict(
-                    [('elev_cns', ds.elev_cns.values)])
-            }
-    # Attributes dictionary
-    output_attrs_dict = {
-            'hd_cm': {
-                    'long_name': 'debris thickness in centimeters',
-                    'comment': 'cm so values are integers'},
-            'elev': {
-                    'long_name': 'elevation',
-                    'units': 'm a.s.l.',
-                    'comment': 'elevation associated with the elevation column name (elev_cns)'},
-            'stats': {
-                    'long_name': 'variable statistics',
-                    'comment': str(input.k_random.shape[0]) + ' simulations; % refers to percentiles'},
-            'elev_cns': {
-                    'long_name': 'elevation column names',
-                    'comment': 'elevations used to run the simulations'},
-            'melt_mwea': {
-                    'long_name': 'annual sub-debris glacier melt',
-                    'units': 'meters water equivalent per year',
-                    'temporal_resolution': 'annual',
-                    'start_date': input.start_date,
-                    'end_date': input.end_date},
-            'b0': {
-                    'long_name': 'second order reaction rate initial concentration',
-                    'units': 'm w.e.'},
-            'k': {
-                    'long_name': 'second order reaction rate initial concentration',
-                    'units': 'm w.e.'}
-            }
-    # Add variables to empty dataset and merge together
-    count_vn = 0
-    encoding = {}
-    noencoding_vn = ['stats', 'hd_cm', 'elev_cns', 'elev']
-    for vn in ['melt_mwea', 'b0', 'k', 'elev']:
-        count_vn += 1
-        empty_holder = np.zeros([len(output_coords_dict[vn][i]) for i in list(output_coords_dict[vn].keys())])
-        output_ds = xr.Dataset({vn: (list(output_coords_dict[vn].keys()), empty_holder)},
-                               coords=output_coords_dict[vn])
-        if vn == 'elev':
-            output_ds['elev'].values = ds.elev.values
-        # Merge datasets of stats into one output
-        if count_vn == 1:
-            output_ds_all = output_ds
-        else:
-            output_ds_all = xr.merge((output_ds_all, output_ds))
+    if glac_no is not None:
+        glac_no_byregion = {}
+        rgi_regionsO1 = [int(i.split('.')[0]) for i in glac_no]
+        rgi_regionsO1 = list(set(rgi_regionsO1))
+        for region in rgi_regionsO1:
+            glac_no_byregion[region] = []
+        for i in glac_no:
+            region = i.split('.')[0]
+            glac_no_only = i.split('.')[1]
+            glac_no_byregion[int(region)].append(glac_no_only)
 
-    # Add attributes
-    for vn in ['melt', 'hd_cm', 'stats', 'elev_cns', 'elev', 'b0', 'k']:
+        for region in rgi_regionsO1:
+            glac_no_byregion[region] = sorted(glac_no_byregion[region])
+
+    # Create an empty dataframe
+    rgi_regionsO1 = sorted(rgi_regionsO1)
+    glacier_table = pd.DataFrame()
+    for region in rgi_regionsO1:
+
+        if glac_no is not None:
+            rgi_glac_number = glac_no_byregion[region]
+
+#        if len(rgi_glac_number) < 50:
+
+        for i in os.listdir(rgi_fp):
+            if i.startswith(str(region).zfill(2)) and i.endswith('.csv'):
+                rgi_fn = i
         try:
-            output_ds_all[vn].attrs = output_attrs_dict[vn]
+            csv_regionO1 = pd.read_csv(rgi_fp + rgi_fn)
         except:
-            pass
-        # Encoding (specify _FillValue, offsets, etc.)
-        if vn not in noencoding_vn:
-            encoding[vn] = {'_FillValue': False}
+            csv_regionO1 = pd.read_csv(rgi_fp + rgi_fn, encoding='latin1')
+        
+        # Populate glacer_table with the glaciers of interest
+        if rgi_regionsO2 == 'all' and rgi_glac_number == 'all':
+            print("All glaciers within region(s) %s are included in this model run." % (region))
+            if glacier_table.empty:
+                glacier_table = csv_regionO1
+            else:
+                glacier_table = pd.concat([glacier_table, csv_regionO1], axis=0)
+        elif rgi_regionsO2 != 'all' and rgi_glac_number == 'all':
+            print("All glaciers within subregion(s) %s in region %s are included in this model run." %
+                  (rgi_regionsO2, region))
+            for regionO2 in rgi_regionsO2:
+                if glacier_table.empty:
+                    glacier_table = csv_regionO1.loc[csv_regionO1['O2Region'] == regionO2]
+                else:
+                    glacier_table = (pd.concat([glacier_table, csv_regionO1.loc[csv_regionO1['O2Region'] ==
+                                                                                regionO2]], axis=0))
+        else:
+            if len(rgi_glac_number) < 20:
+                print("%s glaciers in region %s are included in this model run: %s" % (len(rgi_glac_number), region,
+                                                                                       rgi_glac_number))
+            else:
+                print("%s glaciers in region %s are included in this model run: %s and more" %
+                      (len(rgi_glac_number), region, rgi_glac_number[0:50]))
+                
+            rgiid_subset = ['RGI60-' + str(region).zfill(2) + '.' + x for x in rgi_glac_number] 
+            rgiid_all = list(csv_regionO1.RGIId.values)
+            rgi_idx = [rgiid_all.index(x) for x in rgiid_subset]
+            if glacier_table.empty:
+                glacier_table = csv_regionO1.loc[rgi_idx]
+            else:
+                glacier_table = (pd.concat([glacier_table, csv_regionO1.loc[rgi_idx]],
+                                           axis=0))
+                    
+    glacier_table = glacier_table.copy()
+    # reset the index so that it is in sequential order (0, 1, 2, etc.)
+    glacier_table.reset_index(inplace=True)
+    # change old index to 'O1Index' to be easier to recall what it is
+    glacier_table.rename(columns={'index': 'O1Index'}, inplace=True)
+    # Record the reference date
+    glacier_table['RefDate'] = glacier_table['BgnDate']
+    # if there is an end date, then roughly average the year
+    enddate_idx = glacier_table.loc[(glacier_table['EndDate'] > 0), 'EndDate'].index.values
+    glacier_table.loc[enddate_idx,'RefDate'] = (
+            np.mean((glacier_table.loc[enddate_idx,['BgnDate', 'EndDate']].values / 10**4).astype(int),
+                    axis=1).astype(int) * 10**4 + 9999)
+    # drop columns of data that is not being used
+    glacier_table.drop(rgi_cols_drop, axis=1, inplace=True)
+    # add column with the O1 glacier numbers
+    glacier_table[rgi_O1Id_colname] = (
+            glacier_table['RGIId'].str.split('.').apply(pd.Series).loc[:,1].astype(int))
+    glacier_table['rgino_str'] = [x.split('-')[1] for x in glacier_table.RGIId.values]
+    glacier_table[rgi_glacno_float_colname] = (np.array([np.str.split(glacier_table['RGIId'][x],'-')[1]
+                                                    for x in range(glacier_table.shape[0])]).astype(float))
+    # set index name
+    glacier_table.index.name = indexname
 
-    return output_ds_all, encoding
+    print("This study is focusing on %s glaciers in region %s" % (glacier_table.shape[0], rgi_regionsO1))
+
+    return glacier_table
+
+
+#%% ==== TO-DO LIST =====
+print('\n%TO-DO LIST:\n-----------')
+print('1. estimate flux divergence?')
+print('2. identify glaciers with relatively stable velocities')
+print('3. assess max debris thickness for each region and extrapolate to regions without data\n\n')
+print('4. quality control: ex. 13.00147 has positive mass balance - surging glacier?\n\n')
 
 #%%
-for nlatlon, latlon in enumerate(input.latlon_list):
-    if debug:
-        print(nlatlon, latlon)
-    
-    lat_deg = latlon[0]
-    lon_deg = latlon[1]
-    
+# ===== SELECT GLACIERS WITH DATA =====
+rgiid_list = []
+rgiid_fn_list = []
+for i in os.listdir(input.mb_binned_fp):
+    if i.endswith('mb_bins.csv'):
+        rgiid_list.append(i[0:8])
+        rgiid_fn_list.append(i)
         
-    # Debris thickness vs. melt dataset from energy balance modeling
-    ds_fn = eb_fn.replace('YYYY',str(int(lat_deg*100))).replace('XXXX',str(int(lon_deg*100)))
-    ds = xr.open_dataset(eb_fp + ds_fn)
-    
-    ds_ostrem, encoding = create_xrdataset_ostrem(ds)
-    
-    # Debris thickness
-    debris_thicknesses = ds.hd_cm.values
+rgiid_list = sorted(rgiid_list)
+rgiid_fn_list = sorted(rgiid_fn_list)
 
-    # Time information
-    time_pd = pd.to_datetime(ds.time.values)    
-    
-    # ===== Debris Thickness vs. Surface Lowering =====
-    debris_melt_df = pd.DataFrame(np.zeros((len(debris_thicknesses),2)), columns=['debris_thickness', 'melt_mwea'])
-    
-    # stats column index (0=mean)
-    stats_idx = 0
-    
-    # Plot
-    plot_str = str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E'
-    fig, ax = plt.subplots(1, 1, squeeze=False, sharex=False, sharey=False, 
-                           gridspec_kw = {'wspace':0.4, 'hspace':0.15})
-    
-    elev_colordict = {'zmean':'k', 'zstdlow':'r', 'zstdhigh':'b'}
-    elev_zorderdict = {'zmean':3, 'zstdlow':1, 'zstdhigh':1}
-    elev_lwdict = {'zmean':1, 'zstdlow':0.5, 'zstdhigh':0.5}
-    for nelev, elev_cn in enumerate(elev_cns2analyze):
-#    for nelev, elev_cn in enumerate([ds.elev_cns.values[0]]):
-        print(nelev, elev_cn)
+print(len(rgiid_list))
 
-        for ndebris, debris_thickness in enumerate(debris_thicknesses):
-#            print(ndebris, debris_thickness)
-            
-            melt_mwea = ds['melt'][ndebris,:,stats_idx,nelev].values.sum() / (len(time_pd)/24/365.25)
-                         
-            debris_melt_df.loc[ndebris] = debris_thickness / 100, melt_mwea
-    
-        fit_idx = list(np.where(debris_thicknesses >= 5)[0])
-#        fit_idx = list(debris_melt_df.index.values)
-#        fit_idx = fit_idx[2:]
-#        print('Fit to a subset of data (not thinnest values) to capture this portion of the curve well' + 
-#              '\n  - any discrepancies at < 0.1 m are going to be very small because melt varies so drastically\n\n')
-        
-        # Fit curve
-        func_coeff, pcov = curve_fit(melt_fromdebris_func, 
-                                     debris_melt_df.debris_thickness.values[fit_idx], 
-                                     debris_melt_df.melt_mwea.values[fit_idx])
-        func_coeff_meltfromdebris = func_coeff.copy()
-        fit_melt = melt_fromdebris_func(debris_melt_df.debris_thickness.values, func_coeff[0], func_coeff[1])
-        debris_4curve = np.arange(0.02,5.01,0.01)
-        melt_4curve = melt_fromdebris_func(debris_4curve, func_coeff[0], func_coeff[1])
-        
-        # Record ostrem curve information
-        ds_ostrem['melt_mwea'][:,0,nelev] = debris_melt_df.melt_mwea.values
-        ds_ostrem['b0'][0,nelev] = func_coeff[0]
-        ds_ostrem['k'][0,nelev] = func_coeff[1]
-        
-        # Plot curve
-        ax[0,0].plot(debris_melt_df['debris_thickness'], debris_melt_df['melt_mwea'], 'o', 
-                     color=elev_colordict[elev_cn], markersize=3, markerfacecolor="None", markeredgewidth=0.75,
-                     zorder=elev_zorderdict[elev_cn], label=elev_cn)
-        ax[0,0].plot(debris_4curve, melt_4curve, 
-                     color=elev_colordict[elev_cn], linewidth=elev_lwdict[elev_cn], linestyle='--', 
-                     zorder=elev_zorderdict[elev_cn]+1)
-        # text
-        if nelev == 0:
-            ax[0,0].text(0.5, 1.05, plot_str, size=10, horizontalalignment='center', verticalalignment='top', 
-                         transform=ax[0,0].transAxes)
-            eqn_text = r'$b = \frac{b_{0}}{1 + kb_{0}h}$'
-            coeff1_text = r'$b_{0} = ' + str(np.round(func_coeff[0],2)) + '$' 
-            coeff2_text = r'$k = ' + str(np.round(func_coeff[1],2)) + '$' 
-            # coeff$\frac{b_{0}}{1 + 2kb_{0}h}$'
-            ax[0,0].text(0.9, 0.95, eqn_text, size=12, horizontalalignment='right', verticalalignment='top', 
-                         transform=ax[0,0].transAxes)
-            ax[0,0].text(0.615, 0.83, 'where', size=10, horizontalalignment='left', verticalalignment='top', 
-                         transform=ax[0,0].transAxes)
-            ax[0,0].text(0.66, 0.77, coeff1_text, size=10, horizontalalignment='left', verticalalignment='top', 
-                         transform=ax[0,0].transAxes)
-            ax[0,0].text(0.66, 0.7, coeff2_text, size=10, horizontalalignment='left', verticalalignment='top', 
-                         transform=ax[0,0].transAxes)
-            # X-label
-            ax[0,0].set_xlabel('Debris thickness(m)', size=12)
-            ax[0,0].set_xlim(0, 2.1)
-            #ax[0,0].set_xlim(0, debris_melt_df.debris_thickness.max())
-            ax[0,0].xaxis.set_tick_params(labelsize=12)
-            ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(0.5))
-            ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(0.1))  
-            # Y-label
-            ax[0,0].set_ylabel('Melt (mwea)', size=12)
-            ax[0,0].set_ylim(0,(int(debris_melt_df.melt_mwea.values.max()/0.1)+3)*0.1)
-            ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(1))
-            ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(0.1))
-            # Tick parameters
-            ax[0,0].yaxis.set_ticks_position('both')
-            ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
-            ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
-              
-    # Save plot
-    ax[0,0].legend(loc=(0.65,0.45), fontsize=10, labelspacing=0.25, handlelength=1, handletextpad=0.25, borderpad=0, 
-                   frameon=False)
-    fig.set_size_inches(4, 4)
-    figure_fn = plot_str + '_debris_melt_curve.png'
-    if os.path.exists(ostrem_fp) == False:
-        os.makedirs(ostrem_fp)
-    fig.savefig(ostrem_fp + figure_fn, bbox_inches='tight', dpi=300) 
+main_glac_rgi = selectglaciersrgitable(rgiid_list)
+main_glac_rgi['bin_fn'] = rgiid_fn_list
 
+# ==== DETERMINE NEAREST LAT/LON =====
+ds_elev = xr.open_dataset(input.metdata_fp + input.metdata_elev_fn)
+#  argmin() finds the minimum distance between the glacier lat/lon and the GCM pixel
+lat_nearidx = (np.abs(main_glac_rgi['CenLat'].values[:,np.newaxis] - 
+                      ds_elev['latitude'][:].values).argmin(axis=1))
+lon_nearidx = (np.abs(main_glac_rgi['CenLon'].values[:,np.newaxis] - 
+                      ds_elev['longitude'][:].values).argmin(axis=1))
+
+latlon_nearidx = list(zip(lat_nearidx, lon_nearidx))
+latlon_nearidx_unique = sorted(list(set(latlon_nearidx)))
+
+main_glac_rgi['lat_nearest'] = ds_elev['latitude'][lat_nearidx].values 
+main_glac_rgi['lon_nearest'] = ds_elev['longitude'][lon_nearidx].values 
+main_glac_rgi['latlon_nearidx'] = latlon_nearidx
+latlon_unique_dict = dict(zip(latlon_nearidx_unique,np.arange(0,len(latlon_nearidx_unique))))
+latlon_unique_dict_reversed = dict(zip(np.arange(0,len(latlon_nearidx_unique)),latlon_nearidx_unique))
+main_glac_rgi['latlon_unique_no'] = main_glac_rgi['latlon_nearidx'].map(latlon_unique_dict)
+
+#%%
+# ===== ESTIMATE DEBRIS THICKNESS =====
+latlon_nodata = []
+glac_nodata = []
+for nglac, glac_idx in enumerate(main_glac_rgi.index.values):
+#for nglac, glac_idx in enumerate([main_glac_rgi.index.values[6]]):
+#    print(nglac, glac_idx, main_glac_rgi.loc[glac_idx,'rgino_str'])
+    
+    # ===== Load Mass Balance Data =====
+    mb_df_fn = main_glac_rgi.loc[glac_idx,'bin_fn']
+    mb_df = pd.read_csv(input.mb_binned_fp + mb_df_fn)
+    mb_df.loc[:,:] = mb_df.values.astype(np.float64)
+    
+    # ===== Load Ostrem data =====
+    latlon_str = (str(int(main_glac_rgi.loc[glac_idx,'lat_nearest']*100)) + 'N-' + 
+                  str(int(main_glac_rgi.loc[glac_idx,'lon_nearest']*100)) + 'E') 
+    ostrem_fn = input.output_ostrem_fn_sample.replace('XXXX', latlon_str)
+    
+    
+    if os.path.exists(input.output_ostrem_fp + ostrem_fn) and ' perc_debris' in mb_df.columns:
+        ds_ostrem = xr.open_dataset(input.output_ostrem_fp + ostrem_fn)
+        
+        # Nearest elevation
+        # Debris elevation (weighted mean)
+        mb_area_total = main_glac_rgi.loc[glac_idx,'Area']
+        mb_df['bin_area'] = mb_df[' z1_bin_area_perc'].values / 100 * mb_area_total
+        mb_df['bin_area_debris'] = mb_df[' perc_debris'].values / 100 * mb_df['bin_area'].values
+        debris_elev_mean = ((mb_df['# bin_center_elev_m'] * mb_df['bin_area_debris']).sum() 
+                            /  mb_df['bin_area_debris'].sum()) 
+        ds_elevidx = np.abs(debris_elev_mean - ds_ostrem.elev.values).argmin()
+        
+        # Melt function coefficients
+        func_coeff = [float(ds_ostrem['b0'][stats_idx,ds_elevidx].values), 
+                      float(ds_ostrem['k'][stats_idx,ds_elevidx].values)]
+        
+        # Estimate debris thickness
+        mb_df['mb_bin_mean_mwea_1stdlow'] = mb_df[' mb_bin_mean_mwea'] - mb_df[' mb_bin_std_mwea']
+        mb_df['mb_bin_mean_mwea_1stdhigh'] = mb_df[' mb_bin_mean_mwea'] + mb_df[' mb_bin_std_mwea']
+        mb_df['debris_thickness'] = debris_frommelt_func(-1*mb_df[' mb_bin_mean_mwea'].values, 
+                                                         func_coeff[0], func_coeff[1])
+        mb_df['debris_thickness_1stdlow'] = debris_frommelt_func(-1*mb_df['mb_bin_mean_mwea_1stdlow'].values, 
+                                                                  func_coeff[0], func_coeff[1])
+        mb_df['debris_thickness_1stdhigh'] = debris_frommelt_func(-1*mb_df['mb_bin_mean_mwea_1stdhigh'].values, 
+                                                                  func_coeff[0], func_coeff[1])
+    
+        # Export dataset
+        if os.path.exists(input.mb_binned_fp_wdebris) == False:
+            os.makedirs(input.mb_binned_fp_wdebris)
+        
+        mb_df_fn_wdebris = mb_df_fn.replace('.csv','_wdebris.csv')
+        mb_df.to_csv(input.mb_binned_fp_wdebris + mb_df_fn_wdebris, index=False)
+        ds_ostrem.close()
+    elif os.path.exists(input.output_ostrem_fp + ostrem_fn) == False:
+        latlon_nodata.append(latlon_str)
+        glac_nodata.append(main_glac_rgi.loc[glac_idx,'rgino_str'])
+
+latlon_nodata = sorted(list(set(latlon_nodata)))
+print('\nMissing Ostrem data:\n', latlon_nodata,'\n')
+print('Glaciers without Ostrem data:\n', glac_nodata,'\n')
+print('\nTHESE GLACIERS DONT HAVE CONSIDERABLE DEBRIS AND WERE THEREFORE EXCLUDED\n')
         
 #%% ===== Input Data =====
-#glac_str = '15.03473'
-##larsen_data_fullfn = '/Users/davidrounce/Documents/Dave_Rounce/HiMAT/DEMs/larsen/data/Kennicott.2000.2013.output.txt'
-##larsen_ice_density = 850 # kg m-3
+#larsen_data_fullfn = '/Users/davidrounce/Documents/Dave_Rounce/HiMAT/DEMs/larsen/data/Kennicott.2000.2013.output.txt'
+#larsen_ice_density = 850 # kg m-3
 #mb_fullfn = ('/Users/davidrounce/Documents/Dave_Rounce/HiMAT/DEMs/Shean_2019_0213/' + 
-#             'mb_combined_20190213_nmad_bins/' + glac_str + '_mb_bins.csv')
+#             'mb_combined_20190213_nmad_bins/' + )
 #glacier_name = 'Ngozumpa Glacier (RGI60-01.15645)'
 #output_data_fp = input.main_directory + '/hma_data/output/change/'
 ##output_data_fp = input.main_directory + '/output/exp3/'
 #output_fp = input.main_directory + '/hma_data/output/'
-##anderson_debris_fullfn = input.main_directory + '/kennicott_data/anderson_debristhickness.csv'
-##anderson_debris = pd.read_csv(anderson_debris_fullfn)
+#anderson_debris_fullfn = input.main_directory + '/kennicott_data/anderson_debristhickness.csv'
+#anderson_debris = pd.read_csv(anderson_debris_fullfn)
 
 ###%% ===== DERIVE DEBRIS THICKNESS FROM MASS BALANCE DATA =====
 ##mb_df = pd.read_csv(mb_fullfn)

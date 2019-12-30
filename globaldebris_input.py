@@ -15,6 +15,8 @@ import xarray as xr
 # Main directory
 main_directory = os.getcwd()
 output_fp = main_directory + '/../output/'
+output_ostrem_fp = main_directory + '/../output/ostrem_curves/'
+output_ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
 roi = 'HMA'
@@ -23,6 +25,9 @@ roi_dict = {'HMA':[45, 25, 105, 65],
             }
 
 metdata_fp = main_directory + '/../climate_data/'
+metdata_elev_fn = 'ERA5_elev.nc'
+mb_binned_fp = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/'
+mb_binned_fp_wdebris = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/_wdebris/'
 
 # Simulation data
 startyear = '2000'
@@ -57,7 +62,7 @@ else:
     lon_list = ds_elevstats.longitude[lonidx_list_unique].values
     latlon_list = list(tuple(zip(list(lat_list), list(lon_list))))
 
-#latlon_list = latlon_list[0:24]
+#latlon_list = latlon_list[0:5]
 
 #%%
 # Simulation data
@@ -80,11 +85,11 @@ date_start = '20191227'
 experiment_no = 3
 # Debris thickness
 #debris_thickness_all = np.array([0.02])
-debris_thickness_all = np.array([0.2])
+#debris_thickness_all = np.array([0.2])
 #debris_thickness_all = np.array([0.2, 0.3])
 #debris_thickness_all = np.arange(0,5.001,0.05)
-#debris_thickness_all = np.arange(0,0.301,0.1)
-#debris_thickness_all[0] = 0.02
+debris_thickness_all = np.arange(0,3.001,0.1)
+debris_thickness_all[0] = 0.02
 # Surface roughness, thermal conductivity, and albedo
 debris_properties_fullfn = main_directory + '/../hma_data/hma_debris_properties.csv'
 debris_properties = np.genfromtxt(debris_properties_fullfn, delimiter=',', skip_header=1)

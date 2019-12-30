@@ -18,9 +18,29 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 
 
 Future work:
+- ADD IN ABILITY TO MODEL CLEAN ICE MELT!
 - add back in user-specified options for LE_RH100 and LE_Dry
 - add back in user-specified options for instability corrections
 - add option for wind speed height to vary over time (at present if it varies, the wind speed height is assumed to be the average over the entire study period)
-- develop netcdf file for model output
 - test/validate snow model (as of August 2019, the snow model has only been tested on Miage Glacier to ensure snow melt is "reasonable" during ablation season)
 - test/validate model performance during transition and winter seasons (as of August 2019, the model has only been run during ablation seasons and into transition seasons)
+
+
+Model workflow:
+- process ERA5 orography data to elevation, which will be used to get lat/lon in future scripts
+- debris_elevstats: identify lat/lon of all glaciers
+- process ERA5 data: download and pre-process into netcdf files for each site with a glacier
+- meltmodel_global.py: run model to get melt/Ts at every tilmestep
+- meltcurves.py: processes meltmodel_global.py output to develop Ostrem curves for each glacier
+
+# ===== Validation ======
+'15.03473' # Ngozumpa	- good
+'15.03733' # Khumbu 		- good
+'15.03734' # Changri Nup	- good
+'15.04121' # Langtang	- good
+'15.04045' # Lirung
+'14.06794' # Baltoro 	- good
+'14.04477' # Hispar 		- good
+'13.43232' # Koxkar		- good (positive first bin)
+
+
