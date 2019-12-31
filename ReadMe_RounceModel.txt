@@ -31,6 +31,7 @@ Model workflow:
 - debris_elevstats: identify lat/lon of all glaciers
 - process ERA5 data: download and pre-process into netcdf files for each site with a glacier
 - meltmodel_global.py: run model to get melt/Ts at every tilmestep
+- HMA_emergence_velocity.ipynb: estimate binned emergence velocities
 - meltcurves.py: processes meltmodel_global.py output to develop Ostrem curves for each glacier
 
 # ===== Validation ======
