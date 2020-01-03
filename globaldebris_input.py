@@ -29,6 +29,17 @@ metdata_elev_fn = 'ERA5_elev.nc'
 mb_binned_fp = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/'
 mb_binned_fp_wdebris = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/_wdebris/'
 
+# Emergence Velocity data
+min_glac_area_writeout=0
+min_valid_area_perc = 0
+buff_dist = 1000
+#emvel_bin_width = 50
+emvel_filter_pixsize = 3
+#Surface to column average velocity scaling
+v_col_f = 0.8
+output_emvel_csv_ending = '_emvel_stats_woffset.csv'
+outdir_emvel_fp = output_fp + 'csv/'
+
 # Simulation data
 startyear = '2000'
 endyear = '2018'

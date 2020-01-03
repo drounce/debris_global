@@ -30,9 +30,12 @@ Model workflow:
 - process ERA5 orography data to elevation, which will be used to get lat/lon in future scripts
 - debris_elevstats: identify lat/lon of all glaciers
 - process ERA5 data: download and pre-process into netcdf files for each site with a glacier
-- meltmodel_global.py: run model to get melt/Ts at every tilmestep
+- meltmodel_global.py: run model to get melt/Ts at every timestep
 - HMA_emergence_velocity.ipynb: estimate binned emergence velocities
+    --> debris_global environment
 - meltcurves.py: processes meltmodel_global.py output to develop Ostrem curves for each glacier
+- global_melt2thickness.py: sub-debris melt inversion for debris thickness based on mass balance data and emergence velocities
+- Kraaijenbrink2017-ts-hma Google Earth Engine: maximum surface temperature, year, and day of year to be used for the temperature inversion method
 
 # ===== Validation ======
 '15.03473' # Ngozumpa	- good
