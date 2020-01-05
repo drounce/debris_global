@@ -19,15 +19,29 @@ output_ostrem_fp = main_directory + '/../output/ostrem_curves/'
 output_ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
-roi = 'HMA'
-roi_dict = {'HMA':[45, 25, 105, 65],
-            '01':[71, 50, 233, 180]
-            }
+roi = '01'
+roi_latlon_dict = {'HMA':[45, 25, 105, 65],
+                   '01':[71, 50, 233, 180]
+                   }
 
 metdata_fp = main_directory + '/../climate_data/'
 metdata_elev_fn = 'ERA5_elev.nc'
 mb_binned_fp = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/'
 mb_binned_fp_wdebris = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/_wdebris/'
+
+ts_fp = main_directory + '/../output/ts_tif/'
+ts_fn_dict = {'HMA':'hma_debris_tsurfC_wbuffer.tif'}
+ts_dayfrac_fn_dict = {'HMA':'hma_debris_dayfrac.tif'}
+ts_year_fn_dict = {'HMA':'hma_debris_year.tif'}
+ts_doy_fn_dict = {'HMA':'hma_debris_doy.tif'}
+ts_stats_res = 50 # common resolution needed such that resolution does not interfere with regional stats
+#ts_fn = ts_fn_dict[roi]
+output_ts_csv_ending = '_ts_hd_woffset.csv'
+tscurve_fp = ts_fp + 'ts_curves/'
+output_ts_fn_sample = 'XXXX_debris_ts_curve.nc'
+hd_fp = ts_fp + 'hd_tifs/'
+hd_fn_sample = 'XXXX_hd_m_fromts.nc'
+hd_max = 2.5
 
 # Emergence Velocity data
 min_glac_area_writeout=0
@@ -49,8 +63,9 @@ debris_elevstats_fullfn = main_directory + '/../hma_data/' + roi + '_debris_elev
 
 # Latitude and longitude index to run the model
 #  Longitude must be 0 - 360 degrees
+latlon_list_raw = None # hack to bypass having the elevation data yet
 #latlon_list_raw = 'all'
-latlon_list_raw = [(28.1,86.7)]
+#latlon_list_raw = [(28.1,86.7)]
 #latlon_list_raw = [(44.,83.25)]
 if latlon_list_raw == 'all':
     ds_elevstats = xr.open_dataset(debris_elevstats_fullfn)
@@ -58,7 +73,7 @@ if latlon_list_raw == 'all':
     lat_list = ds_elevstats.latitude[latidx_list].values
     lon_list = ds_elevstats.longitude[lonidx_list].values
     latlon_list = list(tuple(zip(list(lat_list), list(lon_list))))
-else:
+elif latlon_list_raw is not None:
     ds_elevstats = xr.open_dataset(debris_elevstats_fullfn)
     lat_list_raw = np.array([x[0] for x in latlon_list_raw])
     lon_list_raw = np.array([x[1] for x in latlon_list_raw])

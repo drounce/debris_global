@@ -100,20 +100,12 @@ def debris_frommelt_func(b, a, k):
 
 def create_xrdataset_ostrem(ds):
     """
-    Create empty xarray dataset that will be used to record simulation runs.
+    Create empty xarray dataset that will be used to record melt data from simulation runs.
 
     Parameters
     ----------
-    main_glac_rgi : pandas dataframe
-        dataframe containing relevant rgi glacier information
-    dates_table : pandas dataframe
-        table of the dates, months, days in month, etc.
-    sim_iters : int
-        number of simulation runs included
-    stat_cns : list
-        list of strings containing statistics that will be used on simulations
-    record_stats : int
-        Switch to change from recording simulations to statistics
+    ds : xarray dataset
+        dataframe containing energy balance model runs
 
     Returns
     -------

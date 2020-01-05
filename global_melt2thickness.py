@@ -196,8 +196,8 @@ main_glac_rgi['latlon_unique_no'] = main_glac_rgi['latlon_nearidx'].map(latlon_u
 latlon_nodata = []
 glac_nodata = []
 #for nglac, glac_idx in enumerate(main_glac_rgi.index.values):
-#for nglac, glac_idx in enumerate([main_glac_rgi.index.values[6940]]):
-for nglac, glac_idx in enumerate([main_glac_rgi.index.values[4957]]):
+for nglac, glac_idx in enumerate([main_glac_rgi.index.values[6940]]):
+#for nglac, glac_idx in enumerate([main_glac_rgi.index.values[3224]]):
     glac_str = main_glac_rgi.loc[glac_idx,'rgino_str']
     print(nglac, glac_idx, glac_str)
     
@@ -334,74 +334,6 @@ if len(latlon_nodata) > 0:
 ##figure_fn = 'elev_mb_debris.png'
 ##fig.savefig(output_fp + figure_fn, bbox_inches='tight', dpi=300) 
 #
-##%% ===== EMERGENCE VELOCITIES ==========================================
-## CURRENTLY PROCESSED IN IPYTHON NOTEBOOK USING SHEAN GMBTOOLS-TYPE FILE 'emergence_velocity.ipynb'
-#emergence_fullfn = ('/Users/davidrounce/Documents/Dave_Rounce/HiMAT/DEMs/Shean_2019_0213/' + 
-#                    'mb_combined_20190213_nmad_bins/csv/' + glac_str + '_mb_bins_wemvel.csv')
-#emergence_df = pd.read_csv(emergence_fullfn)
-#emergence_df['area_cumsum'] = np.cumsum(emergence_df['z1_bin_area_valid_km2'])
-#
-#binsize_mb = mb_df.loc[1,'# bin_center_elev_m'] - mb_df.loc[0,'# bin_center_elev_m']
-#emvel_binsize = emergence_df['# bin_center_elev_m'].values[1] - emergence_df['# bin_center_elev_m'].values[0]
-#emergence_shift_idx = np.where(emergence_df.area_cumsum.values < mb_df.loc[0,' z1_bin_area_valid_km2'])[0][-1]
-#mb_offset = (mb_df.loc[0, '# bin_center_elev_m'] + binsize_mb/2 - emvel_binsize / 2 - 
-#             emergence_df.loc[emergence_shift_idx, '# bin_center_elev_m'])
-#                      
-#emergence_df['# bin_center_elev_m'] = emergence_df['# bin_center_elev_m'] + mb_offset
-#emergence_df['E_low'] = emergence_df['# bin_center_elev_m'] - emvel_binsize/2
-#emergence_df['E_high'] = emergence_df['# bin_center_elev_m'] + emvel_binsize/2
-#
-## Get mean emergence velocity to coincide with elevation bins
-#mb_df['E_low'] =  mb_df['# bin_center_elev_m'] - binsize_mb/2
-#mb_df['E_high'] = mb_df['# bin_center_elev_m'] + binsize_mb/2
-#
-#mb_df['em_idx_low'] = np.nan
-#mb_df['em_idx_high'] = np.nan
-#for x in mb_df.index.values:
-#    rows_low = np.where(mb_df.E_low.values[x] == emergence_df.E_low.values)[0]
-#    if len(rows_low) > 0:
-#        mb_df.loc[x,'em_idx_low'] = rows_low[0]
-#    elif x == 0:
-#        mb_df.loc[x,'em_idx_low'] = 0
-#        
-#    rows_high = np.where(mb_df.E_high.values[x] == emergence_df.E_high.values)[0]
-#    if len(rows_high) > 0:
-#        mb_df.loc[x,'em_idx_high'] = rows_high[0]
-#    elif len(rows_high) == 0 and ~np.isnan(mb_df.loc[x,'em_idx_low']):
-#        mb_df.loc[x,'em_idx_high'] = emergence_df.index.values[-1]
-#
-#emergence_df['emvel*area'] = emergence_df.emvel_mean * emergence_df.z1_bin_area_valid_km2
-#emergence_df['emvel*area_1stdlow'] = (emergence_df.emvel_mean - emergence_df.emvel_std) * emergence_df.z1_bin_area_valid_km2
-#emergence_df['emvel*area_1stdhigh'] = (emergence_df.emvel_mean + emergence_df.emvel_std) * emergence_df.z1_bin_area_valid_km2
-#            
-#mb_df['emvel_myr'] = np.nan
-#for x in mb_df.index.values:
-#    if ~np.isnan(mb_df.loc[x,'em_idx_low']):
-#        mb_df.loc[x,'emvel_myr'] = (
-#                emergence_df.loc[mb_df.loc[x,'em_idx_low']:mb_df.loc[x,'em_idx_high'], 'emvel*area'].sum() / 
-#                emergence_df.loc[mb_df.loc[x,'em_idx_low']:mb_df.loc[x,'em_idx_high'], 'z1_bin_area_valid_km2'].sum())
-##larsen_data['emvel_myr_1stdlow'] = (
-##        [emvel_data.loc[larsen_data.loc[x,'em_idx_low']:larsen_data.loc[x,'em_idx_high'], 'emvel*area_1stdlow'].sum() / 
-##         emvel_data.loc[larsen_data.loc[x,'em_idx_low']:larsen_data.loc[x,'em_idx_high'], 'z1_bin_area_valid_km2'].sum()
-##         for x in larsen_data.index.values])
-##larsen_data['emvel_myr_1stdhigh'] = (
-##        [emvel_data.loc[larsen_data.loc[x,'em_idx_low']:larsen_data.loc[x,'em_idx_high'], 'emvel*area_1stdhigh'].sum() / 
-##         emvel_data.loc[larsen_data.loc[x,'em_idx_low']:larsen_data.loc[x,'em_idx_high'], 'z1_bin_area_valid_km2'].sum()
-##         for x in larsen_data.index.values])
-#
-#mb_df['mb_wem'] = mb_df[' mb_bin_mean_mwea'] - mb_df['emvel_myr']
-###larsen_data['mb_wem_25'] = larsen_data['MassBal_25'] - larsen_data['emvel_myr_1stdhigh']
-###larsen_data['mb_wem_75'] = larsen_data['MassBal_75'] - larsen_data['emvel_myr_1stdlow']
-##larsen_data['mb_wem_25'] = larsen_data['MassBal_25'] - larsen_data['emvel_myr']
-##larsen_data['mb_wem_75'] = larsen_data['MassBal_75'] - larsen_data['emvel_myr']
-##larsen_data['debris_thickness_wem'] = debris_frommelt_func(-1*larsen_data['mb_wem'].values, func_coeff[0], func_coeff[1])
-##larsen_data['debris_thickness_wem_25'] = debris_frommelt_func(-1*larsen_data['mb_wem_25'].values, 
-##                                                          func_coeff[0], func_coeff[1])
-##larsen_data['debris_thickness_wem_75'] = debris_frommelt_func(-1*larsen_data['mb_wem_75'].values, 
-##                                                          func_coeff[0], func_coeff[1])
-#
-#mb_df['debris_thickness_wem'] = debris_frommelt_func(-1*mb_df['mb_wem'].values, func_coeff[0], func_coeff[1])
-
 ###%% ===== PLOT MASS BALANCE AND DEBRIS THICKNESS VS. ELEVATION WITH EMERGENCE VELOCITIES ======
 ### Mass balance
 ##fig, ax = plt.subplots(1, 2, squeeze=False, sharex=False, sharey=True, gridspec_kw = {'wspace':0.1, 'hspace':0.15})
