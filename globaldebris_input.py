@@ -7,13 +7,14 @@ Model input for intercomparison experiment
 import os
 # External libraries
 import numpy as np
-#import pandas as pd
+import pandas as pd
 import xarray as xr
 
 
 #%%
 # Main directory
 main_directory = os.getcwd()
+rgi_fp = main_directory + '/../00_rgi60_attribs/'
 output_fp = main_directory + '/../output/'
 output_ostrem_fp = main_directory + '/../output/ostrem_curves/'
 output_ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
@@ -23,11 +24,17 @@ roi = '01'
 roi_latlon_dict = {'HMA':[45, 25, 105, 65],
                    '01':[71, 50, 233, 180]
                    }
+roi_rgidict = {'01': [1],
+               'HMA':[13,14,15]}
+roi_years = {'01':[1994,2018],
+             'HMA':[2000,2018]}
 
+# Climate data
 metdata_fp = main_directory + '/../climate_data/'
 metdata_elev_fn = 'ERA5_elev.nc'
 mb_binned_fp = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/'
 mb_binned_fp_wdebris = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/_wdebris/'
+era5_hrly_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
 
 ts_fp = main_directory + '/../output/ts_tif/'
 ts_fn_dict = {'HMA':'hma_debris_tsurfC_wbuffer.tif'}
@@ -55,8 +62,8 @@ output_emvel_csv_ending = '_emvel_stats_woffset.csv'
 outdir_emvel_fp = output_fp + 'csv/'
 
 # Simulation data
-startyear = '2000'
-endyear = '2018'
+startyear = roi_years[roi][0]
+endyear = roi_years[roi][1]
 timezone = 0
 metdata_fn_sample = roi + '_ERA5-metdata-XXXX' + str(startyear) + '_' + str(endyear) + '.nc'
 debris_elevstats_fullfn = main_directory + '/../hma_data/' + roi + '_debris_elevstats.nc'
@@ -196,3 +203,121 @@ k_snow = 0.10               # Rahimi and Konrad (2012), Sturm etal (2002), Sturm
 
 # Newton-Raphson Method constants
 n_iter_max = 100
+
+#%% FUNCTIONS
+def selectglaciersrgitable(glac_no=None,
+                           rgi_regionsO1=None,
+                           rgi_regionsO2=None,
+                           rgi_glac_number=None,
+                           rgi_fp=rgi_fp,
+                           rgi_cols_drop=['GLIMSId','BgnDate','EndDate','Status','Connect','Linkages','Name'],
+                           rgi_O1Id_colname='glacno',
+                           rgi_glacno_float_colname='RGIId_float',
+                           indexname='GlacNo'):
+    """
+    Select all glaciers to be used in the model run according to the regions and glacier numbers defined by the RGI
+    glacier inventory. This function returns the rgi table associated with all of these glaciers.
+
+    glac_no : list of strings
+        list of strings of RGI glacier numbers (e.g., ['1.00001', '13.00001'])
+    rgi_regionsO1 : list of integers
+        list of integers of RGI order 1 regions (e.g., [1, 13])
+    rgi_regionsO2 : list of integers or 'all'
+        list of integers of RGI order 2 regions or simply 'all' for all the order 2 regions
+    rgi_glac_number : list of strings
+        list of RGI glacier numbers without the region (e.g., ['00001', '00002'])
+
+    Output: Pandas DataFrame of the glacier statistics for each glacier in the model run
+    (rows = GlacNo, columns = glacier statistics)
+    """
+    if glac_no is not None:
+        glac_no_byregion = {}
+        rgi_regionsO1 = [int(i.split('.')[0]) for i in glac_no]
+        rgi_regionsO1 = list(set(rgi_regionsO1))
+        for region in rgi_regionsO1:
+            glac_no_byregion[region] = []
+        for i in glac_no:
+            region = i.split('.')[0]
+            glac_no_only = i.split('.')[1]
+            glac_no_byregion[int(region)].append(glac_no_only)
+
+        for region in rgi_regionsO1:
+            glac_no_byregion[region] = sorted(glac_no_byregion[region])
+
+    # Create an empty dataframe
+    rgi_regionsO1 = sorted(rgi_regionsO1)
+    glacier_table = pd.DataFrame()
+    for region in rgi_regionsO1:
+
+        if glac_no is not None:
+            rgi_glac_number = glac_no_byregion[region]
+
+#        if len(rgi_glac_number) < 50:
+
+        for i in os.listdir(rgi_fp):
+            if i.startswith(str(region).zfill(2)) and i.endswith('.csv'):
+                rgi_fn = i
+        try:
+            csv_regionO1 = pd.read_csv(rgi_fp + rgi_fn)
+        except:
+            csv_regionO1 = pd.read_csv(rgi_fp + rgi_fn, encoding='latin1')
+        
+        # Populate glacer_table with the glaciers of interest
+        if rgi_regionsO2 == 'all' and rgi_glac_number == 'all':
+            print("All glaciers within region(s) %s are included in this model run." % (region))
+            if glacier_table.empty:
+                glacier_table = csv_regionO1
+            else:
+                glacier_table = pd.concat([glacier_table, csv_regionO1], axis=0)
+        elif rgi_regionsO2 != 'all' and rgi_glac_number == 'all':
+            print("All glaciers within subregion(s) %s in region %s are included in this model run." %
+                  (rgi_regionsO2, region))
+            for regionO2 in rgi_regionsO2:
+                if glacier_table.empty:
+                    glacier_table = csv_regionO1.loc[csv_regionO1['O2Region'] == regionO2]
+                else:
+                    glacier_table = (pd.concat([glacier_table, csv_regionO1.loc[csv_regionO1['O2Region'] ==
+                                                                                regionO2]], axis=0))
+        else:
+            if len(rgi_glac_number) < 20:
+                print("%s glaciers in region %s are included in this model run: %s" % (len(rgi_glac_number), region,
+                                                                                       rgi_glac_number))
+            else:
+                print("%s glaciers in region %s are included in this model run: %s and more" %
+                      (len(rgi_glac_number), region, rgi_glac_number[0:50]))
+                
+            rgiid_subset = ['RGI60-' + str(region).zfill(2) + '.' + x for x in rgi_glac_number] 
+            rgiid_all = list(csv_regionO1.RGIId.values)
+            rgi_idx = [rgiid_all.index(x) for x in rgiid_subset]
+            if glacier_table.empty:
+                glacier_table = csv_regionO1.loc[rgi_idx]
+            else:
+                glacier_table = (pd.concat([glacier_table, csv_regionO1.loc[rgi_idx]],
+                                           axis=0))
+                    
+    glacier_table = glacier_table.copy()
+    # reset the index so that it is in sequential order (0, 1, 2, etc.)
+    glacier_table.reset_index(inplace=True)
+    # change old index to 'O1Index' to be easier to recall what it is
+    glacier_table.rename(columns={'index': 'O1Index'}, inplace=True)
+    # Record the reference date
+    glacier_table['RefDate'] = glacier_table['BgnDate']
+    # if there is an end date, then roughly average the year
+    enddate_idx = glacier_table.loc[(glacier_table['EndDate'] > 0), 'EndDate'].index.values
+    glacier_table.loc[enddate_idx,'RefDate'] = (
+            np.mean((glacier_table.loc[enddate_idx,['BgnDate', 'EndDate']].values / 10**4).astype(int),
+                    axis=1).astype(int) * 10**4 + 9999)
+    # drop columns of data that is not being used
+    glacier_table.drop(rgi_cols_drop, axis=1, inplace=True)
+    # add column with the O1 glacier numbers
+    glacier_table[rgi_O1Id_colname] = (
+            glacier_table['RGIId'].str.split('.').apply(pd.Series).loc[:,1].astype(int))
+    glacier_table['rgino_str'] = [x.split('-')[1] for x in glacier_table.RGIId.values]
+    glacier_table[rgi_glacno_float_colname] = (np.array([np.str.split(glacier_table['RGIId'][x],'-')[1]
+                                                    for x in range(glacier_table.shape[0])]).astype(float))
+    # set index name
+    glacier_table.index.name = indexname
+
+    print("This study is focusing on %s glaciers in region %s" % (glacier_table.shape[0], rgi_regionsO1))
+
+    return glacier_table
