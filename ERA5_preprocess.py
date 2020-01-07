@@ -58,7 +58,6 @@ if __name__ == '__main__':
     else:
         debug = False
 
-
     #%% ===== SUBSET ERA5 HOURLY DATA TO REGIONAL EXTENTS TO REDUCE FILE SIZES TO MANAGEABLE SIZE =====
     if args.process_era5_hrly_data == '1':
         if args.era5_fn is None:
@@ -105,7 +104,7 @@ if __name__ == '__main__':
             if os.path.exists(ds_out_fp + ds_out_fn) == False:
                 ds_out.to_netcdf(ds_out_fp + ds_out_fn)
 
-
+    
     #%% ===== EXTRACT DATA FOR UNIQUE LAT/LONS =====
     if args.process_unique_latlon_data == '1':
         lat_deg = int(args.lat_deg) / 100
@@ -134,69 +133,56 @@ if __name__ == '__main__':
             
             ds_elev = xr.open_dataset(input.metdata_fp +input.metdata_elev_fn)
             
-            for vn in ['t2m','tp', 'u10', 'v10', 'ssrd', 'strd', 'rh', 'z']:
-#            for vn in ['t2m', 'z']:
-#                print('\n',vn)
-            
-                for nyear, year in enumerate(years):
-#                for nyear, year in enumerate([years[0]]):
-#                    print(year)   
+            for nyear, year in enumerate(years):
+#            for nyear, year in enumerate([years[0]]):
+#                print(year)   
 
-                    for nmonth, month in enumerate(list(np.arange(1,12+1))):
-#                    for nmonth, month in enumerate(list(np.arange(1,12+1))[0:2]):
-                        metdata_netcdf_fn = ds_out_fn = input.roi + '-' + 'ERA5_' + str(year) + '-' + str(month).zfill(2) + '.nc'
+                for nmonth, month in enumerate(list(np.arange(1,12+1))):
+#                for nmonth, month in enumerate(list(np.arange(1,12+1))[0:2]):
+                    metdata_netcdf_fn = ds_out_fn = input.roi + '-' + 'ERA5_' + str(year) + '-' + str(month).zfill(2) + '.nc'
+                    
+                    met_data = xr.open_dataset(output_metdata_fp + metdata_netcdf_fn)
+                    
+                    # Extract lat/lon indices only once
+                    if nyear + nmonth == 0:
+                        lat_idx_z = np.abs(lat_deg - ds_elev['latitude'][:].values).argmin(axis=0)
+                        lon_idx_z = np.abs(lon_deg - ds_elev['longitude'][:].values).argmin(axis=0)
                         
-                        met_data = xr.open_dataset(output_metdata_fp + metdata_netcdf_fn)
-            
+                        lat_idx = np.abs(lat_deg - met_data['latitude'].values).argmin()
+                        lon_idx = np.abs(lon_deg - met_data['longitude'].values).argmin()
                         
-                        # Extract lat/lon indices only once
-                        if nyear + nmonth == 0:
-                            lat_idx_z = np.abs(lat_deg - ds_elev['latitude'][:].values).argmin(axis=0)
-                            lon_idx_z = np.abs(lon_deg - ds_elev['longitude'][:].values).argmin(axis=0)
-                            
-                            lat_idx = np.abs(lat_deg - met_data['latitude'].values).argmin()
-                            lon_idx = np.abs(lon_deg - met_data['longitude'].values).argmin()
+                    # Extract lat/lon data
+                    met_data_latlon = met_data[dict(longitude=lon_idx, latitude=lat_idx)]
+                    
+                    # Add relative humidity
+                    #   relative humidity ('Arden Buck equation': approximation from Bogel modification)
+                    d2m = met_data_latlon.d2m.values
+                    t2m = met_data_latlon.t2m.values
+                    rh = (100 * np.exp((18.678*(d2m-273.15) / (257.14 + (d2m-273.15))) - 
+                                       ((18.678 - (t2m-273.15) / 234.5) * ((t2m-273.15) / (257.14 + (t2m-273.15))))))
+                    met_data_rh = xr.Dataset({'rh': (['time'], rh)},
+                                              coords={'time': met_data.time,
+                                                      'longitude': met_data_latlon.longitude,
+                                                      'latitude': met_data_latlon.latitude})
+                    met_data_rh.rh.attrs = {'units':'%', 'long_name':'Relative humidity'}
+                    met_data_latlon = xr.merge([met_data_latlon, met_data_rh])
+                    met_data_latlon = met_data_latlon.drop(['d2m'])
+                    
+                    # Add elevation
+                    ds_z = ds_elev['z'][lat_idx_z,lon_idx_z].to_dataset()
+                    ds_z.z.attrs = {'units':'m a.s.l.', 'long_name':'Elevation', 'comment':'converted from geopotential'}
+                    met_data_latlon = xr.merge([met_data_latlon, ds_z])
 
-                        if vn == 'rh':
-                            # relative humidity ('Arden Buck equation': approximation from Bogel modification)
-                            d2m = met_data.d2m[:,lat_idx,lon_idx].values
-                            t2m = met_data.t2m[:,lat_idx,lon_idx].values
-                            rh = (100 * np.exp((18.678*(d2m-273.15) / (257.14 + (d2m-273.15))) - 
-                                               ((18.678 - (t2m-273.15) / 234.5) * ((t2m-273.15) / (257.14 + (t2m-273.15))))))
-                            ds_roi_month = xr.Dataset({'rh': (['time'], rh)},
-                                                      coords={'time': met_data.time})
-                        elif vn == 'z':
-                            ds_roi_month = ds_elev[vn][lat_idx_z,lon_idx_z].to_dataset()
-                        else:
-                            ds_roi_month = met_data[vn][:,lat_idx,lon_idx].to_dataset()
-                        
-                        # Concatenate dataset
-                        if nyear + nmonth == 0:
-                            ds_roi = ds_roi_month
-                        elif vn not in ['z']:
-                            ds_roi = xr.concat([ds_roi, ds_roi_month], 'time')
+                    try:
+                        met_data.close()
+                    except:
+                        continue
                             
-                # Concatenate datasets                
-                if ds_all is None:
-                    ds_all = ds_roi
-                else:
-                    ds_all = ds_all.combine_first(ds_roi)
-                # Add attributes manually
-                if vn == 'tp':
-                    ds_all.tp.attrs = {'units':'m', 'long_name':'Total precipitation'}
-                if vn == 'rh':
-                    ds_all.rh.attrs = {'units':'%', 'long_name':'Relative humidity'}
-                elif vn == 'u10':
-                    ds_all.u10.attrs = {'units': 'm s**-1', 'long_name': '10 metre U wind component'}
-                elif vn == 'v10':
-                    ds_all.v10.attrs = {'units': 'm s**-1', 'long_name': '10 metre V wind component'}
-                elif vn == 'ssrd':
-                    ds_all.ssrd.attrs = {'units':'J m**-2', 'long_name':'Surface solar radiation downwards', 
-                                       'standard_name': 'surface_downwelling_shortwave_flux_in_air'}
-                elif vn == 'strd':
-                    ds_all.strd.attrs = {'units':'J m**-2', 'long_name':'Surface thermal radiation downwards'}
-                elif vn == 'z':
-                    ds_all.z.attrs = {'units':'m a.s.l.', 'long_name':'Elevation', 'comment':'converted from geopotential'}
+                    # Concatenate datasets                
+                    if ds_all is None:
+                        ds_all = met_data_latlon
+                    else:
+                        ds_all = ds_all.combine_first(met_data_latlon)
                   
             # Export array for each variable
             ds_all.to_netcdf(output_metdata_fp + output_metdata_fn)    

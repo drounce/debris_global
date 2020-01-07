@@ -49,6 +49,8 @@ output_ts_fn_sample = 'XXXX_debris_ts_curve.nc'
 hd_fp = ts_fp + 'hd_tifs/'
 hd_fn_sample = 'XXXX_hd_m_fromts.nc'
 hd_max = 2.5
+vel_threshold = 7.5
+debrisperc_threshold = 50
 
 # Emergence Velocity data
 min_glac_area_writeout=0

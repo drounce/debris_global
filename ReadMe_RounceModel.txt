@@ -19,6 +19,8 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 
 # ===== TO-DO LIST / FUTURE WORK ===========================================================================================================
 - MULTI-GLACIER CALIBRATION - all glaciers that share ERA5 data should be calibrated together
+- AREA-WEIGHTED BINS FOR GLACIER CALIBRATION & MULTI-GLACIER CALIBRATION!
+  --> this is important to ensure we place most weight on glaciers/bins that have the most data
 - IMPROVE FIT BASED ON VARIATIONS IN THE STANDARD DEVIATION AS OPPOSED TO THE TOFFSET
 
 - consider how to use hd_max: should these bins be avoided during calibration, since debris thickness estimates are very sensitive to them and  they are the most uncertain?
