@@ -21,6 +21,7 @@ output_ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
 roi = '01'
+#roi = 'HMA'
 roi_latlon_dict = {'HMA':[45, 25, 105, 65],
                    '01':[71, 50, 233, 180]
                    }
@@ -43,14 +44,50 @@ ts_year_fn_dict = {'HMA':'hma_debris_year.tif'}
 ts_doy_fn_dict = {'HMA':'hma_debris_doy.tif'}
 ts_stats_res = 50 # common resolution needed such that resolution does not interfere with regional stats
 #ts_fn = ts_fn_dict[roi]
-output_ts_csv_ending = '_ts_hd_woffset.csv'
+output_ts_csv_ending = '_ts_hd_opt.csv'
 tscurve_fp = ts_fp + 'ts_curves/'
 output_ts_fn_sample = 'XXXX_debris_ts_curve.nc'
 hd_fp = ts_fp + 'hd_tifs/'
-hd_fn_sample = 'XXXX_hd_m_fromts.nc'
+hd_fn_sample = 'XXXX_hdts_m.tif'
 hd_max = 2.5
 vel_threshold = 7.5
 debrisperc_threshold = 50
+
+# Debris datasets
+debriscover_fp = main_directory + '/../scherler_debris/LS8_2013-2017_RATIO/fixed/'
+debriscover_fn_dict = {'01':'01_rgi60_L8ratio_fixed.shp',
+                       'HMA':'131415_rgi60_HMA_LS_DC_2013_2017_RATIO_fixed_subset.shp'}
+dc_percarea_threshold = 5   # percent area threshold (%)
+dc_area_threshold = 1       # debris-covered area threshold (km2) for large glaciers with low % but significant debris
+min_glac_area = 2                # minimum glacier area (only work with large glaciers)
+
+# Glacier data
+glac_shp_fn_dict = {
+        '01': main_directory + '/../../../HiMAT/RGI/rgi60/01_rgi60_Alaska/01_rgi60_Alaska.shp',
+        '13': main_directory + '/../../../HiMAT/RGI/rgi60/13_rgi60_CentralAsia/13_rgi60_CentralAsia.shp',
+        '14': main_directory + '/../../../HiMAT/RGI/rgi60/14_rgi60_SouthAsiaWest/14_rgi60_SouthAsiaWest.shp',
+        '15': main_directory + '/../../../HiMAT/RGI/rgi60/15_rgi60_SouthAsiaEast/15_rgi60_SouthAsiaEast.shp'}
+glac_shp_proj_fp = output_fp + 'glac_shp_proj/'
+if os.path.exists(glac_shp_proj_fp) == False:
+    os.makedirs(glac_shp_proj_fp)
+#DEM
+z1_dir_sample = main_directory + '/../../../HiMAT/IceThickness_Farinotti/surface_DEMs_RGI60/surface_DEMs_RGI60-XXXX/'
+z1_fn_sample = 'surface_DEM_RGI60-XXXX.tif'
+# Ice thickness
+huss_dir_sample = (
+        main_directory + '/../../../HiMAT/IceThickness_Farinotti/composite_thickness_RGI60-all_regions/RGI60-XXXX/')
+huss_fn_sample = 'RGI60-XXXX_thickness.tif'
+# Surface velocity
+v_dir = main_directory + '/../../../Satellite_Images/ITS_Live/'
+vx_fn_dict = {'01': 'ALA_G0120_0000_vx.tif',
+              'HMA': 'HMA_G0120_0000_vx.tif'}
+vy_fn_dict = {'01': 'ALA_G0120_0000_vy.tif',
+              'HMA': 'HMA_G0120_0000_vy.tif'}
+
+# Mass balance data
+larsen_fp = main_directory + '/../mb_data/Larsen/'
+larsen_binned_fp = larsen_fp + 'binned_data/'
+larsen_fn = 'larsen2015_supplementdata_wRGIIds_v3.csv'
 
 # Emergence Velocity data
 min_glac_area_writeout=0

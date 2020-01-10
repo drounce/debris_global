@@ -36,6 +36,10 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 
 
 # ===== MODEL WORKFLOW =====================================================================================================================
+- process MB data:
+  - Shean sent binned data
+  - Braun processed using some PyGEM scripts; need to clean up
+
 - process ERA5 orography data to elevation, which will be used to get lat/lon in future scripts
 
 - debris_stats: identify lat/lon of all glaciers with data
@@ -70,6 +74,8 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 '14.04477' # Hispar 		- good
 '13.43232' # Koxkar		- good (positive first bin)
 
+# ===== UNCERTAINTY WITH MASS BALANCE DATA ================================================================================================
+- Some glaciers have data from Braun and Larsen: can use to quantify uncertainty due to data source!
 
 
 # ===== HMA MISSING DATA IN MELT2THICKNESS ================================================================================================
