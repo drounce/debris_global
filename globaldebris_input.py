@@ -54,9 +54,9 @@ vel_threshold = 7.5
 debrisperc_threshold = 50
 
 # Debris datasets
-debriscover_fp = main_directory + '/../scherler_debris/LS8_2013-2017_RATIO/fixed/'
-debriscover_fn_dict = {'01':'01_rgi60_L8ratio_fixed.shp',
-                       'HMA':'131415_rgi60_HMA_LS_DC_2013_2017_RATIO_fixed_subset.shp'}
+debriscover_fp = main_directory + '/../scherler_debris/LS8_2013-2017_RATIO/fixed_v2/'
+debriscover_fn_dict = {'01':'01_rgi60_L8ratio_fixed_v2.shp',
+                       'HMA':'HMA_rgi60_L8ratio_fixed_v2.shp'}
 dc_percarea_threshold = 5   # percent area threshold (%)
 dc_area_threshold = 1       # debris-covered area threshold (km2) for large glaciers with low % but significant debris
 min_glac_area = 2                # minimum glacier area (only work with large glaciers)
@@ -73,6 +73,8 @@ if os.path.exists(glac_shp_proj_fp) == False:
 #DEM
 z1_dir_sample = main_directory + '/../../../HiMAT/IceThickness_Farinotti/surface_DEMs_RGI60/surface_DEMs_RGI60-XXXX/'
 z1_fn_sample = 'surface_DEM_RGI60-XXXX.tif'
+z1_backup_dict = {'01': main_directory + '/../../../Satellite_Images/Alaska_albers_V3_mac/Alaska_albers_V3.tif',
+                  'HMA': None}
 # Ice thickness
 huss_dir_sample = (
         main_directory + '/../../../HiMAT/IceThickness_Farinotti/composite_thickness_RGI60-all_regions/RGI60-XXXX/')

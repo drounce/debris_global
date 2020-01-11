@@ -36,20 +36,36 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 
 
 # ===== MODEL WORKFLOW =====================================================================================================================
+- process Scherler debris cover extents in QGIS:
+  - fix shape file
+  - remove isolated pixels (< 2 surface temperature pixels):
+     - multipart to single part
+     - open attribute -> new field 'area_single'
+     - select features area_single > min threshold (20000 m2)
+     - dissolve using RGIId
+     - open attribute -> new fields 'DC_Area_v2' and 'DC_Area_v2_%' - make sure multiply by 100 and convert km2 to m2 when divided by area
+  - remove holes (if desirable)
+
 - process MB data:
   - Shean sent binned data
   - Braun processed using some PyGEM scripts; need to clean up
 
 - process ERA5 orography data to elevation, which will be used to get lat/lon in future scripts
 
-- debris_stats: identify lat/lon of all glaciers with data
-
 - process ERA5 data: download and pre-process into netcdf files for each site with a glacier
 
-- meltmodel_global.py: run model to get melt/Ts at every timestep
+- debris_stats.ipynb:
+   ---> environment: debris_thickness_global environment
+   ---> identifies lat/lon of all glaciers with data
+   ---> processes emergence velocity, debris cover area, and mass balance data
+
+   - HMA: done
+   - Alaska: done
+
+- meltmodel_global.py: run model to get melt/Ts/snow at every timestep
 
 - HMA_emergence_velocity.ipynb: estimate binned emergence velocities
-    --> debris_thickness_global environment
+    
 
 - meltcurves.py: processes meltmodel_global.py output to develop Ostrem curves for each glacier
 
