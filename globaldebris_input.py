@@ -5,6 +5,7 @@ Model input for intercomparison experiment
 """
 # Built-in libraries
 import os
+import pickle
 # External libraries
 import numpy as np
 import pandas as pd
@@ -29,9 +30,12 @@ roi_rgidict = {'01': [1],
                'HMA':[13,14,15]}
 roi_years = {'01':[1994,2018],
              'HMA':[2000,2018]}
+latlon_unique_fp = output_fp + 'latlon_unique/'
+latlon_unique_dict = {'01':'01_latlon_unique.pkl',
+                      'HMA':'HMA_latlon_unique.pkl'}
 
 # Climate data
-metdata_fp = main_directory + '/../climate_data/'
+metdata_fp = main_directory + '/../climate_data/' + roi + '/'
 metdata_elev_fn = 'ERA5_elev.nc'
 mb_binned_fp = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/'
 mb_binned_fp_wdebris = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/_wdebris/'
@@ -111,17 +115,14 @@ debris_elevstats_fullfn = main_directory + '/../hma_data/' + roi + '_debris_elev
 
 # Latitude and longitude index to run the model
 #  Longitude must be 0 - 360 degrees
-latlon_list_raw = None # hack to bypass having the elevation data yet
-#latlon_list_raw = 'all'
+latlon_list_raw = 'all'
 #latlon_list_raw = [(28.1,86.7)]
+
 #latlon_list_raw = [(44.,83.25)]
 if latlon_list_raw == 'all':
-    ds_elevstats = xr.open_dataset(debris_elevstats_fullfn)
-    latidx_list, lonidx_list = np.where(ds_elevstats['zmean'] > 0)
-    lat_list = ds_elevstats.latitude[latidx_list].values
-    lon_list = ds_elevstats.longitude[lonidx_list].values
-    latlon_list = list(tuple(zip(list(lat_list), list(lon_list))))
-elif latlon_list_raw is not None:
+    with open(latlon_unique_fp + latlon_unique_dict[roi], 'rb') as f:
+        latlon_list = pickle.load(f)
+else:
     ds_elevstats = xr.open_dataset(debris_elevstats_fullfn)
     lat_list_raw = np.array([x[0] for x in latlon_list_raw])
     lon_list_raw = np.array([x[1] for x in latlon_list_raw])
@@ -137,14 +138,20 @@ elif latlon_list_raw is not None:
     latlon_list = list(tuple(zip(list(lat_list), list(lon_list))))
 
 #latlon_list = latlon_list[0:5]
+#latlon_list = [latlon_list[0]]
+latlon_list = [(63.75, 213.0)]
 
 #%%
 # Simulation data
-start_date = '2000-05-28'   # start date for debris_ts_model.py
-end_date = '2018-05-28'     # end date for debris_ts_model.py
+roi_datedict = {'01': ['1994-01-01', '2018-12-31'],
+                'HMA': ['2000-05-28', '2018-05-28']}
+start_date = roi_datedict[roi][0]  # start date for debris_ts_model.py
+end_date = roi_datedict[roi][1]     # end date for debris_ts_model.py
+#start_date = '2000-05-28'   # start date for debris_ts_model.py
+#end_date = '2018-05-28'     # end date for debris_ts_model.py
 fn_prefix = 'Rounce2015_' + roi + '-'
-#elev_cns = ['zmean']
-elev_cns = ['zmean', 'zstdlow', 'zstdhigh']
+elev_cns = ['zmean']
+#elev_cns = ['zmean', 'zstdlow', 'zstdhigh']
 
 # Output info
 output_option = 2           # 1: csv of all fluxes and internal temps, 2: netcdf of melt and ts
@@ -158,12 +165,12 @@ date_start = '20191227'
 # ===== Debris properties =====
 experiment_no = 3
 # Debris thickness
-#debris_thickness_all = np.array([0.02])
+debris_thickness_all = np.array([0])
 #debris_thickness_all = np.array([0.2])
 #debris_thickness_all = np.array([0.2, 0.3])
 #debris_thickness_all = np.arange(0,5.001,0.05)
-debris_thickness_all = np.arange(0,3.001,0.1)
-debris_thickness_all[0] = 0.02
+#debris_thickness_all = np.arange(0,3.001,0.05)
+#debris_thickness_all[0] = 0.02
 # Surface roughness, thermal conductivity, and albedo
 debris_properties_fullfn = main_directory + '/../hma_data/hma_debris_properties.csv'
 debris_properties = np.genfromtxt(debris_properties_fullfn, delimiter=',', skip_header=1)

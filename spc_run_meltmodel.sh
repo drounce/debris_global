@@ -1,6 +1,6 @@
 #!/bin/sh
-#SBATCH --partition=debug
-#SBATCH --ntasks=24
+#SBATCH --partition=t1standard
+#SBATCH --ntasks=240
 #SBATCH --tasks-per-node=24
 
 echo partition: $SLURM_JOB_PARTITION
@@ -13,7 +13,7 @@ ORDERED_SWITCH=1
 module load lang/Anaconda3/2.5.0
 source activate pygem_hpc
 
-ROI="HMA"
+ROI="01"
 # region batch string
 latlon_batch_str="${ROI}_latlon_batch"
 

@@ -165,6 +165,9 @@ def create_xrdataset(debris_thickness_all=input.debris_thickness_all, time_value
             'ts': collections.OrderedDict(
                     [('hd_cm', debris_cm_values), ('time', time_values), 
                      ('stats', stat_cns), ('elev_cns', elev_cns)]),
+            'snow_depth': collections.OrderedDict(
+                    [('hd_cm', debris_cm_values), ('time', time_values), 
+                     ('stats', stat_cns), ('elev_cns', elev_cns)]),
             'elev': collections.OrderedDict(
                     [('elev_cns', elev_cns)])
             }
@@ -192,13 +195,17 @@ def create_xrdataset(debris_thickness_all=input.debris_thickness_all, time_value
             'ts': {
                     'long_name': 'debris surface temperature',
                     'units': 'K',
+                    'temporal_resolution': 'hourly'},
+            'snow_depth': {
+                    'long_name': 'snow depth',
+                    'units': 'm',
                     'temporal_resolution': 'hourly'}
             }
     # Add variables to empty dataset and merge together
     count_vn = 0
     encoding = {}
     noencoding_vn = ['stats', 'hd_cm', 'elev_cns', 'elev']
-    for vn in ['melt', 'ts', 'elev']:
+    for vn in ['melt', 'ts', 'elev', 'snow_depth']:
         count_vn += 1
         empty_holder = np.zeros([len(output_coords_dict[vn][i]) for i in list(output_coords_dict[vn].keys())])
         output_ds = xr.Dataset({vn: (list(output_coords_dict[vn].keys()), empty_holder)},
@@ -210,7 +217,7 @@ def create_xrdataset(debris_thickness_all=input.debris_thickness_all, time_value
             output_ds_all = xr.merge((output_ds_all, output_ds))
 
     # Add attributes
-    for vn in ['melt', 'ts', 'time', 'hd_cm', 'stats', 'elev_cns', 'elev']:
+    for vn in ['melt', 'ts', 'snow_depth', 'time', 'hd_cm', 'stats', 'elev_cns', 'elev']:
         try:
             output_ds_all[vn].attrs = output_attrs_dict[vn]
         except:
@@ -864,18 +871,25 @@ def main(list_packed_vars):
         nsteps = len(Tair_AWS)
         
         for nelev, elev_cn in enumerate(input.elev_cns):
-            # Assume elevation and Sin are same as AWS
-            debris_elevstats = xr.open_dataset(input.debris_elevstats_fullfn)
-            lat_idx = np.abs(lat_deg - debris_elevstats['latitude'][:].values).argmin(axis=0)
-            lon_idx = np.abs(lon_deg - debris_elevstats['longitude'][:].values).argmin(axis=0)
-            if elev_cn in debris_elevstats.keys():
-                Elevation_pixel = debris_elevstats['zmean'][lat_idx, lon_idx].values
+#            # Assume elevation and Sin are same as AWS
+#            debris_elevstats = xr.open_dataset(input.debris_elevstats_fullfn)
+#            lat_idx = np.abs(lat_deg - debris_elevstats['latitude'][:].values).argmin(axis=0)
+#            lon_idx = np.abs(lon_deg - debris_elevstats['longitude'][:].values).argmin(axis=0)
+#            if elev_cn in debris_elevstats.keys():
+#                Elevation_pixel = debris_elevstats['zmean'][lat_idx, lon_idx].values
+#            elif elev_cn == 'zstdlow':
+#                Elevation_pixel = (debris_elevstats['zmean'][lat_idx, lon_idx].values - 
+#                                   debris_elevstats['zstd'][lat_idx, lon_idx].values)
+#            elif elev_cn == 'zstdhigh':
+#                Elevation_pixel = (debris_elevstats['zmean'][lat_idx, lon_idx].values + 
+#                                   debris_elevstats['zstd'][lat_idx, lon_idx].values)
+            if elev_cn == 'zmean':
+                Elevation_pixel = ds['dc_zmean'].values
             elif elev_cn == 'zstdlow':
-                Elevation_pixel = (debris_elevstats['zmean'][lat_idx, lon_idx].values - 
-                                   debris_elevstats['zstd'][lat_idx, lon_idx].values)
+                Elevation_pixel = ds['dc_zmean'].values - ds['dc_zstd'].values
             elif elev_cn == 'zstdhigh':
-                Elevation_pixel = (debris_elevstats['zmean'][lat_idx, lon_idx].values + 
-                                   debris_elevstats['zstd'][lat_idx, lon_idx].values)
+                Elevation_pixel = ds['dc_zmean'].values + ds['dc_zstd'].values
+            
             output_ds_all['elev'].values[nelev] = Elevation_pixel
             Sin = Sin_timeseries
             lon_deg_pixel = lon_deg
@@ -884,175 +898,142 @@ def main(list_packed_vars):
             aspect_rad = 0
             if debug:
                 print('Elevation column name:', elev_cn)
+                print(Elevation_pixel)
 
-            #%%
             # ===== LOOP THROUGH RELEVANT DEBRIS THICKNESS AND/OR MC SIMULATIONS =====
             for n_thickness in range(input.debris_thickness_all.shape[0]):
                 debris_thickness = input.debris_thickness_all[n_thickness]
-                # Height of each internal layer
-                h = debris_thickness / 10
-                # Number of internal calculation layers + 1 to include the surface layer
-                N = int(debris_thickness/h + 1)
-                if debug:
-                    print('Debris thickness [m]:', debris_thickness)
-        
-                # Output dataset
-                # Record melt, Ts, internal debris temperature, fluxes, and snow depth
-                output_cns = ['Time', 'Melt [mwe]', 'Ts [K]']
                 
-                if input.output_option == 1:
-                    # add internal temperature layers
-                    h_internal_cns = []
-                    for n_internal in range(1,N):
-                        if n_internal == N-1:
-                            h_internal_cns.append('T_debris/ice [K]')
-                        else:
-                            h_internal_cns.append('T_' + str(int(np.round(n_internal * h * 1000)) / 1000) + ' [K]')
-                    for internal_cn in h_internal_cns:
-                        output_cns.append(internal_cn)
-                    # add fluxes and snow depth
-                    extra_cns = ['Rn [W m2]', 'LE [W m2]', 'H [W m2]', 'P [W m2]', 'Qc [W m2]', 'd_snow [m]']
-                    for extra_cn in extra_cns:
-                        output_cns.append(extra_cn)
-                    # Output file
-                    output_ds = pd.DataFrame(np.zeros((nsteps, len(output_cns))), columns=output_cns)
-                    output_ds['Time'] = df_datetime
-                
-                for MC in range(input.k_random.shape[0]):
+                if debris_thickness > 0:
+                    # Height of each internal layer
+                    h = debris_thickness / 10
+                    # Number of internal calculation layers + 1 to include the surface layer
+                    N = int(debris_thickness/h + 1)
                     if debug:
-                        print('  properties iteration ', MC)
-        
-                    # Debris properties (Albedo, Surface roughness [m], Thermal Conductivity [W m-1 K-1])
-                    albedo = input.albedo_random[MC]
-                    albedo_AWS = np.repeat(albedo,nsteps) 
-                    z0 = input.z0_random[MC]
-                    k = input.k_random[MC]
+                        print('Debris thickness [m]:', debris_thickness)
+            
+                    # Output dataset
+                    # Record melt, Ts, internal debris temperature, fluxes, and snow depth
+                    output_cns = ['Time', 'Melt [mwe]', 'Ts [K]']
                     
-                    # Additional properties
-                    # Turbulent heat flux transfer coefficient (neutral conditions)
-                    a_neutral_debris = input.Kvk**2/(np.log(input.za/z0))**2
-                    # Turbulent heat flux transfer coefficient (neutral condition)
-                    a_neutral_snow = input.Kvk**2/(np.log(input.za/input.z0_snow))**2
-                    # Adjust wind speed from sensor height to 2 m accounting for surface roughness
-                    u_AWS = u_AWS_raw*(np.log(2/z0)/(np.log(input.zw/z0)))
-                    # Pressure (barometric pressure formula)
-                    P = input.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
-        
-                    # Air temperature
-                    Tair = Tair_AWS - input.lapserate*(Elevation_pixel-Elev_AWS)
-                    # Snow [m]
-                    if input.option_snow_fromAWS == 1:
-                        if Snow_AWS == None:
-                            print('\n\nNO SNOW DEPTH FROM AWS\n\n')
+                    if input.output_option == 1:
+                        # add internal temperature layers
+                        h_internal_cns = []
+                        for n_internal in range(1,N):
+                            if n_internal == N-1:
+                                h_internal_cns.append('T_debris/ice [K]')
+                            else:
+                                h_internal_cns.append('T_' + str(int(np.round(n_internal * h * 1000)) / 1000) + ' [K]')
+                        for internal_cn in h_internal_cns:
+                            output_cns.append(internal_cn)
+                        # add fluxes and snow depth
+                        extra_cns = ['Rn [W m2]', 'LE [W m2]', 'H [W m2]', 'P [W m2]', 'Qc [W m2]', 'd_snow [m]']
+                        for extra_cn in extra_cns:
+                            output_cns.append(extra_cn)
+                        # Output file
+                        output_ds = pd.DataFrame(np.zeros((nsteps, len(output_cns))), columns=output_cns)
+                        output_ds['Time'] = df_datetime
+                    
+                    for MC in range(input.k_random.shape[0]):
+                        if debug:
+                            print('  properties iteration ', MC)
+            
+                        # Debris properties (Albedo, Surface roughness [m], Thermal Conductivity [W m-1 K-1])
+                        albedo = input.albedo_random[MC]
+                        albedo_AWS = np.repeat(albedo,nsteps) 
+                        z0 = input.z0_random[MC]
+                        k = input.k_random[MC]
+                        
+                        # Additional properties
+                        # Turbulent heat flux transfer coefficient (neutral conditions)
+                        a_neutral_debris = input.Kvk**2/(np.log(input.za/z0))**2
+                        # Turbulent heat flux transfer coefficient (neutral condition)
+                        a_neutral_snow = input.Kvk**2/(np.log(input.za/input.z0_snow))**2
+                        # Adjust wind speed from sensor height to 2 m accounting for surface roughness
+                        u_AWS = u_AWS_raw*(np.log(2/z0)/(np.log(input.zw/z0)))
+                        # Pressure (barometric pressure formula)
+                        P = input.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
+            
+                        # Air temperature
+                        Tair = Tair_AWS - input.lapserate*(Elevation_pixel-Elev_AWS)
+                        # Snow [m]
+                        if input.option_snow_fromAWS == 1:
+                            if Snow_AWS == None:
+                                print('\n\nNO SNOW DEPTH FROM AWS\n\n')
+                            else:
+                                snow = Snow_AWS.copy()    
                         else:
-                            snow = Snow_AWS.copy()    
-                    else:
-                        snow = Rain_AWS.copy()
-                        snow[Tair > input.Tsnow_threshold] = 0
-                        snow[snow < input.snow_min] = 0
-                        Rain_AWS[Tair <= input.Tsnow_threshold] = 0
-                        Rain_AWS[Rain_AWS < input.rain_min] = 0
-        
-                    # Solar information
-                    zenith_angle_rad, azimuth_angle_rad, rm_r2 = (
-                            solar_calcs_NOAA(year, julian_day_of_year, time_frac, lon_deg_pixel, lat_deg_pixel, nsteps))
-                    # Illumination angle / angle of Incidence b/w normal to grid slope at AWS and solar beam
-                    #  if slope & aspect are 0 degrees, then this is equal to the zenith angle
-                    ill_angle_rad = (np.arccos(np.cos(slope_rad) * np.cos(zenith_angle_rad) + np.sin(slope_rad) *
-                                     np.sin(zenith_angle_rad) * np.cos(azimuth_angle_rad - aspect_rad)))
-        
-                    # ===== DEBRIS-COVERED GLACIER ENERGY BALANCE MODEL =====
-                    # Constant defined by Reid and Brock (2010) for Crank-Nicholson Scheme
-                    C = k * input.delta_t / (2 * input.row_d * input.c_d * h**2)
-                    # "Crank Nicholson Newton Raphson" Method for LE Rain
-                    # Compute Ts from surface energy balance model using Newton-Raphson Method at each time step and Td
-                    # at all points in debris layer
-                    Td = np.zeros((N, nsteps))
-                    a_Crank = np.zeros((N,nsteps))
-                    b_Crank = np.zeros((N,nsteps))
-                    c_Crank = np.zeros((N,nsteps))
-                    d_Crank = np.zeros((N,nsteps))
-                    A_Crank = np.zeros((N,nsteps))
-                    S_Crank = np.zeros((N,nsteps))
-                    n_iterations = np.zeros((nsteps))
-                    Ts_past = np.zeros((nsteps))
-                    LE = np.zeros((nsteps))
-                    Rn = np.zeros((nsteps))
-                    H_flux = np.zeros((nsteps))
-                    Qc = np.zeros((nsteps))
-                    P_flux = np.zeros((nsteps))
-                    dLE = np.zeros((nsteps))
-                    dRn = np.zeros((nsteps))
-                    dH_flux = np.zeros((nsteps))
-                    dQc = np.zeros((nsteps))
-                    dP_flux = np.zeros((nsteps))
-                    F_Ts = np.zeros((nsteps))
-                    dF_Ts = np.zeros((nsteps))
-                    Qc_ice = np.zeros((nsteps))
-                    Melt = np.zeros((nsteps))
-                    dsnow = np.zeros((nsteps))      # snow depth [mwe]
-                    tsnow = np.zeros((nsteps))      # snow temperature [K]
-                    snow_tau = np.zeros((nsteps))   # non-dimensional snow age
-        
-                    # Initial values
-                    dsnow_t0 = 0
-                    tsnow_t0 = 273.15
-                    snow_tau_t0 = 0
-        
-                    for i in np.arange(0,nsteps):
-        
-                        Td[N-1,i] = 273.15
-        
-                        if i > 0:
-                            dsnow_t0 = dsnow[i-1]
-                            tsnow_t0 = tsnow[i-1]
-                            snow_tau_t0 = snow_tau[i-1]
-        
-                        # Initially assume Ts = Tair, for all other time steps assume it's equal to previous Ts
-                        if i == 0:
-                            Td[0,i] = Tair[i]
-                        else:
-                            Td[0,i] = Td[0,i-1]
-        
-                        # Calculate debris temperature profile for timestep i
-                        Td = CrankNicholson(Td, Tair, i, debris_thickness, N, h, C, a_Crank, b_Crank, c_Crank,
-                                            d_Crank, A_Crank, S_Crank)
-        
-                        # Surface energy fluxes
-                        (F_Ts[i], Rn[i], LE[i], H_flux[i], P_flux[i], Qc[i], dF_Ts[i], dRn[i], dLE[i], dH_flux[i],
-                         dP_flux[i], dQc[i], dsnow[i], tsnow[i], snow_tau[i]) = (
-                                calc_surface_fluxes(Td[:,i], Tair[i], RH_AWS[i], u_AWS[i], Sin[i], Lin_AWS[i],
-                                                    Rain_AWS[i], snow[i], P, albedo_AWS[i], k, a_neutral_debris,
-                                                    h, dsnow_t0, tsnow_t0, snow_tau_t0, ill_angle_rad[i],
-                                                    a_neutral_snow, debris_thickness,
-                                                    option_snow=input.option_snow,
-                                                    option_snow_fromAWS=input.option_snow_fromAWS))
-        
-                        # Newton-Raphson method to solve for surface temperature
-                        while abs(Td[0,i] - Ts_past[i]) > 0.01 and n_iterations[i] < input.n_iter_max:
-                            
-#                            if i == 1768:
-#                                print(np.round(Td[0,i],2), np.round(Ts_past[i],2), 
-#                                      np.round(F_Ts[i],2), np.round(dF_Ts[i],2),
-#                                      '\n  Tair:', np.round(Tair[i],1), 'Rain:', np.round(Rain_AWS[i],5),
-#                                      'wind:', np.round(u_AWS[i],2), 'Sin:', np.round(Sin[i],0), 
-#                                      'Lin:', np.round(Lin_AWS[i],0), 
-#                                      '\n  Rn:', np.round(Rn[i],0), 'LE:', np.round(LE[i],0), 
-#                                      'H:', np.round(H_flux[i],0), 'Qc:', np.round(Qc[i],0))
-        
-                            n_iterations[i] = n_iterations[i] + 1
-                            Ts_past[i] = Td[0,i]
-                            # max step size is 1 degree C
-                            Td[0,i] = Ts_past[i] - F_Ts[i] /dF_Ts[i]
-                            if (Td[0,i] - Ts_past[i]) > 1:
-                                Td[0,i] = Ts_past[i] + 1
-                            elif (Td[0,i] - Ts_past[i]) < -1:
-                                Td[0,i] = Ts_past[i] - 1
-        
-                            # Debris temperature profile for timestep i
+                            snow = Rain_AWS.copy()
+                            snow[Tair > input.Tsnow_threshold] = 0
+                            snow[snow < input.snow_min] = 0
+                            Rain_AWS[Tair <= input.Tsnow_threshold] = 0
+                            Rain_AWS[Rain_AWS < input.rain_min] = 0
+            
+                        # Solar information
+                        zenith_angle_rad, azimuth_angle_rad, rm_r2 = (
+                                solar_calcs_NOAA(year, julian_day_of_year, time_frac, lon_deg_pixel, lat_deg_pixel, nsteps))
+                        # Illumination angle / angle of Incidence b/w normal to grid slope at AWS and solar beam
+                        #  if slope & aspect are 0 degrees, then this is equal to the zenith angle
+                        ill_angle_rad = (np.arccos(np.cos(slope_rad) * np.cos(zenith_angle_rad) + np.sin(slope_rad) *
+                                         np.sin(zenith_angle_rad) * np.cos(azimuth_angle_rad - aspect_rad)))
+            
+                        # ===== DEBRIS-COVERED GLACIER ENERGY BALANCE MODEL =====
+                        # Constant defined by Reid and Brock (2010) for Crank-Nicholson Scheme
+                        C = k * input.delta_t / (2 * input.row_d * input.c_d * h**2)
+                        # "Crank Nicholson Newton Raphson" Method for LE Rain
+                        # Compute Ts from surface energy balance model using Newton-Raphson Method at each time step and Td
+                        # at all points in debris layer
+                        Td = np.zeros((N, nsteps))
+                        a_Crank = np.zeros((N,nsteps))
+                        b_Crank = np.zeros((N,nsteps))
+                        c_Crank = np.zeros((N,nsteps))
+                        d_Crank = np.zeros((N,nsteps))
+                        A_Crank = np.zeros((N,nsteps))
+                        S_Crank = np.zeros((N,nsteps))
+                        n_iterations = np.zeros((nsteps))
+                        Ts_past = np.zeros((nsteps))
+                        LE = np.zeros((nsteps))
+                        Rn = np.zeros((nsteps))
+                        H_flux = np.zeros((nsteps))
+                        Qc = np.zeros((nsteps))
+                        P_flux = np.zeros((nsteps))
+                        dLE = np.zeros((nsteps))
+                        dRn = np.zeros((nsteps))
+                        dH_flux = np.zeros((nsteps))
+                        dQc = np.zeros((nsteps))
+                        dP_flux = np.zeros((nsteps))
+                        F_Ts = np.zeros((nsteps))
+                        dF_Ts = np.zeros((nsteps))
+                        Qc_ice = np.zeros((nsteps))
+                        Melt = np.zeros((nsteps))
+                        dsnow = np.zeros((nsteps))      # snow depth [mwe]
+                        tsnow = np.zeros((nsteps))      # snow temperature [K]
+                        snow_tau = np.zeros((nsteps))   # non-dimensional snow age
+            
+                        # Initial values
+                        dsnow_t0 = 0
+                        tsnow_t0 = 273.15
+                        snow_tau_t0 = 0
+            
+                        for i in np.arange(0,nsteps):
+            
+                            Td[N-1,i] = 273.15
+            
+                            if i > 0:
+                                dsnow_t0 = dsnow[i-1]
+                                tsnow_t0 = tsnow[i-1]
+                                snow_tau_t0 = snow_tau[i-1]
+            
+                            # Initially assume Ts = Tair, for all other time steps assume it's equal to previous Ts
+                            if i == 0:
+                                Td[0,i] = Tair[i]
+                            else:
+                                Td[0,i] = Td[0,i-1]
+            
+                            # Calculate debris temperature profile for timestep i
                             Td = CrankNicholson(Td, Tair, i, debris_thickness, N, h, C, a_Crank, b_Crank, c_Crank,
                                                 d_Crank, A_Crank, S_Crank)
-        
+            
                             # Surface energy fluxes
                             (F_Ts[i], Rn[i], LE[i], H_flux[i], P_flux[i], Qc[i], dF_Ts[i], dRn[i], dLE[i], dH_flux[i],
                              dP_flux[i], dQc[i], dsnow[i], tsnow[i], snow_tau[i]) = (
@@ -1062,63 +1043,99 @@ def main(list_packed_vars):
                                                         a_neutral_snow, debris_thickness,
                                                         option_snow=input.option_snow,
                                                         option_snow_fromAWS=input.option_snow_fromAWS))
-        
-                            if n_iterations[i] == input.n_iter_max:
-                                Td[0,i] = (Td[0,i] + Ts_past[i]) / 2
-                                print(lat_deg, lon_deg, 'Timestep ', i, 'maxed out at ', n_iterations[i], 'iterations.')
-        
-                        Qc_ice[i] = k * (Td[N-2,i] - Td[N-1,i]) / h
-                        if Qc_ice[i] < 0:
-                            Qc_ice[i] = 0
-                        # Melt [m ice]
-                        Melt[i] = Qc_ice[i] * input.delta_t / (input.density_ice * input.Lf)
-        
-#                    if debug:
-                    print(lat_deg, lon_deg, 'hd [m]:', debris_thickness, 
-                          '  Melt[m ice/yr]:', np.round(np.sum(Melt) / (len(Melt) / 24 / 365),3), 
-                          'Ts_max[degC]:', np.round(np.max(Td[0,:]),1), 'Ts_min[degC]:', np.round(np.min(Td[0,:]),1))
-        
-        
-                    # EXPORT OUTPUT
-                    if input.output_option == 1:
-                        output_ds['Melt [mwe]'] = Melt * input.density_ice / input.density_water
-                        output_ds.iloc[:,2:13] = np.transpose(Td)
-                        output_ds['Rn [W m2]'] = Rn
-                        output_ds['LE [W m2]'] = LE
-                        output_ds['H [W m2]'] = H_flux
-                        output_ds['P [W m2]'] = P_flux
-                        output_ds['Qc [W m2]'] = Qc
-                        output_ds['d_snow [m]'] = dsnow
-                    
-                    elif input.output_option == 2:
-                        output_ds_all['melt'].values[n_thickness,:,0,nelev] = (
-                                Melt * input.density_ice / input.density_water)
-                        output_ds_all['ts'].values[n_thickness,:,0,nelev] = Td[0,:]
-                    
-                    #%%
-                    output_fp = input.output_fp + 'exp' + str(input.experiment_no) + '/'
-                    if os.path.exists(output_fp) == False:
-                        os.makedirs(output_fp)
-                    # add debris thickness string
-                    debris_str = 'debris_' + str(int(debris_thickness*100)) + 'cm_'
-                    # add MC string
-                    if input.experiment_no == 1 or input.experiment_no == 3:
-                        mc_str = ''
-                    else:
-                        mc_str = 'MC' + str(MC) + '_'
-                        
-                    
-                    if input.output_option == 1:
-                        output_ds_fn = (input.fn_prefix + str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E-' + 
-                                        debris_str + mc_str + input.date_start + '.csv')
-                        output_ds.to_csv(output_fp + output_ds_fn, index=False)
-                    
-        if input.output_option == 2:
-            output_ds_fn = (input.fn_prefix + str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E-'
-                            + mc_str + input.date_start + '.nc')
-            # Export netcdf
-            output_ds_all.to_netcdf(output_fp + output_ds_fn, encoding=encoding)
             
+                            # Newton-Raphson method to solve for surface temperature
+                            while abs(Td[0,i] - Ts_past[i]) > 0.01 and n_iterations[i] < input.n_iter_max:
+                                
+    #                            if i == 1768:
+    #                                print(np.round(Td[0,i],2), np.round(Ts_past[i],2), 
+    #                                      np.round(F_Ts[i],2), np.round(dF_Ts[i],2),
+    #                                      '\n  Tair:', np.round(Tair[i],1), 'Rain:', np.round(Rain_AWS[i],5),
+    #                                      'wind:', np.round(u_AWS[i],2), 'Sin:', np.round(Sin[i],0), 
+    #                                      'Lin:', np.round(Lin_AWS[i],0), 
+    #                                      '\n  Rn:', np.round(Rn[i],0), 'LE:', np.round(LE[i],0), 
+    #                                      'H:', np.round(H_flux[i],0), 'Qc:', np.round(Qc[i],0))
+            
+                                n_iterations[i] = n_iterations[i] + 1
+                                Ts_past[i] = Td[0,i]
+                                # max step size is 1 degree C
+                                Td[0,i] = Ts_past[i] - F_Ts[i] /dF_Ts[i]
+                                if (Td[0,i] - Ts_past[i]) > 1:
+                                    Td[0,i] = Ts_past[i] + 1
+                                elif (Td[0,i] - Ts_past[i]) < -1:
+                                    Td[0,i] = Ts_past[i] - 1
+            
+                                # Debris temperature profile for timestep i
+                                Td = CrankNicholson(Td, Tair, i, debris_thickness, N, h, C, a_Crank, b_Crank, c_Crank,
+                                                    d_Crank, A_Crank, S_Crank)
+            
+                                # Surface energy fluxes
+                                (F_Ts[i], Rn[i], LE[i], H_flux[i], P_flux[i], Qc[i], dF_Ts[i], dRn[i], dLE[i], dH_flux[i],
+                                 dP_flux[i], dQc[i], dsnow[i], tsnow[i], snow_tau[i]) = (
+                                        calc_surface_fluxes(Td[:,i], Tair[i], RH_AWS[i], u_AWS[i], Sin[i], Lin_AWS[i],
+                                                            Rain_AWS[i], snow[i], P, albedo_AWS[i], k, a_neutral_debris,
+                                                            h, dsnow_t0, tsnow_t0, snow_tau_t0, ill_angle_rad[i],
+                                                            a_neutral_snow, debris_thickness,
+                                                            option_snow=input.option_snow,
+                                                            option_snow_fromAWS=input.option_snow_fromAWS))
+            
+                                if n_iterations[i] == input.n_iter_max:
+                                    Td[0,i] = (Td[0,i] + Ts_past[i]) / 2
+                                    print(lat_deg, lon_deg, 'Timestep ', i, 'maxed out at ', n_iterations[i], 'iterations.')
+            
+                            Qc_ice[i] = k * (Td[N-2,i] - Td[N-1,i]) / h
+                            if Qc_ice[i] < 0:
+                                Qc_ice[i] = 0
+                            # Melt [m ice]
+                            Melt[i] = Qc_ice[i] * input.delta_t / (input.density_ice * input.Lf)
+            
+    #                    if debug:
+                        print(lat_deg, lon_deg, 'hd [m]:', debris_thickness, 
+                              '  Melt[m ice/yr]:', np.round(np.sum(Melt) / (len(Melt) / 24 / 365),3), 
+                              'Ts_max[degC]:', np.round(np.max(Td[0,:]),1), 'Ts_min[degC]:', np.round(np.min(Td[0,:]),1))
+            
+            
+                        # EXPORT OUTPUT
+                        if input.output_option == 1:
+                            output_ds['Melt [mwe]'] = Melt * input.density_ice / input.density_water
+                            output_ds.iloc[:,2:13] = np.transpose(Td)
+                            output_ds['Rn [W m2]'] = Rn
+                            output_ds['LE [W m2]'] = LE
+                            output_ds['H [W m2]'] = H_flux
+                            output_ds['P [W m2]'] = P_flux
+                            output_ds['Qc [W m2]'] = Qc
+                            output_ds['d_snow [m]'] = dsnow
+                        
+                        elif input.output_option == 2:
+                            output_ds_all['melt'].values[n_thickness,:,0,nelev] = (
+                                    Melt * input.density_ice / input.density_water)
+                            output_ds_all['ts'].values[n_thickness,:,0,nelev] = Td[0,:]
+                            output_ds_all['snow_depth'].values[n_thickness,:,0,nelev] = dsnow
+                        
+    
+                        output_fp = input.output_fp + 'exp' + str(input.experiment_no) + '/'
+                        if os.path.exists(output_fp) == False:
+                            os.makedirs(output_fp)
+                        # add debris thickness string
+                        debris_str = 'debris_' + str(int(debris_thickness*100)) + 'cm_'
+                        # add MC string
+                        if input.experiment_no == 1 or input.experiment_no == 3:
+                            mc_str = ''
+                        else:
+                            mc_str = 'MC' + str(MC) + '_'
+                            
+                        
+                        if input.output_option == 1:
+                            output_ds_fn = (input.fn_prefix + str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E-' + 
+                                            debris_str + mc_str + input.date_start + '.csv')
+                            output_ds.to_csv(output_fp + output_ds_fn, index=False)
+                        
+            if input.output_option == 2:
+                output_ds_fn = (input.fn_prefix + str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E-'
+                                + mc_str + input.date_start + '.nc')
+                # Export netcdf
+                output_ds_all.to_netcdf(output_fp + output_ds_fn, encoding=encoding)
+                
     if debug:
         return (time_pd, Tair_AWS, RH_AWS, u_AWS, Rain_AWS, Sin_AWS, Lin_AWS, Elev_AWS, Snow_AWS, Td, n_iterations, 
                 LE, Rn, H_flux, Qc, P_flux, F_Ts, Qc_ice, Melt, dsnow, tsnow, snow_tau)
@@ -1143,7 +1160,6 @@ if __name__ == '__main__':
     else:
         latlon_list = input.latlon_list    
 
-        #%%
     # Number of cores for parallel processing
     if args.option_parallels != 0:
         num_cores = int(np.min([len(latlon_list), args.num_simultaneous_processes]))
