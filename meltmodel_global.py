@@ -469,7 +469,7 @@ def CrankNicholson(Td, Tair, i, debris_thickness, N, h, C, a_Crank, b_Crank, c_C
 def calc_surface_fluxes(Td_i, Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Rain_AWS_i, snow_i, P, Albedo, k,
                         a_neutral_debris, h, dsnow_t0, tsnow_t0, snow_tau_t0, ill_angle_rad_i, a_neutral_snow,
                         debris_thickness,
-                        option_snow=0, option_snow_fromAWS=0):
+                        option_snow=0, option_snow_fromAWS=0, i_step=None):
     """ Calculate surface energy fluxes for timestep i
 
     Snow model uses a modified version of Tarboten and Luce (1996) to compute fluxes
@@ -538,7 +538,7 @@ def calc_surface_fluxes(Td_i, Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Rain_
     # Snow depth [m w.e.]
     dsnow_i = dsnow_t0 + snow_i
     snow_tau_i = snow_tau_t0
-    tsnow_i = 0
+    tsnow_i = 273.15
 
     # First option: Snow depth is based on snow fall, so need to melt snow
     if dsnow_i > 0 and option_snow==1 and option_snow_fromAWS == 0:
@@ -647,12 +647,21 @@ def calc_surface_fluxes(Td_i, Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Rain_
             tsnow_i = 273.15
             Fnet_snow -= Qcc_snow
             Fnet_snow2debris = 0
+            
         elif Fnet_snow < Qcc_snow_neg1:
             # Otherwise only changes the temperature in the snowpack and the debris
             # limit the change in snow temperature
             tsnow_i -= 1
+            # Remaining energy goes to cool down the debris
             Fnet_snow2debris = Fnet_snow - Qcc_snow_neg1
-            Fnet_snow = 0
+            Fnet_snow = 0   
+            
+            # Set maximum energy to cool debris top layer by 1 degree
+            #  otherwise, this can become very unstable since the turbulent heat fluxes are set by the snow surfaces
+            Fnet_snow2debris_max = -1* input.c_d * input.row_d * h / input.delta_t
+            if Fnet_snow2debris < Fnet_snow2debris_max:
+                Fnet_snow2debris = Fnet_snow2debris_max
+
         else:
             # Otherwise only changes the temperature
             tsnow_i += Fnet_snow / (input.cSnow * input.density_water * dsnow_i) * input.delta_t
@@ -672,7 +681,7 @@ def calc_surface_fluxes(Td_i, Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Rain_
         if dsnow_i == 0:
             snow_tau_i = 0
 
-        # Solve for temperature in debris
+        # Solve for temperature in debris        
         #  Rn, LE, H, and P equal 0
         Rn_i = 0
         LE_i = 0
@@ -680,6 +689,7 @@ def calc_surface_fluxes(Td_i, Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Rain_
         Qc_i = k * (Td_i[1] - Td_i[0]) / h
         P_flux_i = 0
         Qc_snow_i = -Qc_snow_debris
+        
         F_Ts_i = Rn_i + LE_i + H_i + Qc_i + P_flux_i + Qc_snow_i  + Fnet_snow2debris
 
         dRn_i = 0
@@ -1083,12 +1093,6 @@ def main(list_packed_vars):
         # Assume no adjustments for slope/aspect from AWS
         Sin_timeseries = Sin_AWS
  
-#        if ~os.path.exists(input.pkl_fp):
-#            os.mkdir(input.pkl_fp)
-#        pkl_fullfn = pkl_fullfn_sample.replace('XXXX', 't2m')
-#        
-#        pickle_data(fn, data)
-#
 #        # Add spinup
 #        nsteps_spinup = int(input.spinup_days*24*60*60/input.delta_t)
 #        met_data = np.concatenate((met_data[0:nsteps_spinup,:], met_data), axis=0)
@@ -1100,18 +1104,6 @@ def main(list_packed_vars):
         nsteps = len(Tair_AWS)
         
         for nelev, elev_cn in enumerate(input.elev_cns):
-#            # Assume elevation and Sin are same as AWS
-#            debris_elevstats = xr.open_dataset(input.debris_elevstats_fullfn)
-#            lat_idx = np.abs(lat_deg - debris_elevstats['latitude'][:].values).argmin(axis=0)
-#            lon_idx = np.abs(lon_deg - debris_elevstats['longitude'][:].values).argmin(axis=0)
-#            if elev_cn in debris_elevstats.keys():
-#                Elevation_pixel = debris_elevstats['zmean'][lat_idx, lon_idx].values
-#            elif elev_cn == 'zstdlow':
-#                Elevation_pixel = (debris_elevstats['zmean'][lat_idx, lon_idx].values - 
-#                                   debris_elevstats['zstd'][lat_idx, lon_idx].values)
-#            elif elev_cn == 'zstdhigh':
-#                Elevation_pixel = (debris_elevstats['zmean'][lat_idx, lon_idx].values + 
-#                                   debris_elevstats['zstd'][lat_idx, lon_idx].values)
             if elev_cn == 'zmean':
                 Elevation_pixel = ds['dc_zmean'].values
             elif elev_cn == 'zstdlow':
@@ -1127,33 +1119,6 @@ def main(list_packed_vars):
             aspect_rad = 0
             if debug:
                 print('Elevation column name:', elev_cn, np.round(Elevation_pixel, 1), 'm')
-                
-            # Pressure (barometric pressure formula)
-            P = input.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
-            
-            # Air temperature
-            Tair = Tair_AWS - input.lapserate*(Elevation_pixel-Elev_AWS)
-            # Snow [m]
-            if input.option_snow_fromAWS == 1:
-                if Snow_AWS == None:
-                    print('\n\nNO SNOW DEPTH FROM AWS\n\n')
-                else:
-                    snow = Snow_AWS.copy()    
-            else:
-                snow = Rain_AWS.copy()
-                snow[Tair > input.Tsnow_threshold] = 0
-                snow[snow < input.snow_min] = 0
-                Rain_AWS[Tair <= input.Tsnow_threshold] = 0
-                Rain_AWS[Rain_AWS < input.rain_min] = 0
-
-            # Solar information
-            zenith_angle_rad, azimuth_angle_rad, rm_r2 = (
-                    solar_calcs_NOAA(year, julian_day_of_year, time_frac, lon_deg_pixel, lat_deg_pixel, nsteps))
-            # Illumination angle / angle of Incidence b/w normal to grid slope at AWS and solar beam
-            #  if slope & aspect are 0 degrees, then this is equal to the zenith angle
-            ill_angle_rad = (np.arccos(np.cos(slope_rad) * np.cos(zenith_angle_rad) + np.sin(slope_rad) *
-                             np.sin(zenith_angle_rad) * np.cos(azimuth_angle_rad - aspect_rad)))
-    
 
             # ===== LOOP THROUGH RELEVANT DEBRIS THICKNESS AND/OR MC SIMULATIONS =====
             for n_thickness in range(input.debris_thickness_all.shape[0]):
@@ -1206,31 +1171,31 @@ def main(list_packed_vars):
                         a_neutral_snow = input.Kvk**2/(np.log(input.za/input.z0_snow))**2
                         # Adjust wind speed from sensor height to 2 m accounting for surface roughness
                         u_AWS = u_AWS_raw*(np.log(2/z0)/(np.log(input.zw/z0)))
-#                        # Pressure (barometric pressure formula)
-#                        P = input.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
-#            
-#                        # Air temperature
-#                        Tair = Tair_AWS - input.lapserate*(Elevation_pixel-Elev_AWS)
-#                        # Snow [m]
-#                        if input.option_snow_fromAWS == 1:
-#                            if Snow_AWS == None:
-#                                print('\n\nNO SNOW DEPTH FROM AWS\n\n')
-#                            else:
-#                                snow = Snow_AWS.copy()    
-#                        else:
-#                            snow = Rain_AWS.copy()
-#                            snow[Tair > input.Tsnow_threshold] = 0
-#                            snow[snow < input.snow_min] = 0
-#                            Rain_AWS[Tair <= input.Tsnow_threshold] = 0
-#                            Rain_AWS[Rain_AWS < input.rain_min] = 0
-#            
-#                        # Solar information
-#                        zenith_angle_rad, azimuth_angle_rad, rm_r2 = (
-#                                solar_calcs_NOAA(year, julian_day_of_year, time_frac, lon_deg_pixel, lat_deg_pixel, nsteps))
-#                        # Illumination angle / angle of Incidence b/w normal to grid slope at AWS and solar beam
-#                        #  if slope & aspect are 0 degrees, then this is equal to the zenith angle
-#                        ill_angle_rad = (np.arccos(np.cos(slope_rad) * np.cos(zenith_angle_rad) + np.sin(slope_rad) *
-#                                         np.sin(zenith_angle_rad) * np.cos(azimuth_angle_rad - aspect_rad)))
+                        # Pressure (barometric pressure formula)
+                        P = input.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
+            
+                        # Air temperature
+                        Tair = Tair_AWS - input.lapserate*(Elevation_pixel-Elev_AWS)
+                        # Snow [m]
+                        if input.option_snow_fromAWS == 1:
+                            if Snow_AWS == None:
+                                print('\n\nNO SNOW DEPTH FROM AWS\n\n')
+                            else:
+                                snow = Snow_AWS.copy()    
+                        else:
+                            snow = Rain_AWS.copy()
+                            snow[Tair > input.Tsnow_threshold] = 0
+                            snow[snow < input.snow_min] = 0
+                            Rain_AWS[Tair <= input.Tsnow_threshold] = 0
+                            Rain_AWS[Rain_AWS < input.rain_min] = 0
+            
+                        # Solar information
+                        zenith_angle_rad, azimuth_angle_rad, rm_r2 = (
+                                solar_calcs_NOAA(year, julian_day_of_year, time_frac, lon_deg_pixel, lat_deg_pixel, nsteps))
+                        # Illumination angle / angle of Incidence b/w normal to grid slope at AWS and solar beam
+                        #  if slope & aspect are 0 degrees, then this is equal to the zenith angle
+                        ill_angle_rad = (np.arccos(np.cos(slope_rad) * np.cos(zenith_angle_rad) + np.sin(slope_rad) *
+                                         np.sin(zenith_angle_rad) * np.cos(azimuth_angle_rad - aspect_rad)))
             
                         # ===== DEBRIS-COVERED GLACIER ENERGY BALANCE MODEL =====
                         # Constant defined by Reid and Brock (2010) for Crank-Nicholson Scheme
@@ -1297,19 +1262,21 @@ def main(list_packed_vars):
                                                         h, dsnow_t0, tsnow_t0, snow_tau_t0, ill_angle_rad[i],
                                                         a_neutral_snow, debris_thickness,
                                                         option_snow=input.option_snow,
-                                                        option_snow_fromAWS=input.option_snow_fromAWS))
+                                                        option_snow_fromAWS=input.option_snow_fromAWS, i_step=i))
             
                             # Newton-Raphson method to solve for surface temperature
                             while abs(Td[0,i] - Ts_past[i]) > 0.01 and n_iterations[i] < input.n_iter_max:
                                 
-    #                            if i == 1768:
-    #                                print(np.round(Td[0,i],2), np.round(Ts_past[i],2), 
-    #                                      np.round(F_Ts[i],2), np.round(dF_Ts[i],2),
-    #                                      '\n  Tair:', np.round(Tair[i],1), 'Rain:', np.round(Rain_AWS[i],5),
-    #                                      'wind:', np.round(u_AWS[i],2), 'Sin:', np.round(Sin[i],0), 
-    #                                      'Lin:', np.round(Lin_AWS[i],0), 
-    #                                      '\n  Rn:', np.round(Rn[i],0), 'LE:', np.round(LE[i],0), 
-    #                                      'H:', np.round(H_flux[i],0), 'Qc:', np.round(Qc[i],0))
+#                                if i in [1022]:
+#                                    print(np.round(Td[0,i],2), np.round(Ts_past[i],2), 
+#                                          np.round(F_Ts[i],2), np.round(dF_Ts[i],2),
+#                                          '\n  Tair:', np.round(Tair[i],1), 'Rain:', np.round(Rain_AWS[i],5),
+#                                          'wind:', np.round(u_AWS[i],2), 'Sin:', np.round(Sin[i],0), 
+#                                          'Lin:', np.round(Lin_AWS[i],0), 
+#                                          '\n  Rn:', np.round(Rn[i],0), 'LE:', np.round(LE[i],0), 
+#                                          'H:', np.round(H_flux[i],0), 'Qc:', np.round(Qc[i],0), 
+#                                          'dsnow:', np.round(dsnow[i],4), 'snow:', np.round(snow[i],4)
+#                                          )
             
                                 n_iterations[i] = n_iterations[i] + 1
                                 Ts_past[i] = Td[0,i]
@@ -1332,11 +1299,12 @@ def main(list_packed_vars):
                                                             h, dsnow_t0, tsnow_t0, snow_tau_t0, ill_angle_rad[i],
                                                             a_neutral_snow, debris_thickness,
                                                             option_snow=input.option_snow,
-                                                            option_snow_fromAWS=input.option_snow_fromAWS))
+                                                            option_snow_fromAWS=input.option_snow_fromAWS, i_step=i))
             
                                 if n_iterations[i] == input.n_iter_max:
                                     Td[0,i] = (Td[0,i] + Ts_past[i]) / 2
-                                    print(lat_deg, lon_deg, 'Timestep ', i, 'maxed out at ', n_iterations[i], 'iterations.')
+                                    print(lat_deg, lon_deg, 'debris_thickness:', debris_thickness, 'Timestep ', i, 
+                                          'maxed out at ', n_iterations[i], 'iterations.')
             
                             Qc_ice[i] = k * (Td[N-2,i] - Td[N-1,i]) / h
                             if Qc_ice[i] < 0:
@@ -1405,6 +1373,31 @@ def main(list_packed_vars):
                     a_neutral_snow = input.Kvk**2/(np.log(input.za/input.z0_snow))**2
                     # Adjust wind speed from sensor height to 2 m accounting for surface roughness
                     u_AWS = u_AWS_raw*(np.log(2/z0)/(np.log(input.zw/z0)))
+                    # Pressure (barometric pressure formula)
+                    P = input.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
+        
+                    # Air temperature
+                    Tair = Tair_AWS - input.lapserate*(Elevation_pixel-Elev_AWS)
+                    # Snow [m]
+                    if input.option_snow_fromAWS == 1:
+                        if Snow_AWS == None:
+                            print('\n\nNO SNOW DEPTH FROM AWS\n\n')
+                        else:
+                            snow = Snow_AWS.copy()    
+                    else:
+                        snow = Rain_AWS.copy()
+                        snow[Tair > input.Tsnow_threshold] = 0
+                        snow[snow < input.snow_min] = 0
+                        Rain_AWS[Tair <= input.Tsnow_threshold] = 0
+                        Rain_AWS[Rain_AWS < input.rain_min] = 0
+        
+                    # Solar information
+                    zenith_angle_rad, azimuth_angle_rad, rm_r2 = (
+                            solar_calcs_NOAA(year, julian_day_of_year, time_frac, lon_deg_pixel, lat_deg_pixel, nsteps))
+                    # Illumination angle / angle of Incidence b/w normal to grid slope at AWS and solar beam
+                    #  if slope & aspect are 0 degrees, then this is equal to the zenith angle
+                    ill_angle_rad = (np.arccos(np.cos(slope_rad) * np.cos(zenith_angle_rad) + np.sin(slope_rad) *
+                                     np.sin(zenith_angle_rad) * np.cos(azimuth_angle_rad - aspect_rad)))
         
                     # ===== CLEAN ICE GLACIER ENERGY BALANCE MODEL =====                    
                     Rn = np.zeros((nsteps))

@@ -12,7 +12,8 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 - The code has been converted from Matlab to Python
 - The code uses the LE_Rain option from Rounce et al. (2015), although other options (LE_RH100 and LE_Dry can easily be added to the code if precipitation data is unavailable).
 - There are now two options for handling snow accumulation: (1) assuming that the snow depth is prescribed by the automatic weather station, so snow melt does not need to be computed and instead the net radiation, latent heat flux, and sensible heat flux for the debris is set to zero, and (2) explicitly accounting for snow accumulation and melt based on a modified version of Tarboten and Luce (1996) described below.
-- A snow model has been added based on a modified version of Tarboten and Luce (1996) to compute fluxes with snow ison the surface. Specifically, the incoming shortwave radiation is computed using the scheme already in the melt model as opposed to using their corrections for local slope and illumination. The ground heat flux is computed from the debris as opposed to using their estimates from diurnal soil temperature. The model uses a set temperature threshold for snowfall, which can be specified in the input, instead of their threshold. We do not calculate the heat flux from precipitation for rain on snow because it alters the cold content of the snow pack and therefore we do not want to double count this energy. We do not account for wind redistribution, since it is site specific. We do not iterate to solve for snow temperature, but instead simply calculate a depth average. The thermal conductivity at the debris/ice interface is estimated using the depth of snow and debris height.
+- A snow model has been added based on a modified version of Tarboten and Luce (1996) to compute fluxes with snow on the surface. Specifically, the incoming shortwave radiation is computed using the scheme already in the melt model as opposed to using their corrections for local slope and illumination. The ground heat flux is computed from the debris as opposed to using their estimates from diurnal soil temperature. The model uses a set temperature threshold for snowfall, which can be specified in the input, instead of their threshold. We do not calculate the heat flux from precipitation for rain on snow because it alters the cold content of the snow pack and therefore we do not want to double count this energy. We do not account for wind redistribution, since it is site specific. We do not iterate to solve for snow temperature, but instead simply calculate a depth average. The thermal conductivity at the debris/ice interface is estimated using the depth of snow and debris height. To avoid cooling the snow pack excessively (e.g, when the snow depth is < 1 cm and the net energy is highly negative), the change in snow pack temperature for a given time step is limited to 1 degree. Any remaining energy is used to cool the debris beneath the snow pack; however, this energy is also limited to cool the upper layer by 1 degree, which is necessary because the turbulent heat fluxes are estimated by the snow, yet there is no feedback between the turbulent heat fluxes and net energy as the debris cools thus the debris would cool to unrealistically low temperatures (< -100 degrees C). 
+
 - Two bugs were fixed: (1) dealing with the specification of layers in the internal debris structure and (2) in counting the number of iterations for which to cut off the Newton-Raphson method if agreement cannot be reached. Both bugs were found to cause minor/no changes in the results (i.e., the total melt over an ablation season in Nepal for various debris thicknesses was changed by less than 1 cm).
 - The model was significantly cleaned up during the transition and large portions of model code were converted to functions in order to make the code easier to read and easier to modify in the future.
 
@@ -87,18 +88,14 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 # ===== TO-DO LIST ========================================================================================================================
 
 - PROCESS ERA5 DATA FOR ALL OTHER REGIONS !!!!
-
-- Process HMA data (ideally with new files given by Shean)
-  --> latlon pickle
-  --> elevation stats
   
 - Merge HMA data together
 
 - SEE NOTES FROM .IPYNB FILES
-  - skip files
   - convert .ipynb 'debris_stats' and 'HMA_debris_thickness' to .py scripts
 
 - Ts for each region from GEE
+
 
 
 

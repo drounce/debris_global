@@ -119,7 +119,6 @@ debris_elevstats_fullfn = main_directory + '/../hma_data/' + roi + '_debris_elev
 # Latitude and longitude index to run the model
 #  Longitude must be 0 - 360 degrees
 latlon_list_raw = 'all'
-#latlon_list_raw = [(28.1,86.7)]
 if latlon_list_raw == 'all':
     with open(latlon_unique_fp + latlon_unique_dict[roi], 'rb') as f:
         latlon_list = pickle.load(f)
@@ -140,7 +139,9 @@ else:
 
 #latlon_list = latlon_list[0:5]
 #latlon_list = [latlon_list[0]]
-latlon_list = [(61.5, 217.0)]
+#latlon_list = [(61.5, 217.0)]
+#latlon_list = [(59.0, 206.5)]
+#latlon_list = [(28.0, 86.75)]
 
 #%%
 # Simulation data
@@ -161,15 +162,15 @@ if output_option == 2:
 elif output_option == 3:
     mc_stat_cns = ['mean', 'std', '25%', '75%']
     print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
-date_start = '20200112'
+date_start = '20200113'
 
 # ===== Debris properties =====
 experiment_no = 3
 # Debris thickness
-#debris_thickness_all = np.array([0.2])
+debris_thickness_all = np.array([0.2])
 #debris_thickness_all = np.array([0, 0.02])
-debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
-debris_thickness_all[1] = 0.02
+#debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
+#debris_thickness_all[1] = 0.02
 
 # Surface roughness, thermal conductivity, and albedo
 debris_properties_fullfn = main_directory + '/../hma_data/hma_debris_properties.csv'
@@ -202,7 +203,7 @@ zw = 10                 # m, height of wind instrument
 # Snow model parameters
 option_snow_fromAWS = 0 # Switch to use snow depth as opposed to snow fall
 option_snow = 1         # Switch to use snow model (1) or not (0)
-Tsnow_threshold = 273.15      # Snow temperature threshold [K]
+Tsnow_threshold = 274.15      # Snow temperature threshold [K] - Regine get source
 snow_min = 0.0001       # minimum snowfall (mwe) to include snow on surface; since the density of falling snow is 
                         # much less (~50-100 kg m-3) 0.0001 m of snow w.e. will produce 0.001 - 0.002 m of snow
 rain_min = 0.0001
