@@ -21,8 +21,8 @@ output_ostrem_fp = main_directory + '/../output/ostrem_curves/'
 output_ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
-roi = '01'
-#roi = 'HMA'
+#roi = '01'
+roi = 'HMA'
 roi_latlon_dict = {'HMA':[45, 25, 105, 65],
                    '01':[71, 50, 233, 180]
                    }
@@ -33,6 +33,9 @@ roi_years = {'01':[1994,2018],
 latlon_unique_fp = output_fp + 'latlon_unique/'
 latlon_unique_dict = {'01':'01_latlon_unique.pkl',
                       'HMA':'HMA_latlon_unique.pkl'}
+
+#mb_datasets = ['larsen', 'braun']
+mb_datasets = ['shean']
 
 # Climate data
 metdata_fp = main_directory + '/../climate_data/' + roi + '/'
@@ -117,8 +120,6 @@ debris_elevstats_fullfn = main_directory + '/../hma_data/' + roi + '_debris_elev
 #  Longitude must be 0 - 360 degrees
 latlon_list_raw = 'all'
 #latlon_list_raw = [(28.1,86.7)]
-
-#latlon_list_raw = [(44.,83.25)]
 if latlon_list_raw == 'all':
     with open(latlon_unique_fp + latlon_unique_dict[roi], 'rb') as f:
         latlon_list = pickle.load(f)
@@ -139,7 +140,7 @@ else:
 
 #latlon_list = latlon_list[0:5]
 #latlon_list = [latlon_list[0]]
-latlon_list = [(63.75, 213.0)]
+latlon_list = [(61.5, 217.0)]
 
 #%%
 # Simulation data
@@ -160,24 +161,23 @@ if output_option == 2:
 elif output_option == 3:
     mc_stat_cns = ['mean', 'std', '25%', '75%']
     print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
-date_start = '20191227'
+date_start = '20200112'
 
 # ===== Debris properties =====
 experiment_no = 3
 # Debris thickness
-debris_thickness_all = np.array([0])
 #debris_thickness_all = np.array([0.2])
-#debris_thickness_all = np.array([0.2, 0.3])
-#debris_thickness_all = np.arange(0,5.001,0.05)
-#debris_thickness_all = np.arange(0,3.001,0.05)
-#debris_thickness_all[0] = 0.02
+#debris_thickness_all = np.array([0, 0.02])
+debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
+debris_thickness_all[1] = 0.02
+
 # Surface roughness, thermal conductivity, and albedo
 debris_properties_fullfn = main_directory + '/../hma_data/hma_debris_properties.csv'
 debris_properties = np.genfromtxt(debris_properties_fullfn, delimiter=',', skip_header=1)
 if experiment_no == 3:
     z0_random = np.array([0.016])
     k_random = np.array([1.])
-    albedo_random = np.array([0.3])
+    albedo_random = np.array([0.2])
 elif experiment_no == 4:    
     z0_random = debris_properties[:,1]
     k_random = debris_properties[:,2]
@@ -195,7 +195,7 @@ elif experiment_no == 4:
 #ts_hr = roi_dict[roi][3]            # hour of satellite temperature data acquisition  
     
 # Extra 
-debris_albedo = 0.3     # -, debris albedo
+debris_albedo = 0.2     # -, debris albedo
 za = 2                  # m, height of air temperature instrument
 zw = 10                 # m, height of wind instrument
 
@@ -206,6 +206,8 @@ Tsnow_threshold = 273.15      # Snow temperature threshold [K]
 snow_min = 0.0001       # minimum snowfall (mwe) to include snow on surface; since the density of falling snow is 
                         # much less (~50-100 kg m-3) 0.0001 m of snow w.e. will produce 0.001 - 0.002 m of snow
 rain_min = 0.0001
+
+
 
 #%%
 #debris_elev = roi_dict[roi][0]       # m a.s.l. of the debris modeling
@@ -248,6 +250,11 @@ eS_snow = 610.5             # Saturated vapor pressure of snow (Pa) (Colbeck 199
 k_snow = 0.10               # Rahimi and Konrad (2012), Sturm etal (2002), Sturm etal (1997)
 #density_snow = 150         # Density of snow (kg/m3) - Lejeune et al. (2007)
 #albedo_snow = 0.75         # Collier etal (2014)
+
+# Clean ice melt model constants
+albedo_ice = 0.4            # Gardner and Sharp (2010); Hock (2005)
+z0_ice = z0_snow            # Hock and Holmgren (2005) - vary from 0.0001 to 0.0027, assume z0_ice = z0_snow
+#k_ice = 1
 
 # Newton-Raphson Method constants
 n_iter_max = 100
