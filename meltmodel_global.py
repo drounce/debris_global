@@ -781,7 +781,7 @@ def calc_surface_fluxes(Td_i, Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Rain_
 
 def calc_surface_fluxes_cleanice(Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Rain_AWS_i, snow_i, P, Albedo,
                                  a_neutral_ice, dsnow_t0, tsnow_t0, snow_tau_t0, ill_angle_rad_i, a_neutral_snow,
-                                 option_snow=0, option_snow_fromAWS=0):
+                                 option_snow=0, option_snow_fromAWS=0, i_step=None):
     """ Calculate surface energy fluxes for timestep i
 
     Snow model uses a modified version of Tarboten and Luce (1996) to compute fluxes
@@ -849,7 +849,7 @@ def calc_surface_fluxes_cleanice(Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Ra
     tsnow_i = 0
 
     # First option: Snow depth is based on snow fall, so need to melt snow
-    if dsnow_i > 0 and option_snow==1 and option_snow_fromAWS == 0:
+    if dsnow_i > 0 and option_snow==1 and option_snow_fromAWS == 0:        
         tsnow_i = (dsnow_t0 * tsnow_t0 + snow_i * Tair_i) / dsnow_i
 
         # Density of air (dry) based on pressure (elevation) and temperature
@@ -955,6 +955,9 @@ def calc_surface_fluxes_cleanice(Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Ra
 
         # Total snow melt
         snow_melt = snow_melt_energy + snow_sublimation
+        
+        if i_step > 5400 and i_step < 5424:
+            print('  ', i_step, snow_melt)
 
         # Snow depth [m w.e.]
         dsnow_i -= snow_melt
@@ -1432,7 +1435,9 @@ def main(list_packed_vars):
                                 calc_surface_fluxes_cleanice(Tair[i], RH_AWS[i], u_AWS[i], Sin[i], Lin_AWS[i], 
                                                              Rain_AWS[i], snow[i], P, albedo, a_neutral_ice, dsnow_t0, 
                                                              tsnow_t0, snow_tau_t0, ill_angle_rad[i], a_neutral_snow,
-                                                             option_snow=0, option_snow_fromAWS=0))
+                                                             option_snow=input.option_snow, 
+                                                             option_snow_fromAWS=input.option_snow_fromAWS, i_step=i))
+
                         # Melt [m ice]
                         if F_Ts[i] > 0:
                             # Melt [m ice]
@@ -1472,8 +1477,8 @@ def main(list_packed_vars):
             output_ds_all.to_netcdf(output_fp + output_ds_fn, encoding=encoding)
                 
     if debug:
-        return (time_pd, Tair_AWS, RH_AWS, u_AWS, Rain_AWS, Sin_AWS, Lin_AWS, Elev_AWS, Snow_AWS, Td, n_iterations, 
-                LE, Rn, H_flux, Qc, P_flux, F_Ts, Qc_ice, Melt, dsnow, tsnow, snow_tau, output_ds_all)
+        return (time_pd, Tair_AWS, RH_AWS, u_AWS, Rain_AWS, snow, Sin_AWS, Lin_AWS, Elev_AWS, Snow_AWS, Td, 
+                n_iterations, LE, Rn, H_flux, Qc, P_flux, F_Ts, Qc_ice, Melt, dsnow, tsnow, snow_tau, output_ds_all)
                 
 #%%
 if __name__ == '__main__':
@@ -1519,8 +1524,9 @@ if __name__ == '__main__':
         # Loop through the chunks and export bias adjustments
         for n in range(len(list_packed_vars)):
             if debug and num_cores == 1:
-                (time_pd, Tair_AWS, RH_AWS, u_AWS, Rain_AWS, Sin_AWS, Lin_AWS, Elev_AWS, Snow_AWS, Td, n_iterations, 
-                 LE, Rn, H_flux, Qc, P_flux, F_Ts, Qc_ice, Melt, dsnow, tsnow, snow_tau, output_ds_all) = (
+                (time_pd, Tair_AWS, RH_AWS, u_AWS, Rain_AWS, snow, Sin_AWS, Lin_AWS, Elev_AWS, Snow_AWS, Td, 
+                 n_iterations, LE, Rn, H_flux, Qc, P_flux, F_Ts, Qc_ice, Melt, dsnow, tsnow, snow_tau, 
+                 output_ds_all) = (
                          main(list_packed_vars[n]))
             else:
                 main(list_packed_vars[n])

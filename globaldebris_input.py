@@ -43,8 +43,8 @@ latlon_unique_dict = {'01':'01_latlon_unique.pkl',
                       'HMA':'HMA_latlon_unique.pkl',
                       '17':'17_latlon_unique.pkl'}
 
-#mb_datasets = ['larsen', 'braun']
-mb_datasets = ['shean']
+mb_datasets = ['larsen', 'braun']
+#mb_datasets = ['shean']
 
 # Climate data
 metdata_fp = main_directory + '/../climate_data/' + roi + '/'
@@ -52,6 +52,7 @@ metdata_elev_fn = 'ERA5_elev.nc'
 mb_binned_fp = main_directory + '/../output/mb_bins/csv/'
 #mb_binned_fp_wdebris = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/_wdebris/'
 mb_binned_fp_wdebris = main_directory + '/../output/mb_bins/csv/_wdebris/'
+mb_binned_fp_wdebris_hdts = main_directory + '/../output/mb_bins/csv/_wdebris_hdts/'
 era5_hrly_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
 
 ts_fp = main_directory + '/../output/ts_tif/'
@@ -165,7 +166,7 @@ elif latlon_list_raw is not None:
 
 #latlon_list = latlon_list[0:5]
 #latlon_list = [latlon_list[0]]
-#latlon_list = [(61.5, 217.0)]
+latlon_list = [(61.5, 217.0)]
 #latlon_list = [(55.25, 230.50)]
 #latlon_list = [(28.0, 86.75)]
 
@@ -197,7 +198,7 @@ eb_fp = '/Volumes/LaCie/debris_global_output/output/exp3/01_20200113/'
 # ===== Debris properties =====
 experiment_no = 3
 # Debris thickness
-debris_thickness_all = np.array([0.2])
+debris_thickness_all = np.array([0])
 #debris_thickness_all = np.array([0, 0.02])
 #debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
 #debris_thickness_all[1] = 0.02
