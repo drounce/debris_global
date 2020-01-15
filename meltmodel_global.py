@@ -1462,7 +1462,11 @@ def main(list_packed_vars):
             
         # ===== EXPORT OUTPUT DATASET ===== 
         if input.output_option == 2:
-            output_ds_fn = (input.fn_prefix + str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E-'
+            if lat_deg < 0:
+                lat_str = 'S-'
+            else:
+                lat_str = 'N-'
+            output_ds_fn = (input.fn_prefix + str(int(abs(lat_deg)*100)) + lat_str + str(int(lon_deg*100)) + 'E-'
                             + mc_str + input.date_start + '.nc')
             # Export netcdf
             output_ds_all.to_netcdf(output_fp + output_ds_fn, encoding=encoding)

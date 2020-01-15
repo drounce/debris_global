@@ -27,51 +27,75 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 
 
 # ===== MODEL WORKFLOW =====================================================================================================================
-- process Scherler debris cover extents in QGIS:
-  - fix shape file
-  - remove isolated pixels (< 2 surface temperature pixels):
-     - multipart to single part
-     - open attribute -> new field 'area_single'
-     - select features area_single > min threshold (20000 m2)
-     - dissolve using RGIId
-     - open attribute -> new fields 'DC_Area_v2' and 'DC_Area_v2_%' - make sure multiply by 100 and convert km2 to m2 when divided by area
-  - remove holes (if desirable)
 
-- process MB data:
-  - Shean sent binned data
-  - Braun processed using some PyGEM scripts; need to clean up
+# ----- INPUT DATA -----
 
-- process ERA5 orography data to elevation, which will be used to get lat/lon in future scripts
+1. Debris cover extents:
+   - process Scherler debris cover extents in QGIS:
+     - fix shape file
+     - remove isolated pixels (< 2 surface temperature pixels):
+        - multipart to single part
+        - open attribute -> new field 'area_single'
+        - select features area_single > min threshold (20000 m2)
+        - dissolve using RGIId
+        - open attribute -> new fields 'DC_Area_v2' and 'DC_Area_v2_%' - make sure multiply by 100 and convert km2 to m2 when divided by area
+     - remove holes (if desirable)
 
-- process ERA5 data: download and pre-process into netcdf files for each site with a glacier
+2. ERA5 data
+   - process ERA5 data: download and pre-process into netcdf files for each site with a glacier
 
-- debris_stats.ipynb:
-   ---> environment: debris_thickness_global environment
-   ---> identifies lat/lon of all glaciers with data
-   ---> processes emergence velocity, debris cover area, and mass balance data
+3. Mass Balance data:
+   - process MB data:
+     - Shean sent binned data
+     - Braun processed using some PyGEM scripts; need to clean up
 
-   - HMA: done
-   - Alaska: done
-
-- meltmodel_global.py: run model to get melt/Ts/snow at every timestep
-
-- #### (now in debris_stats) HMA_emergence_velocity.ipynb: estimate binned emergence velocities
-    
-
-- meltcurves.py: processes meltmodel_global.py output to develop Ostrem curves for each glacier
-
-- global_melt2thickness.py: sub-debris melt inversion for debris thickness based on mass balance data and emergence velocities
-    --> pygem_v2 environment because debris_thickness_global has no array
-
-- Kraaijenbrink2017-ts-hma Google Earth Engine: surface temperature, etc.
-    --> Modifications: export year, day of year and time; 
+4. Surface temperature data:
+   - Kraaijenbrink2017-ts-hma Google Earth Engine: surface temperature, etc.
+       --> Modifications: export year, day of year and time; 
 			  added buffer which is needed to ensure full coverage of glaciers by debris thickness estimates
 
-- ts_datetime_stats.ipynb: calculate information associated with the composite surface temperature raster from GEE
-    --> debris_thickness_global environment
+   - ts_datetime_stats.ipynb: calculate information associated with the composite surface temperature raster from GEE
+       --> debris_thickness_global environment
+
+5. Velocity data:
+   - ITS-Live: High Mountain Asia, Alaska, Arctic, part of South America
+   - GoLive: Europe, New Zealand, Caucasus, part of South America, continental US
+
+6. Ice thickness data:
+   - Downloaded from Farinotti et al. (2019)
+
+
+# ----- WORKFLOW -----
+
+1. debris_stats.ipynb:
+    ---> environment: debris_thickness_global environment
+    ---> identifies lat/lon of all glaciers with data
+    ---> processes emergence velocity, debris cover area, and mass balance data
+
+    - HMA: done
+    - Alaska: done
+
+      --> (now in debris_stats) HMA_emergence_velocity.ipynb: estimate binned emergence velocities
+
+2. ts_datetime_stats.ipynb: pull stats of surface temperature composite image for each lat/lon
+    ---> environment: debris_thickness_global
+
+3. meltmodel_global.py: run model to get melt/Ts/snow at every timestep
+
+4. meltcurves.py: processes meltmodel_global.py output to develop Ostrem curves for each glacier
+
+5. tscurves.py: processes meltmodel_global.py output to develop Ts-hd curves for each lat/lon
+
+6. global_melt2thickness.py: sub-debris melt inversion for debris thickness based on mass balance data and emergence velocities
+    --> pygem_v2 environment because debris_thickness_global has no array
+   #### MOVED THIS INTO HMA DEBRIS THICKNESS #####
+
+
+7. HMA_debris_thickness.ipynb: calibrate surface temperature inversion with sub-debris melt inversion
 
 
 # ===== Validation =========================================================================================================================
+HMA:
 '15.03473' # Ngozumpa	- good
 '15.03733' # Khumbu 	- good
 '15.03734' # Changri Nup- good
@@ -80,6 +104,13 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 '14.06794' # Baltoro 	- good
 '14.04477' # Hispar 	- good
 '13.43232' # Koxkar	- good (positive first bin)
+
+Alaska:
+'01.15645' # Kennicott  - 
+
+Europe:
+
+
 
 # ===== UNCERTAINTY WITH MASS BALANCE DATA ================================================================================================
 - Some glaciers have data from Braun and Larsen: can use to quantify uncertainty due to data source!
@@ -95,6 +126,16 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
   - convert .ipynb 'debris_stats' and 'HMA_debris_thickness' to .py scripts
 
 - Ts for each region from GEE
+
+- Make better Ostrem curve files: 
+   --> convert melt to daily melt rates and only export those data (that way they can be aggregated to whatever range of dates necessary, e.g., Alaska)
+   --> process from supercomputer: this is fast, may not need to, but it would make file transfer sizes more manageable
+   --> update the debris thickness inversion files based on the observation period (may vary by glacier!)
+
+- Make better Ts curve files:
+   --> export snow depth and interpolated Ts for each image?
+
+
 
 
 

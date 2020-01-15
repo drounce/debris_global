@@ -25,17 +25,6 @@ from meltcurves import debris_frommelt_func
 #%% ===== SCRIPT SPECIFIC INFORMATION =====
 stats_idx = 0
 
-#%% ==== TO-DO LIST =====
-print('\n%TO-DO LIST:\n-----------')
-print('1. estimate debris with and without flux divergence')
-print('  a. quality control emergence velocities ')
-print('  b. total uncertainty should be based on root sum of squares from MB and emvel')
-print('2. identify glaciers with relatively stable velocities where confident in debris thickness')
-print('  a. consider a mixture of velocities and % of the terminus?')
-print('3. assess max debris thickness for each region and extrapolate to regions without data')
-print('  a. assess any regional trends based on Bolch et al. regions')
-print('  b. quality control: ex. 13.00147 has positive mass balance - surging glacier?\n\n')
-
 #%%
 # ===== SELECT GLACIERS WITH DATA =====
 rgiid_list = []

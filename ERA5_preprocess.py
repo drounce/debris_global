@@ -41,6 +41,8 @@ def getparser():
                         help='latitude * 100 in degrees')
     parser.add_argument('-lon_deg', action='store', type=str, default=0,
                         help='longitude * 100 in degrees')
+    parser.add_argument('-roi', action='store', type=str, default=None,
+                        help='region of interest')
     parser.add_argument('-debug', action='store', type=int, default=0,
                         help='Boolean for debugging to turn it on or off (default 0 is off')
     return parser 
@@ -57,6 +59,11 @@ if __name__ == '__main__':
         debug = True
     else:
         debug = False
+        
+    if args.roi is None:
+        roi = input.roi
+    else:
+        roi = args.roi
 
     #%% ===== SUBSET ERA5 HOURLY DATA TO REGIONAL EXTENTS TO REDUCE FILE SIZES TO MANAGEABLE SIZE =====
     if args.process_era5_hrly_data == '1':
@@ -69,12 +76,12 @@ if __name__ == '__main__':
         else:
             era5_fns = [args.era5_fn]
     
-        ds_elev = xr.open_dataset(input.metdata_fp +input.metdata_elev_fn)
+        ds_elev = xr.open_dataset(input.metdata_fp + '../' + input.metdata_elev_fn)
         
-        lat_N = input.roi_latlon_dict[input.roi][0]
-        lat_S = input.roi_latlon_dict[input.roi][1]
-        lon_E = input.roi_latlon_dict[input.roi][2]
-        lon_W = input.roi_latlon_dict[input.roi][3]
+        lat_N = input.roi_latlon_dict[roi][0]
+        lat_S = input.roi_latlon_dict[roi][1]
+        lon_E = input.roi_latlon_dict[roi][2]
+        lon_W = input.roi_latlon_dict[roi][3]
         
         lat_N_idx = np.abs(lat_N - ds_elev['latitude'].values).argmin()
         lat_S_idx = np.abs(lat_S - ds_elev['latitude'].values).argmin()
@@ -96,8 +103,8 @@ if __name__ == '__main__':
                             longitude=slice(ds_elev['longitude'][lon_W_idx].values,ds_elev['longitude'][lon_E_idx].values))
             
             # Export subset
-            ds_out_fp = input.metdata_fp + input.roi + '/'
-            ds_out_fn = input.roi + '-' + era5_fn
+            ds_out_fp = input.metdata_fp + '../' + roi + '/'
+            ds_out_fn = roi + '-' + era5_fn
             if os.path.exists(ds_out_fp) == False:
                 os.makedirs(ds_out_fp)
             
@@ -111,37 +118,48 @@ if __name__ == '__main__':
         lon_deg = int(args.lon_deg) / 100
         
         print(lat_deg, lon_deg)
+
+        output_metdata_fp = input.metdata_fp + '../' + roi + '/'
+        metdata_fn_sample = (roi + '_ERA5-metdata-XXXX' + str(input.roi_years[roi][0]) + '_' + 
+                             str(input.roi_years[roi][1]) + '.nc')
+        if os.path.exists(output_metdata_fp) == False:
+            os.makedirs(output_metdata_fp)
         
-        ds_out_fp = input.metdata_fp + input.roi + '/'
+#        era5_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
+        era5_fp = input.metdata_fp + '../' + roi + '/'
         era5_reg_fns = []
-        for i in os.listdir(ds_out_fp):
-            if i.startswith(input.roi + '-ERA5_') and i.endswith('.nc'):
+        for i in os.listdir(era5_fp):
+#            if i.startswith('ERA5_') and i.endswith('.nc'):
+            if i.startswith(roi + '-ERA5_') and i.endswith('.nc'):
                 era5_reg_fns.append(i)
         era5_reg_fns = sorted(era5_reg_fns)
         
-        output_metdata_fp = input.metdata_fp + input.roi + '/'
-        output_metdata_fn = input.metdata_fn_sample.replace('XXXX', str(int(lat_deg*100)) + 'N-' + 
-                                                            str(int(lon_deg*100)) + 'E-')
-        if os.path.exists(output_metdata_fp) == False:
-            os.makedirs(output_metdata_fp)
-            
+        # Met data filename
+        if lat_deg < 0:
+            lat_str = 'S-'
+        else:
+            lat_str = 'N-'   
+        output_metdata_fn = (metdata_fn_sample.replace('XXXX', str(int(abs(lat_deg)*100)) + lat_str + 
+                                                       str(int(lon_deg*100)) + 'E-'))
         
         if os.path.exists(output_metdata_fp + output_metdata_fn) == False:
             # ===== Combine meteorological data =====
             ds_all = None
-            years = list(np.arange(int(input.startyear), int(input.endyear)+1))
+            years = list(np.arange(int(input.roi_years[roi][0]), int(input.roi_years[roi][1])+1))
             
-            ds_elev = xr.open_dataset(input.metdata_fp +input.metdata_elev_fn)
+            ds_elev = xr.open_dataset(input.metdata_fp + '../' + input.metdata_elev_fn)
             
             for nyear, year in enumerate(years):
 #            for nyear, year in enumerate([years[0]]):
-#                print(year)   
+                print(year)
 
                 for nmonth, month in enumerate(list(np.arange(1,12+1))):
 #                for nmonth, month in enumerate(list(np.arange(1,12+1))[0:2]):
-                    metdata_netcdf_fn = ds_out_fn = input.roi + '-' + 'ERA5_' + str(year) + '-' + str(month).zfill(2) + '.nc'
+#                    print(year, month)
+                    metdata_netcdf_fn = roi + '-' + 'ERA5_' + str(year) + '-' + str(month).zfill(2) + '.nc'
+#                    metdata_netcdf_fn = 'ERA5_' + str(year) + '-' + str(month).zfill(2) + '.nc'
                     
-                    met_data = xr.open_dataset(output_metdata_fp + metdata_netcdf_fn)
+                    met_data = xr.open_dataset(era5_fp + metdata_netcdf_fn)
                     
                     # Extract lat/lon indices only once
                     if nyear + nmonth == 0:
@@ -182,9 +200,10 @@ if __name__ == '__main__':
                     if ds_all is None:
                         ds_all = met_data_latlon
                     else:
-                        ds_all = ds_all.combine_first(met_data_latlon)
+                        ds_all = ds_all.combine_first(met_data_latlon) 
                   
             # Export array for each variable
+            print('exporting...' + output_metdata_fn)
             ds_all.to_netcdf(output_metdata_fp + output_metdata_fn)    
         
 #%%

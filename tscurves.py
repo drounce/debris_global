@@ -30,8 +30,8 @@ from spc_split_lists import split_list
 eb_fp = input.main_directory + '/../output/exp3/'
 eb_fn = input.fn_prefix + 'YYYYN-' + 'XXXXE-' + input.date_start + '.nc'
 
-#elev_cns2analyze = ['zmean']
-elev_cns2analyze = ['zmean', 'zstdlow', 'zstdhigh']
+elev_cns2analyze = ['zmean']
+#elev_cns2analyze = ['zmean', 'zstdlow', 'zstdhigh']
 
 #%% ===== FUNCTIONS =====
 def getparser():

@@ -17,22 +17,31 @@ import xarray as xr
 main_directory = os.getcwd()
 rgi_fp = main_directory + '/../00_rgi60_attribs/'
 output_fp = main_directory + '/../output/'
-output_ostrem_fp = main_directory + '/../output/ostrem_curves/'
-output_ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
+ostrem_fp = main_directory + '/../output/ostrem_curves/'
+ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
-#roi = '01'
-roi = 'HMA'
-roi_latlon_dict = {'HMA':[45, 25, 105, 65],
-                   '01':[71, 50, 233, 180]
-                   }
+roi = '01'
+#roi = '11'
+#roi = 'HMA'
+#roi = '17'
+roi_latlon_dict = {'01':[71, 50, 233, 180],
+                   '11':[48, 42, 20, -1],
+                   'HMA':[45, 25, 105, 65],
+                   '17':[-26, -56, 293, 285]}
 roi_rgidict = {'01': [1],
-               'HMA':[13,14,15]}
+               '11': [11],
+               'HMA':[13,14,15],
+               '17':[17]}
 roi_years = {'01':[1994,2018],
-             'HMA':[2000,2018]}
+             '11':[2000,2018],
+             'HMA':[2000,2018],
+             '17':[2000,2018]}
 latlon_unique_fp = output_fp + 'latlon_unique/'
 latlon_unique_dict = {'01':'01_latlon_unique.pkl',
-                      'HMA':'HMA_latlon_unique.pkl'}
+                      '11':'11_latlon_unique.pkl',
+                      'HMA':'HMA_latlon_unique.pkl',
+                      '17':'17_latlon_unique.pkl'}
 
 #mb_datasets = ['larsen', 'braun']
 mb_datasets = ['shean']
@@ -40,15 +49,20 @@ mb_datasets = ['shean']
 # Climate data
 metdata_fp = main_directory + '/../climate_data/' + roi + '/'
 metdata_elev_fn = 'ERA5_elev.nc'
-mb_binned_fp = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/'
-mb_binned_fp_wdebris = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/_wdebris/'
+mb_binned_fp = main_directory + '/../output/mb_bins/csv/'
+#mb_binned_fp_wdebris = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/_wdebris/'
+mb_binned_fp_wdebris = main_directory + '/../output/mb_bins/csv/_wdebris/'
 era5_hrly_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
 
 ts_fp = main_directory + '/../output/ts_tif/'
-ts_fn_dict = {'HMA':'hma_debris_tsurfC_wbuffer.tif'}
-ts_dayfrac_fn_dict = {'HMA':'hma_debris_dayfrac.tif'}
-ts_year_fn_dict = {'HMA':'hma_debris_year.tif'}
-ts_doy_fn_dict = {'HMA':'hma_debris_doy.tif'}
+ts_fn_dict = {'01':'01_debris_tsurfC.tif',
+              'HMA':'hma_debris_tsurfC_wbuffer.tif'}
+ts_dayfrac_fn_dict = {'01':'01_debris_dayfrac.tif',
+                      'HMA':'hma_debris_dayfrac.tif'}
+ts_year_fn_dict = {'01':'01_debris_year.tif',
+                   'HMA':'hma_debris_year.tif'}
+ts_doy_fn_dict = {'01':'01_debris_doy.tif',
+                  'HMA':'hma_debris_doy.tif'}
 ts_stats_res = 50 # common resolution needed such that resolution does not interfere with regional stats
 #ts_fn = ts_fn_dict[roi]
 output_ts_csv_ending = '_ts_hd_opt.csv'
@@ -63,7 +77,9 @@ debrisperc_threshold = 50
 # Debris datasets
 debriscover_fp = main_directory + '/../scherler_debris/LS8_2013-2017_RATIO/fixed_v2/'
 debriscover_fn_dict = {'01':'01_rgi60_L8ratio_fixed_v2.shp',
-                       'HMA':'HMA_rgi60_L8ratio_fixed_v2.shp'}
+                       '11':'11_rgi60_L8ratio_fixed_v2.shp',
+                       'HMA':'HMA_rgi60_L8ratio_fixed_v2.shp',
+                       '17':'17_rgi60_L8ratio_fixed_v2.shp'}
 dc_percarea_threshold = 5   # percent area threshold (%)
 dc_area_threshold = 1       # debris-covered area threshold (km2) for large glaciers with low % but significant debris
 min_glac_area = 2                # minimum glacier area (only work with large glaciers)
@@ -71,9 +87,11 @@ min_glac_area = 2                # minimum glacier area (only work with large gl
 # Glacier data
 glac_shp_fn_dict = {
         '01': main_directory + '/../../../HiMAT/RGI/rgi60/01_rgi60_Alaska/01_rgi60_Alaska.shp',
+        '11': main_directory + '/../../../HiMAT/RGI/rgi60/11_rgi60_CentralEurope/11_rgi60_CentralEurope.shp',
         '13': main_directory + '/../../../HiMAT/RGI/rgi60/13_rgi60_CentralAsia/13_rgi60_CentralAsia.shp',
         '14': main_directory + '/../../../HiMAT/RGI/rgi60/14_rgi60_SouthAsiaWest/14_rgi60_SouthAsiaWest.shp',
-        '15': main_directory + '/../../../HiMAT/RGI/rgi60/15_rgi60_SouthAsiaEast/15_rgi60_SouthAsiaEast.shp'}
+        '15': main_directory + '/../../../HiMAT/RGI/rgi60/15_rgi60_SouthAsiaEast/15_rgi60_SouthAsiaEast.shp',
+        '17': main_directory + '/../../../HiMAT/RGI/rgi60/17_rgi60_SouthernAndes/17_rgi60_SouthernAndes.shp'}
 glac_shp_proj_fp = output_fp + 'glac_shp_proj/'
 if os.path.exists(glac_shp_proj_fp) == False:
     os.makedirs(glac_shp_proj_fp)
@@ -81,7 +99,9 @@ if os.path.exists(glac_shp_proj_fp) == False:
 z1_dir_sample = main_directory + '/../../../HiMAT/IceThickness_Farinotti/surface_DEMs_RGI60/surface_DEMs_RGI60-XXXX/'
 z1_fn_sample = 'surface_DEM_RGI60-XXXX.tif'
 z1_backup_dict = {'01': main_directory + '/../../../Satellite_Images/Alaska_albers_V3_mac/Alaska_albers_V3.tif',
-                  'HMA': None}
+                  '11': None,
+                  'HMA': None,
+                  '17': None}
 # Ice thickness
 huss_dir_sample = (
         main_directory + '/../../../HiMAT/IceThickness_Farinotti/composite_thickness_RGI60-all_regions/RGI60-XXXX/')
@@ -89,9 +109,14 @@ huss_fn_sample = 'RGI60-XXXX_thickness.tif'
 # Surface velocity
 v_dir = main_directory + '/../../../Satellite_Images/ITS_Live/'
 vx_fn_dict = {'01': 'ALA_G0120_0000_vx.tif',
-              'HMA': 'HMA_G0120_0000_vx.tif'}
+              '11': None,
+              'HMA': 'HMA_G0120_0000_vx.tif',
+              '17': None
+              }
 vy_fn_dict = {'01': 'ALA_G0120_0000_vy.tif',
-              'HMA': 'HMA_G0120_0000_vy.tif'}
+              '11': None,
+              'HMA': 'HMA_G0120_0000_vy.tif',
+              '17': None}
 
 # Mass balance data
 larsen_fp = main_directory + '/../mb_data/Larsen/'
@@ -119,10 +144,11 @@ debris_elevstats_fullfn = main_directory + '/../hma_data/' + roi + '_debris_elev
 # Latitude and longitude index to run the model
 #  Longitude must be 0 - 360 degrees
 latlon_list_raw = 'all'
+#latlon_list_raw = None
 if latlon_list_raw == 'all':
     with open(latlon_unique_fp + latlon_unique_dict[roi], 'rb') as f:
         latlon_list = pickle.load(f)
-else:
+elif latlon_list_raw is not None:
     ds_elevstats = xr.open_dataset(debris_elevstats_fullfn)
     lat_list_raw = np.array([x[0] for x in latlon_list_raw])
     lon_list_raw = np.array([x[1] for x in latlon_list_raw])
@@ -140,13 +166,15 @@ else:
 #latlon_list = latlon_list[0:5]
 #latlon_list = [latlon_list[0]]
 #latlon_list = [(61.5, 217.0)]
-#latlon_list = [(59.0, 206.5)]
+#latlon_list = [(55.25, 230.50)]
 #latlon_list = [(28.0, 86.75)]
 
 #%%
 # Simulation data
 roi_datedict = {'01': ['1994-01-01', '2018-12-31'],
-                'HMA': ['2000-05-28', '2018-05-28']}
+                '11': ['2000-01-01', '2018-12-31'],
+                'HMA': ['2000-05-28', '2018-05-28'],
+                '17': ['2000-01-01', '2017-12-31']}
 start_date = roi_datedict[roi][0]  # start date for debris_ts_model.py
 end_date = roi_datedict[roi][1]     # end date for debris_ts_model.py
 #start_date = '2000-05-28'   # start date for debris_ts_model.py
