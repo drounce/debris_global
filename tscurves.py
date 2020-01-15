@@ -27,10 +27,10 @@ import globaldebris_input as input
 from spc_split_lists import split_list
 
 #%% ===== SCRIPT SPECIFIC INFORMATION =====
-eb_fp = input.main_directory + '/../output/exp3/'
-eb_fn = input.fn_prefix + 'YYYYN-' + 'XXXXE-' + input.date_start + '.nc'
-
-elev_cns2analyze = ['zmean']
+#eb_fp = input.main_directory + '/../output/exp3/'
+#eb_fn = input.fn_prefix + 'YYYYN-' + 'XXXXE-' + input.date_start + '.nc'
+#
+#elev_cns2analyze = ['zmean']
 #elev_cns2analyze = ['zmean', 'zstdlow', 'zstdhigh']
 
 #%% ===== FUNCTIONS =====
@@ -96,6 +96,9 @@ def create_xrdataset_ts(ds, time_values):
             'ts': collections.OrderedDict(
                     [('hd_cm', ds.hd_cm.values), ('time', time_values), ('stats', ds.stats.values), 
                      ('elev_cns', ds.elev_cns.values)]),
+            'dsnow': collections.OrderedDict(
+                    [('hd_cm', ds.hd_cm.values), ('time', time_values), ('stats', ds.stats.values), 
+                     ('elev_cns', ds.elev_cns.values)]),
             'elev': collections.OrderedDict(
                     [('elev_cns', ds.elev_cns.values)])
             }
@@ -118,6 +121,10 @@ def create_xrdataset_ts(ds, time_values):
                     'long_name': 'debris surface temperature',
                     'units': 'K',
                     'temporal_resolution': 'hourly'},
+            'dsnow': {
+                    'long_name': 'snow depth',
+                    'units': 'm',
+                    'temporal_resolution': 'hourly'},
             'time': {
                     'long_name': 'time of satellite acquisition',
 #                    'units': '-',
@@ -127,7 +134,7 @@ def create_xrdataset_ts(ds, time_values):
     count_vn = 0
     encoding = {}
     noencoding_vn = ['stats', 'hd_cm', 'elev_cns', 'elev']
-    for vn in ['ts', 'elev']:
+    for vn in ['ts', 'dsnow', 'elev']:
         count_vn += 1
         empty_holder = np.zeros([len(output_coords_dict[vn][i]) for i in list(output_coords_dict[vn].keys())])
         output_ds = xr.Dataset({vn: (list(output_coords_dict[vn].keys()), empty_holder)},
@@ -141,7 +148,7 @@ def create_xrdataset_ts(ds, time_values):
             output_ds_all = xr.merge((output_ds_all, output_ds))
 
     # Add attributes
-    for vn in ['ts', 'hd_cm', 'stats', 'elev_cns', 'elev', 'time']:
+    for vn in ['ts', 'dsnow', 'hd_cm', 'stats', 'elev_cns', 'elev', 'time']:
         try:
             output_ds_all[vn].attrs = output_attrs_dict[vn]
         except:
@@ -178,8 +185,8 @@ def main(list_packed_vars):
     ds_ts_info = xr.open_dataset(ts_info_fullfn, decode_times=False)
     
     for nlatlon, latlon in enumerate(latlon_list):
-        if debug:
-            print(nlatlon, latlon)
+#        if debug:
+        print(nlatlon, latlon)
         
         lat_deg = latlon[0]
         lon_deg = latlon[1]
@@ -192,13 +199,19 @@ def main(list_packed_vars):
         plot_str = str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E'
         ds_tscurve_fn = input.output_ts_fn_sample.replace('XXXX', plot_str)
         
-        ds_fn = eb_fn.replace('YYYY',str(int(lat_deg*100))).replace('XXXX',str(int(lon_deg*100)))
+        # Melt model output fn                
+        if lat_deg < 0:
+            lat_str = 'S-'
+        else:
+            lat_str = 'N-'
+        ds_meltmodel_fn = (input.fn_prefix + str(int(abs(lat_deg*100))) + lat_str + str(int(lon_deg*100)) + 'E-' + 
+                           input.date_start + '.nc')
         
         if ((os.path.exists(input.tscurve_fp + ds_tscurve_fn) == False) and 
-            (os.path.exists(eb_fp + ds_fn) == True)):
+            (os.path.exists(input.eb_fp + ds_meltmodel_fn) == True)):
             
             # Dataset from energy balance modeling
-            ds = xr.open_dataset(eb_fp + ds_fn)
+            ds = xr.open_dataset(input.eb_fp + ds_meltmodel_fn)
             
             # Time information of surface temperature
             lat_idx = np.abs(lat_deg - ds_ts_info['latitude'][:].values).argmin(axis=0)
@@ -207,10 +220,14 @@ def main(list_packed_vars):
             ts_year = np.round(ds_ts_info['year_mean'][lat_idx,lon_idx].values,0)
             ts_doy = np.round(ds_ts_info['doy_med'][lat_idx,lon_idx].values,0)
             ts_hr = ds_ts_info['dayfrac_mean'][lat_idx,lon_idx].values
+            
+#            if debug:            
+#                print('ts_hr:', ts_hr, 'ts_doy:', ts_doy, 'ts_year', ts_year)
+            
             if ts_year > 0 and ts_doy > 0:
-                ts_str = str(int(ts_year)) + '-' + str(int(ts_doy))       
+                ts_str = str(int(ts_year)) + '-' + str(int(ts_doy))
                 ts_date_pd = pd.to_datetime(pd.DataFrame(np.array([ts_str]))[0], format='%Y-%j')
-                ts_date = ts_date_pd.values[0] + np.timedelta64(4,'h')
+                ts_date = ts_date_pd.values[0] + np.timedelta64(int(ts_hr),'h')
                 
                 # Index with model results      
                 time_pd = pd.to_datetime(ds.time.values)  
@@ -218,22 +235,26 @@ def main(list_packed_vars):
                 # index one month before and after to get statistics
                 time_idx_all = np.arange(time_idx - 30*24, time_idx + 31*24, 24)
                 time_all_interpolated = time_pd[time_idx_all] + np.timedelta64(int((ts_hr%1)*60),'m')
-    
+                
                 # Output dataset
                 ds_ts, encoding = create_xrdataset_ts(ds, time_all_interpolated)
                 
-                for nelev, elev_cn in enumerate(elev_cns2analyze):
-                    if debug:
-                        print(nelev, elev_cn)
+                for nelev, elev_cn in enumerate(input.elev_cns):
+#                    if debug:
+#                        print(nelev, elev_cn)
                         
                     # Select data
                     #  each row is a debris thickness
                     ts_t1 = ds['ts'][:,time_idx_all,stats_idx,nelev].values
                     ts_t2 = ds['ts'][:,time_idx_all+1,stats_idx,nelev].values
-                    
                     ts_data = ts_t1 + ts_hr%1 * (ts_t2 - ts_t1)
                     
+                    dsnow_t1 = ds['snow_depth'][:,time_idx_all,stats_idx,nelev].values
+                    dsnow_t2 = ds['snow_depth'][:,time_idx_all+1,stats_idx,nelev].values
+                    dsnow_data = dsnow_t1 + ts_hr%1 * (dsnow_t2 - dsnow_t1)
+                    
                     ds_ts['ts'][:,:,stats_idx,nelev] = ts_data
+                    ds_ts['dsnow'][:,:,stats_idx,nelev] = dsnow_data
                         
                 # Export netcdf
                 if os.path.exists(input.tscurve_fp) == False:
@@ -241,7 +262,7 @@ def main(list_packed_vars):
                 ds_ts.to_netcdf(input.tscurve_fp + ds_tscurve_fn)
 
     if debug:
-        return ds_ts 
+        return ds_ts
             
 
 #%%
@@ -289,7 +310,7 @@ if __name__ == '__main__':
         # Loop through the chunks and export bias adjustments
         for n in range(len(list_packed_vars)):
             if debug and num_cores == 1:
-                ds_ostrem = main(list_packed_vars[n])
+                ds_ts = main(list_packed_vars[n])
             else:
                 main(list_packed_vars[n])
      

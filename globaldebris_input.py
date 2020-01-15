@@ -191,6 +191,8 @@ elif output_option == 3:
     mc_stat_cns = ['mean', 'std', '25%', '75%']
     print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
 date_start = '20200113'
+#eb_fp = input.output_fp + 'exp' + str(input.experiment_no) + '/'
+eb_fp = '/Volumes/LaCie/debris_global_output/output/exp3/01_20200113/'
 
 # ===== Debris properties =====
 experiment_no = 3
@@ -212,12 +214,6 @@ elif experiment_no == 4:
     k_random = debris_properties[:,2]
     albedo_random = np.array([debris_properties[:,5]])
     print('\n\nNEED TO MAKE DEBRIS PROPERTIES RANDOM FOR MC SIMULATIONS\n\n')
-
-#met_data_netcdf_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
-#orog_data_fullfn = '/Users/davidrounce/Documents/Dave_Rounce/HiMAT/Climate_data/ERA5/ERA5_geopotential_monthly.nc'
-
-#pkl_fp = main_directory + '/hma_data/pkl/'
-#pkl_fullfn_sample = pkl_fp + roi + '_ERA5-metadata_' + start_date + '_'+ end_date + '_XXXX.pkl' 
 
 # Dates of satellite temperature data
 #ts_dates = ['2015-09-30']      

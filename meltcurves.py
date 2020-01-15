@@ -313,9 +313,7 @@ def main(list_packed_vars):
         if os.path.exists(input.ostrem_fp + ds_ostrem_fn) == False:
             
             # Debris thickness vs. melt dataset from energy balance modeling
-#            ds_fp = input.output_fp + 'exp' + str(input.experiment_no) + '/'
-            ds_fp = '/Volumes/LaCie/debris_global_output/output/exp3/01_20200113/'
-            ds = xr.open_dataset(ds_fp + ds_meltmodel_fn)
+            ds = xr.open_dataset(input.eb_fp + ds_meltmodel_fn)
             
             ds_ostrem, encoding = export_ds_daily_melt(ds)
             # Export netcdf
