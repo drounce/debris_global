@@ -95,7 +95,7 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 
 
 # ===== Validation =========================================================================================================================
-HMA:
+HMA (13,14,15):
 '15.03473' # Ngozumpa	- good
 '15.03733' # Khumbu 	- good
 '15.03734' # Changri Nup- good
@@ -105,8 +105,11 @@ HMA:
 '14.04477' # Hispar 	- good
 '13.43232' # Koxkar	- good (positive first bin)
 
-Alaska:
-'01.15645' # Kennicott  - 
+Alaska (01):
+'01.15645' # Kennicott  - good
+
+Western Canada (02):
+'02.12438' # Dome Glacier -    Mattson (2000) - 
 
 Europe:
 

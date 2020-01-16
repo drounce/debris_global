@@ -319,6 +319,7 @@ def main(list_packed_vars):
             # Export netcdf
             ds_ostrem.to_netcdf(input.ostrem_fp + ds_ostrem_fn)
             
+            
 #            # Debris thickness
 #            debris_thicknesses = ds.hd_cm.values
 #            
@@ -483,3 +484,18 @@ if __name__ == '__main__':
                 main(list_packed_vars[n])
                 
     print('\nProcessing time of :',time.time()-time_start, 's')
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
