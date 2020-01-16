@@ -185,6 +185,7 @@ def main(list_packed_vars):
     ds_ts_info = xr.open_dataset(ts_info_fullfn, decode_times=False)
     
     for nlatlon, latlon in enumerate(latlon_list):
+#    for nlatlon, latlon in enumerate([latlon_list[0]]):
 #        if debug:
         print(nlatlon, latlon)
         
@@ -206,6 +207,10 @@ def main(list_packed_vars):
             lat_str = 'N-'
         ds_meltmodel_fn = (input.fn_prefix + str(int(abs(lat_deg*100))) + lat_str + str(int(lon_deg*100)) + 'E-' + 
                            input.date_start + '.nc')
+        
+#        print(os.path.exists(input.tscurve_fp + ds_tscurve_fn) == False)
+#        print(os.path.exists(input.eb_fp + ds_meltmodel_fn) == True)
+#        print(input.eb_fp + ds_meltmodel_fn)
         
         if ((os.path.exists(input.tscurve_fp + ds_tscurve_fn) == False) and 
             (os.path.exists(input.eb_fp + ds_meltmodel_fn) == True)):

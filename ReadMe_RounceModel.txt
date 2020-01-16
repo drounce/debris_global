@@ -97,13 +97,17 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 # ===== Validation =========================================================================================================================
 HMA (13,14,15):
 '15.03473' # Ngozumpa	- good
-'15.03733' # Khumbu 	- good
+'15.03733' # Khumbu 	- good (Gades et al 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus"
 '15.03734' # Changri Nup- good
 '15.04121' # Langtang	- good
-'15.04045' # Lirung	- good
+'15.04045' # Lirung	- good (McCarthy et al. 2017) Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus"
 '14.06794' # Baltoro 	- good
 '14.04477' # Hispar 	- good
 '13.43232' # Koxkar	- good (positive first bin)
+'15.07886' # Hailuogou  - good (Zhang et al. 2015; and others? - very thin < 10 cm)
+'14.16042' # Batal      - good (Patel et al. 2016 - with altitude dependence)
+'' # K
+'14.15447' # Bara Shigri- good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
 
 Alaska (01):
 '01.15645' # Kennicott  - good
@@ -112,6 +116,8 @@ Western Canada (02):
 '02.12438' # Dome Glacier -    Mattson (2000) - 
 
 Europe:
+'' # Miage (Foster et al. 2012; Westoby?)
+'' # Haut d'Arolla (Carenzo etal 2016)
 
 
 

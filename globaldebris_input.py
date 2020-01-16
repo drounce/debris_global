@@ -23,9 +23,9 @@ ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
 #roi = '01'
 #roi = '11'
-#roi = 'HMA'
+roi = 'HMA'
 #roi = '17'
-roi = '18'
+#roi = '18'
 roi_latlon_dict = {'01':[71, 50, 233, 180],
                    '11':[48, 42, 20, -1],
                    'HMA':[45, 25, 105, 65],
@@ -47,14 +47,25 @@ latlon_unique_dict = {'01':'01_latlon_unique.pkl',
                       'HMA':'HMA_latlon_unique.pkl',
                       '17':'17_latlon_unique.pkl',
                       '18':'18_latlon_unique.pkl'}
+mb_datasets_dict = {'01': ['larsen', 'braun'],
+                    'HMA': ['shean']}
+mb_datasets = mb_datasets_dict[roi]
+mb_dataset_fp_dict = {'shean': main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/',
+                      'larsen': main_directory + '/../mb_data/Larsen/binned_data/',
+                      'braun': main_directory + '/../mb_data/Braun/binned_data/'}
 
-mb_datasets = ['larsen', 'braun']
-#mb_datasets = ['shean']
+## Mass balance data
+#larsen_fp = main_directory + '/../mb_data/Larsen/'
+#larsen_binned_fp = larsen_fp + 'binned_data/'
+#larsen_fn = 'larsen2015_supplementdata_wRGIIds_v3.csv'
+
+
 
 # Climate data
 metdata_fp = main_directory + '/../climate_data/' + roi + '/'
 metdata_elev_fn = 'ERA5_elev.nc'
 mb_binned_fp = main_directory + '/../output/mb_bins/csv/'
+output_fig_fp = main_directory + '/../output/mb_bins/figures/'
 #mb_binned_fp_wdebris = main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/_wdebris/'
 mb_binned_fp_wdebris = main_directory + '/../output/mb_bins/csv/_wdebris/'
 mb_binned_fp_wdebris_hdts = main_directory + '/../output/mb_bins/csv/_wdebris_hdts/'
@@ -126,11 +137,6 @@ vy_fn_dict = {'01': 'ALA_G0120_0000_vy.tif',
               'HMA': 'HMA_G0120_0000_vy.tif',
               '17': None}
 
-# Mass balance data
-larsen_fp = main_directory + '/../mb_data/Larsen/'
-larsen_binned_fp = larsen_fp + 'binned_data/'
-larsen_fn = 'larsen2015_supplementdata_wRGIIds_v3.csv'
-
 # Emergence Velocity data
 min_glac_area_writeout=0
 min_valid_area_perc = 0
@@ -151,8 +157,8 @@ debris_elevstats_fullfn = main_directory + '/../hma_data/' + roi + '_debris_elev
 
 # Latitude and longitude index to run the model
 #  Longitude must be 0 - 360 degrees
-#latlon_list_raw = 'all'
-latlon_list_raw = None
+latlon_list_raw = 'all'
+#latlon_list_raw = None
 if latlon_list_raw == 'all':
     with open(latlon_unique_fp + latlon_unique_dict[roi], 'rb') as f:
         latlon_list = pickle.load(f)
@@ -200,8 +206,10 @@ elif output_option == 3:
     mc_stat_cns = ['mean', 'std', '25%', '75%']
     print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
 date_start = '20200113'
+eb_fp_dict = {'01':'/Volumes/LaCie/debris_global_output/output/exp3/01_20200113/',
+              'HMA':'/Volumes/LaCie/debris_global_output/output/exp3/HMA_20200113/'}
+eb_fp = eb_fp_dict[roi]
 #eb_fp = input.output_fp + 'exp' + str(input.experiment_no) + '/'
-eb_fp = '/Volumes/LaCie/debris_global_output/output/exp3/HMA/'
 
 # ===== Debris properties =====
 experiment_no = 3
