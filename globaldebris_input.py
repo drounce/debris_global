@@ -22,33 +22,45 @@ ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
 #roi = '01'
+#roi = '02'
 #roi = '11'
-roi = 'HMA'
+#roi = 'HMA'
+roi = '16'
 #roi = '17'
 #roi = '18'
 roi_latlon_dict = {'01':[71, 50, 233, 180],
+                   '02':[66, 36, 256, 225],
                    '11':[48, 42, 20, -1],
                    'HMA':[45, 25, 105, 65],
+                   '16':[12, -26, 294, 279],
                    '17':[-26, -56, 293, 285],
                    '18':[-39, -46, 176, 167]}
 roi_rgidict = {'01': [1],
+               '02': [2],
                '11': [11],
                'HMA':[13,14,15],
+               '16':[16],
                '17':[17],
                '18':[18]}
 roi_years = {'01':[1994,2018],
+             '02':[2000,2018],
              '11':[2000,2018],
              'HMA':[2000,2018],
+             '16':[2000,2018],
              '17':[2000,2018],
              '18':[2000,2018]}
 latlon_unique_fp = output_fp + 'latlon_unique/'
 latlon_unique_dict = {'01':'01_latlon_unique.pkl',
+                      '02':'02_latlon_unique.pkl',
                       '11':'11_latlon_unique.pkl',
                       'HMA':'HMA_latlon_unique.pkl',
+                      '16':'16_latlon_unique.pkl',
                       '17':'17_latlon_unique.pkl',
                       '18':'18_latlon_unique.pkl'}
 mb_datasets_dict = {'01': ['larsen', 'braun'],
-                    'HMA': ['shean']}
+                    '02': None,
+                    'HMA': ['shean'],
+                    '16': None,}
 mb_datasets = mb_datasets_dict[roi]
 mb_dataset_fp_dict = {'shean': main_directory + '/../mb_data/Shean_2019_0213/mb_combined_20190213_nmad_bins/',
                       'larsen': main_directory + '/../mb_data/Larsen/binned_data/',
@@ -73,7 +85,7 @@ era5_hrly_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
 
 ts_fp = main_directory + '/../output/ts_tif/'
 ts_fn_dict = {'01':'01_debris_tsurfC.tif',
-              'HMA':'hma_debris_tsurfC_wbuffer.tif'}
+              'HMA':'hma_debris_tsurfC_v2.tif'}
 ts_dayfrac_fn_dict = {'01':'01_debris_dayfrac.tif',
                       'HMA':'hma_debris_dayfrac.tif'}
 ts_year_fn_dict = {'01':'01_debris_year.tif',
@@ -87,6 +99,7 @@ tscurve_fp = ts_fp + 'ts_curves/'
 output_ts_fn_sample = 'XXXX_debris_ts_curve.nc'
 hd_fp = ts_fp + 'hd_tifs/'
 hd_fn_sample = 'XXXX_hdts_m.tif'
+mf_fn_sample = 'XXXX_meltfactor.tif'
 hd_max = 2.5
 vel_threshold = 7.5
 debrisperc_threshold = 50
@@ -94,8 +107,10 @@ debrisperc_threshold = 50
 # Debris datasets
 debriscover_fp = main_directory + '/../scherler_debris/LS8_2013-2017_RATIO/fixed_v2/'
 debriscover_fn_dict = {'01':'01_rgi60_L8ratio_fixed_v2.shp',
+                       '02':'02_rgi60_L8ratio_fixed_v2.shp',
                        '11':'11_rgi60_L8ratio_fixed_v2.shp',
                        'HMA':'HMA_rgi60_L8ratio_fixed_v2.shp',
+                       '16':'16_rgi60_L8ratio_fixed_v2.shp',
                        '17':'17_rgi60_L8ratio_fixed_v2.shp',
                        '18':'18_rgi60_L8ratio_fixed_v2.shp'}
 dc_percarea_threshold = 5   # percent area threshold (%)
@@ -105,10 +120,12 @@ min_glac_area = 2                # minimum glacier area (only work with large gl
 # Glacier data
 glac_shp_fn_dict = {
         '01': main_directory + '/../../../HiMAT/RGI/rgi60/01_rgi60_Alaska/01_rgi60_Alaska.shp',
+        '02': main_directory + '/../../../HiMAT/RGI/rgi60/02_rgi60_WesternCanadaUS/02_rgi60_WesternCanadaUS.shp',
         '11': main_directory + '/../../../HiMAT/RGI/rgi60/11_rgi60_CentralEurope/11_rgi60_CentralEurope.shp',
         '13': main_directory + '/../../../HiMAT/RGI/rgi60/13_rgi60_CentralAsia/13_rgi60_CentralAsia.shp',
         '14': main_directory + '/../../../HiMAT/RGI/rgi60/14_rgi60_SouthAsiaWest/14_rgi60_SouthAsiaWest.shp',
         '15': main_directory + '/../../../HiMAT/RGI/rgi60/15_rgi60_SouthAsiaEast/15_rgi60_SouthAsiaEast.shp',
+        '16': main_directory + '/../../../HiMAT/RGI/rgi60/16_rgi60_LowLatitudes/16_rgi60_LowLatitudes.shp',
         '17': main_directory + '/../../../HiMAT/RGI/rgi60/17_rgi60_SouthernAndes/17_rgi60_SouthernAndes.shp',
         '18': main_directory + '/../../../HiMAT/RGI/rgi60/18_rgi60_NewZealand/18_rgi60_NewZealand.shp'}
 glac_shp_proj_fp = output_fp + 'glac_shp_proj/'
@@ -120,7 +137,9 @@ z1_fn_sample = 'surface_DEM_RGI60-XXXX.tif'
 z1_backup_dict = {'01': main_directory + '/../../../Satellite_Images/Alaska_albers_V3_mac/Alaska_albers_V3.tif',
                   '11': None,
                   'HMA': None,
-                  '17': None}
+                  '16': None,
+                  '17': None,
+                  '18': None}
 # Ice thickness
 huss_dir_sample = (
         main_directory + '/../../../HiMAT/IceThickness_Farinotti/composite_thickness_RGI60-all_regions/RGI60-XXXX/')
@@ -186,8 +205,10 @@ elif latlon_list_raw is not None:
 #%%
 # Simulation data
 roi_datedict = {'01': ['1994-01-01', '2018-12-31'],
+                '02': ['2000-01-01', '2018-12-31'],
                 '11': ['2000-01-01', '2018-12-31'],
                 'HMA': ['2000-05-28', '2018-05-28'],
+                '16': ['2000-01-01', '2018-12-31'],
                 '17': ['2000-01-01', '2018-12-31'],
                 '18': ['2000-01-01', '2018-12-31']}
 start_date = roi_datedict[roi][0]  # start date for debris_ts_model.py
@@ -207,7 +228,12 @@ elif output_option == 3:
     print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
 date_start = '20200113'
 eb_fp_dict = {'01':'/Volumes/LaCie/debris_global_output/output/exp3/01_20200113/',
-              'HMA':'/Volumes/LaCie/debris_global_output/output/exp3/HMA_20200113/'}
+              '02': None,
+              '11': None,
+              'HMA':'/Volumes/LaCie/debris_global_output/output/exp3/HMA_20200113/',
+              '16': None,
+              '17': None,
+              '18': None}
 eb_fp = eb_fp_dict[roi]
 #eb_fp = input.output_fp + 'exp' + str(input.experiment_no) + '/'
 

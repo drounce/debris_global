@@ -142,7 +142,13 @@ if __name__ == '__main__':
         output_metdata_fn = (metdata_fn_sample.replace('XXXX', str(int(abs(lat_deg)*100)) + lat_str + 
                                                        str(int(lon_deg*100)) + 'E-'))
         
-        if os.path.exists(output_metdata_fp + output_metdata_fn) == False:
+        lat_N = input.roi_latlon_dict[roi][0]
+        lat_S = input.roi_latlon_dict[roi][1]
+        lon_E = input.roi_latlon_dict[roi][2]
+        lon_W = input.roi_latlon_dict[roi][3]
+        
+        if (os.path.exists(output_metdata_fp + output_metdata_fn) == False and 
+            lat_deg <= lat_N and lat_deg >= lat_S and lon_deg >= lon_W and lon_deg <= lon_E):
             # ===== Combine meteorological data =====
             ds_all = None
             years = list(np.arange(int(input.roi_years[roi][0]), int(input.roi_years[roi][1])+1))

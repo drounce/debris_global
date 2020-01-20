@@ -104,9 +104,8 @@ HMA (13,14,15):
 '14.06794' # Baltoro 	- good
 '14.04477' # Hispar 	- good
 '13.43232' # Koxkar	- good (positive first bin)
-'15.07886' # Hailuogou  - good (Zhang et al. 2015; and others? - very thin < 10 cm)
+'15.07886' # Hailuogou  - HORRIBLE (Zhang et al. 2011, Figure 2)
 '14.16042' # Batal      - good (Patel et al. 2016 - with altitude dependence)
-'' # K
 '14.15447' # Bara Shigri- good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
 
 Alaska (01):
@@ -136,13 +135,12 @@ Europe:
 
 - Ts for each region from GEE
 
-- Make better Ostrem curve files: 
-   --> convert melt to daily melt rates and only export those data (that way they can be aggregated to whatever range of dates necessary, e.g., Alaska)
-   --> process from supercomputer: this is fast, may not need to, but it would make file transfer sizes more manageable
-   --> update the debris thickness inversion files based on the observation period (may vary by glacier!)
 
-- Make better Ts curve files:
-   --> export snow depth and interpolated Ts for each image?
+- 15.07886: Hailuogou Glacier is HORRIBLE - the reason is emissivity - now fixed
+  --> still the velocity is super low likely because the glacier is very
+  --> add max terminus cells (e.g., lowest 10% based on elevation?)
+
+  --> 10% of the elevation as opposed to the jump cells
 
 
 
