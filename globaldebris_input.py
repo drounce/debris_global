@@ -21,11 +21,11 @@ ostrem_fp = main_directory + '/../output/ostrem_curves/'
 ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
-#roi = '01'
+roi = '01'
 #roi = '02'
 #roi = '11'
 #roi = 'HMA'
-roi = '16'
+#roi = '16'
 #roi = '17'
 #roi = '18'
 roi_latlon_dict = {'01':[71, 50, 233, 180],
