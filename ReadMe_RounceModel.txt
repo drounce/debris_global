@@ -29,25 +29,33 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 # ===== MODEL WORKFLOW =====================================================================================================================
 
 # ----- INPUT DATA -----
+0. DEMs:
+   - download OGGM's best DEM with ice thickness and widths:
+	 https://cluster.klima.uni-bremen.de/~fmaussion/output/debris_project/
+     Use wget:
+       wget -r -nH --cut-dirs=2 -np -R "index.html*" https://cluster.klima.uni-bremen.de/~fmaussion/output/debris_project/
 
 1. Debris cover extents:
    - process Scherler debris cover extents in QGIS:
-     - fix shape file
-     - remove isolated pixels (< 2 surface temperature pixels):
-        - multipart to single part
-        - open attribute -> new field 'area_single'
-        - select features area_single > min threshold (20000 m2)
-        - dissolve using RGIId
-        - open attribute -> new fields 'DC_Area_v2' and 'DC_Area_v2_%' - make sure multiply by 100 and convert km2 to m2 when divided by area
+     a. fix shape file
+     b. multipart to single part
+     c. open attribute -> new field 'area_single'
+     d. select features area_single > min threshold (20000 m2): removes isolated pixels (< 2 surface temperature pixels)
+     e. dissolve using RGIId
+     f. open attribute -> new fields 'DC_Area_v2' and 'DC_Area_v2_%' - make sure multiply by 100 and convert km2 to m2 when divided by area
      - remove holes (if desirable)
 
 2. ERA5 data
-   - process ERA5 data: download and pre-process into netcdf files for each site with a glacier
+   - process ERA5 data: 
+       a. python ERA5_preprocess.py -process_era5_hrly_data=1 -debug=1
+            set latlon_list_raw = None in globaldebris_input.py if want to download before computing the latlon
+       b. debris_stats.ipynb
+	    run this until get to first unique lat/lons such that you can process the relevant data
+       c. python ERA5_preprocess_looplatlon.py -process_unique_latlon_data=1
+            download and pre-process into netcdf files for each site with a glacier
 
 3. Mass Balance data:
-   - process MB data:
-     - Shean sent binned data
-     - Braun processed using some PyGEM scripts; need to clean up
+   - process MB data: (this is done as part of the workflow now)
 
 4. Surface temperature data:
    - Kraaijenbrink2017-ts-hma Google Earth Engine: surface temperature, etc.
@@ -60,29 +68,32 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 5. Velocity data:
    - ITS-Live: High Mountain Asia, Alaska, Arctic, part of South America
    - GoLive: Europe, New Zealand, Caucasus, part of South America, continental US
-
-6. Ice thickness data:
-   - Downloaded from Farinotti et al. (2019)
+     --> ftp://dtn.rc.colorado.edu/work/nsidc0710/nsidc0710_landsat8_golive_ice_velocity_v1.1/p193_r028/
 
 
 # ----- WORKFLOW -----
+0. process_mb_bin.ipynb:
+    ---> environment: debris_thickness_global environment
+    ---> processes mass balance data, debris-covered areas, emergence velocities, etc.
 
 1. debris_stats.ipynb:
     ---> environment: debris_thickness_global environment
-    ---> identifies lat/lon of all glaciers with data
-    ---> processes emergence velocity, debris cover area, and mass balance data
-
-    - HMA: done
-    - Alaska: done
+    ---> identifies lat/lon of all glaciers with data (THIS SHOULD BE RUN FIRST SO CAN SELECT INDIVIDUAL LAT/LON)
+    ---> adds debris cover elevation statistics for each lat/lon to the ERA5 dataset
 
       --> (now in debris_stats) HMA_emergence_velocity.ipynb: estimate binned emergence velocities
 
-2. ts_datetime_stats.ipynb: pull stats of surface temperature composite image for each lat/lon
+2. meltmodel_global.py: 
+    ---> run model to get melt/Ts/snow at every timestep
+
+
+
+
+3. meltcurves.py: 
+    ---> processes meltmodel_global.py output to develop Ostrem curves for each glacier
+
+4. ts_datetime_stats.ipynb: pull stats of surface temperature composite image for each lat/lon
     ---> environment: debris_thickness_global
-
-3. meltmodel_global.py: run model to get melt/Ts/snow at every timestep
-
-4. meltcurves.py: processes meltmodel_global.py output to develop Ostrem curves for each glacier
 
 5. tscurves.py: processes meltmodel_global.py output to develop Ts-hd curves for each lat/lon
 
@@ -94,47 +105,68 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 7. HMA_debris_thickness.ipynb: calibrate surface temperature inversion with sub-debris melt inversion
 
 
-# ===== Validation =========================================================================================================================
-HMA (13,14,15):
-'15.03473' # Ngozumpa	- good
-'15.03733' # Khumbu 	- good (Gades et al 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus"
-'15.03734' # Changri Nup- good
-'15.04121' # Langtang	- good
-'15.04045' # Lirung	- good (McCarthy et al. 2017) Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus"
-'14.06794' # Baltoro 	- good
-'14.04477' # Hispar 	- good
-'13.43232' # Koxkar	- good (positive first bin)
-'15.07886' # Hailuogou  - HORRIBLE (Zhang et al. 2011, Figure 2)
-'14.16042' # Batal      - good (Patel et al. 2016 - with altitude dependence)
-'14.15447' # Bara Shigri- good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
+# ===== SCRIPTS ACTUALLY USED (for clean-up of the repository) =====
+  - debris_stats.ipynb
+  - ERA5_preprocess.py
+  - ERA5_preprocess_looplatlon.py
+  - process_mb_bin.ipynb
+  - globaldebris_input.py
+  - meltmodel_global.py
+  - spc_run_meltmodel.sh
+  - spc_split_lists.py
 
+
+# ===== Validation =========================================================================================================================
 Alaska (01):
 '01.15645' # Kennicott  - good
 
 Western Canada (02):
 '02.12438' # Dome Glacier -    Mattson (2000) - 
 
-Europe:
-'' # Miage (Foster et al. 2012; Westoby?)
-'' # Haut d'Arolla (Carenzo etal 2016)
+Europe (11):
+'11.01604' # Suldenferner (Lindsey has datasets)
+'11.02810' # Haut d'Arolla (Carenzo etal 2016)
+'11.03005' # Miage (Mihalcea et al. 2008; Foster et al. 2012; Ablation stake data from Reid and Brock 2010)
+
+HMA (13,14,15):
+'13.43232' # Koxkar	- good (positive first bin)
+'14.04477' # Hispar 	- good
+'14.06794' # Baltoro 	- good
+'14.16042' # Batal      - good (Patel et al. 2016 - with altitude dependence)
+'14.15447' # Bara Shigri- good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
+'15.03473' # Ngozumpa	- good
+'15.03733' # Khumbu 	- good (Gades et al 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus"
+'15.03734' # Changri Nup- good
+'15.04045' # Lirung	- good (McCarthy et al. 2017) Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus"
+'15.04121' # Langtang	- good
+'15.07886' # Hailuogou  - HORRIBLE (Zhang et al. 2011, Figure 2)
 
 
+# ===== UNCERTAINTIES ====================================================================================================================
+- Model parameter uncertainty
+   --> select glaciers in each region to come up with uncertainty associated with model parameters
 
-# ===== UNCERTAINTY WITH MASS BALANCE DATA ================================================================================================
-- Some glaciers have data from Braun and Larsen: can use to quantify uncertainty due to data source!
+- Mass balance data uncertainty 
+    TO-DO: compare debris thickness estimates for select glaciers derived with different data sources
+      - Alaska (McNabb vs. Braun)
+      - S America (Braun vs. Berthier)
+    TO-DO: add uncertainty with emergence velocity into this analysis
+
+Are debris thickness estimates within the error bars of one another when derived from different sources?
+  - Are the main discrepancies within the accumulation error due to the handling of the penetration corrections? 
+      If so, then good for debris estimates.
+
+Is uncertainty associated with the model parameters parameters comparable to the uncertainty associated with the mass balance data?
 
 
 # ===== TO-DO LIST ========================================================================================================================
 
-- PROCESS ERA5 DATA FOR ALL OTHER REGIONS !!!!
-  
-- Merge HMA data together
+- PROCESS ERA5 DATA FOR ALL OTHER REGIONS
 
 - SEE NOTES FROM .IPYNB FILES
   - convert .ipynb 'debris_stats' and 'HMA_debris_thickness' to .py scripts
 
 - Ts for each region from GEE
-
 
 - 15.07886: Hailuogou Glacier is HORRIBLE - the reason is emissivity - now fixed
   --> still the velocity is super low likely because the glacier is very
@@ -143,33 +175,10 @@ Europe:
   --> 10% of the elevation as opposed to the jump cells
 
 
+-LIMIT MELTFACTOR BASED ON 2 CM
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- Validation figure
+  a) using the full x-axis needed to show the full ranges and in  that case make  in  inlet figure with 0-5 m so that information does not get too  squeezed.
+  b) indicate the number of samples per dot by using different symbol size. Would need to be the same  symbol  for  comparability  in which case you would need  to use colors for the different sites.
 

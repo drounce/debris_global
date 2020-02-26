@@ -29,7 +29,7 @@ import globaldebris_input as input
 #glaciers = ['1.15645', '15.03473', '15.03733', '15.03734', '15.04121', '15.04045', '14.06794', '14.04477', 
 #            '13.43232', '15.07886', '14.16042']
 glaciers = ['1.15645', '15.04045', '15.03473', '15.03743', '14.06794']
-#glaciers = ['14.06794']
+#glaciers = ['15.04045']
 glac_name_dict = {'1.15645':'Kennicott',
                   '15.04045':'Lirung',
                   '15.03473':'Ngozumpa',
@@ -39,7 +39,7 @@ glac_name_dict = {'1.15645':'Kennicott',
 hd_obs_fp = input.main_directory + '/../hd_obs/'
 hd_ts_fp = input.main_directory + '/../hd_obs/hd_ts_csv/'
 hd_fn_dict = {'1.15645': 'kennicott_anderson_2019.csv',
-              '15.04045': 'lirung_mccarthy_2017.csv',
+              '15.04045': 'lirung_nicholson_gpr.csv',
               '15.03473': 'ngoz_mccarthy_gpr.csv',
               '15.03743': 'imja_rounce2014.csv',
               '14.06794': 'baltoro_mihalcea2006.csv'}
@@ -93,10 +93,16 @@ for nglac, glac_str in enumerate(glaciers):
                     
                     # Model
                     mb_df_idx = np.where(mb_df['bin_center_elev_m'] == zbincenter)[0][0]
-                    mb_df_mean = mb_df.loc[mb_df_idx, 'hd_ts_mean']
-                    mb_df_std = mb_df.loc[mb_df_idx, 'hd_ts_std']
-                    mb_df_med = mb_df.loc[mb_df_idx, 'hd_ts_med']
-                    mb_df_mad = mb_df.loc[mb_df_idx, 'hd_ts_mad']
+                    if 'hd_ts_mean' in mb_df.columns:    
+                        mb_df_mean = mb_df.loc[mb_df_idx, 'hd_ts_mean']
+                        mb_df_std = mb_df.loc[mb_df_idx, 'hd_ts_std']
+                        mb_df_med = mb_df.loc[mb_df_idx, 'hd_ts_med']
+                        mb_df_mad = mb_df.loc[mb_df_idx, 'hd_ts_mad']
+                    else:
+                        mb_df_mean = mb_df.loc[mb_df_idx, 'debris_thick_ts_mean_m']
+                        mb_df_std = mb_df.loc[mb_df_idx, 'debris_thick_ts_std_m']
+                        mb_df_med = mb_df.loc[mb_df_idx, 'debris_thick_ts_med_m']
+                        mb_df_mad = mb_df.loc[mb_df_idx, 'debris_thick_ts_mad_m']
                     
                     print(glac_str, zbincenter, 
                           '  ', np.round(hd_bin_mean,2), '+/-', np.round(hd_bin_std,2), 'vs',

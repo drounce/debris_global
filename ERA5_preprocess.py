@@ -156,12 +156,10 @@ if __name__ == '__main__':
             ds_elev = xr.open_dataset(input.metdata_fp + '../' + input.metdata_elev_fn)
             
             for nyear, year in enumerate(years):
-#            for nyear, year in enumerate([years[0]]):
                 print(year)
 
                 for nmonth, month in enumerate(list(np.arange(1,12+1))):
-#                for nmonth, month in enumerate(list(np.arange(1,12+1))[0:2]):
-#                    print(year, month)
+                    print(year, month)
                     metdata_netcdf_fn = roi + '-' + 'ERA5_' + str(year) + '-' + str(month).zfill(2) + '.nc'
 #                    metdata_netcdf_fn = 'ERA5_' + str(year) + '-' + str(month).zfill(2) + '.nc'
                     
@@ -210,7 +208,8 @@ if __name__ == '__main__':
                   
             # Export array for each variable
             print('exporting...' + output_metdata_fn)
-            ds_all.to_netcdf(output_metdata_fp + output_metdata_fn)    
+            ds_all.to_netcdf(output_metdata_fp + output_metdata_fn)  
+            
         
 #%%
 #print('\nSHORTCUT FOR HMA WHICH IS ALREADY PROCESSED!\n')

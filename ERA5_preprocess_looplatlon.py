@@ -114,6 +114,7 @@ if __name__ == '__main__':
         if input.latlon_list_raw == 'all':
             with open(input.latlon_unique_fp + input.latlon_unique_dict[roi], 'rb') as f:
                 latlon_list = pickle.load(f)
+                
         
         for nlatlon, latlon_idx in enumerate(latlon_list):
 #        for nlatlon, latlon_idx in enumerate([latlon_list[0]]):
