@@ -23,15 +23,8 @@ from scipy.optimize import curve_fit
 import xarray as xr
 
 # Local libraries
-import globaldebris_input as input
+import debrisglobal.globaldebris_input as debris_prms
 from spc_split_lists import split_list
-
-#%% ===== SCRIPT SPECIFIC INFORMATION =====
-#eb_fp = input.main_directory + '/../output/exp3/'
-#eb_fn = input.fn_prefix + 'YYYYN-' + 'XXXXE-' + input.date_start + '.nc'
-
-#elev_cns2analyze = ['zmean']
-#elev_cns2analyze = ['zmean', 'zstdlow', 'zstdhigh']
 
 #%% ===== FUNCTIONS =====
 def getparser():
@@ -137,7 +130,7 @@ def debris_frommelt_func(b, a, k):
 #                    'comment': 'elevation associated with the elevation column name (elev_cns)'},
 #            'stats': {
 #                    'long_name': 'variable statistics',
-#                    'comment': str(input.k_random.shape[0]) + ' simulations; % refers to percentiles'},
+#                    'comment': str(debris_prms.k_random.shape[0]) + ' simulations; % refers to percentiles'},
 #            'elev_cns': {
 #                    'long_name': 'elevation column names',
 #                    'comment': 'elevations used to run the simulations'},
@@ -145,8 +138,8 @@ def debris_frommelt_func(b, a, k):
 #                    'long_name': 'annual sub-debris glacier melt',
 #                    'units': 'meters water equivalent per year',
 #                    'temporal_resolution': 'annual',
-#                    'start_date': input.start_date,
-#                    'end_date': input.end_date},
+#                    'start_date': debris_prms.start_date,
+#                    'end_date': debris_prms.end_date},
 #            'b0': {
 #                    'long_name': 'second order reaction rate initial concentration',
 #                    'units': 'm w.e.'},
@@ -224,7 +217,7 @@ def export_ds_daily_melt(ds):
                     'comment': 'elevation associated with the elevation column name (elev_cns)'},
             'stats': {
                     'long_name': 'variable statistics',
-                    'comment': str(input.k_random.shape[0]) + ' simulations; % refers to percentiles'},
+                    'comment': str(debris_prms.k_random.shape[0]) + ' simulations; % refers to percentiles'},
             'elev_cns': {
                     'long_name': 'elevation column names',
                     'comment': 'elevations used to run the simulations'},
@@ -286,148 +279,39 @@ def main(list_packed_vars):
         print(count, latlon_list)
     
     for nlatlon, latlon in enumerate(latlon_list):
-#        if debug:
+
         print(nlatlon, latlon)
         
         lat_deg = latlon[0]
         lon_deg = latlon[1]
         
-        # ===== Debris Thickness vs. Surface Lowering =====
-        # stats column index (0=mean)
-#        stats_idx = 0
-        
+        # ===== Debris Thickness vs. Surface Lowering =====        
         # Filename
-        if os.path.exists(input.ostrem_fp) == False:
-            os.makedirs(input.ostrem_fp)
-        plot_str = str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E'
-        ds_ostrem_fn = input.ostrem_fn_sample.replace('XXXX', plot_str)
+        if os.path.exists(debris_prms.ostrem_fp) == False:
+            os.makedirs(debris_prms.ostrem_fp)
         
         # Melt model output fn
         if lat_deg < 0:
             lat_str = 'S-'
         else:
             lat_str = 'N-'
-        ds_meltmodel_fn = (input.fn_prefix + str(int(abs(lat_deg*100))) + lat_str + str(int(lon_deg*100)) + 'E-' + 
-                           input.date_start + '.nc')
+        latlon_str = str(int(abs(lat_deg*100))) + lat_str + str(int(lon_deg*100)) + 'E-'
+        # Raw meltmodel output filename
+        ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + debris_prms.date_start + '.nc'
+        # Processed "ostrem" filename, although this is really only daily data to enable each glacier to choose correct
+        #  dates over which to sum the melt consistent with the DEM differencing
+        ds_ostrem_fn = debris_prms.ostrem_fn_sample.replace('XXXX', latlon_str)
         
-        if os.path.exists(input.ostrem_fp + ds_ostrem_fn) == False:
+        
+        if os.path.exists(debris_prms.ostrem_fp + ds_ostrem_fn) == False:
             
             # Debris thickness vs. melt dataset from energy balance modeling
-            ds = xr.open_dataset(input.eb_fp + ds_meltmodel_fn)
+            ds = xr.open_dataset(debris_prms.eb_fp + ds_meltmodel_fn)
             
             ds_ostrem, encoding = export_ds_daily_melt(ds)
             # Export netcdf
-            ds_ostrem.to_netcdf(input.ostrem_fp + ds_ostrem_fn)
+            ds_ostrem.to_netcdf(debris_prms.ostrem_fp + ds_ostrem_fn)
             
-            
-#            # Debris thickness
-#            debris_thicknesses = ds.hd_cm.values
-#            
-#            debris_melt_df = pd.DataFrame(np.zeros((len(debris_thicknesses),2)), 
-#                                          columns=['debris_thickness', 'melt_mwea'])
-#        
-#            # Time information
-#            time_pd = pd.to_datetime(ds.time.values)    
-#            
-#            for nelev, elev_cn in enumerate(elev_cns2analyze):
-##                if debug:
-##                    print(nelev, elev_cn)
-#        
-#                for ndebris, debris_thickness in enumerate(debris_thicknesses):                    
-#                    melt_mwea = ds['melt'][ndebris,:,stats_idx,nelev].values.sum() / (len(time_pd)/24/365.25)
-#                                 
-#                    debris_melt_df.loc[ndebris] = debris_thickness / 100, melt_mwea
-#            
-#                # Fit curve
-#                fit_idx = list(np.where(debris_thicknesses >= 5)[0])            
-#                func_coeff, pcov = curve_fit(melt_fromdebris_func, 
-#                                             debris_melt_df.debris_thickness.values[fit_idx], 
-#                                             debris_melt_df.melt_mwea.values[fit_idx])
-##                func_coeff_meltfromdebris = func_coeff.copy()
-##                fit_melt = melt_fromdebris_func(debris_melt_df.debris_thickness.values, func_coeff[0], func_coeff[1])
-#                
-#                # Record ostrem curve information
-#                ds_ostrem['melt_mwea'][:,0,nelev] = debris_melt_df.melt_mwea.values
-#                ds_ostrem['b0'][0,nelev] = func_coeff[0]
-#                ds_ostrem['k'][0,nelev] = func_coeff[1]
-#            # Export netcdf
-#            ds_ostrem.to_netcdf(input.ostrem_fp + ds_ostrem_fn)
-#        
-#        # Plot debris vs. surface lowering
-#        if args.plotfigs == 1:
-#            
-#            # Open dataset
-#            ds_ostrem = xr.open_dataset(input.ostrem_fp + ds_ostrem_fn)
-#            
-#            fig, ax = plt.subplots(1, 1, squeeze=False, sharex=False, sharey=False, 
-#                                   gridspec_kw = {'wspace':0.4, 'hspace':0.15})
-#            
-#            elev_colordict = {'zmean':'k', 'zstdlow':'r', 'zstdhigh':'b'}
-#            elev_zorderdict = {'zmean':3, 'zstdlow':1, 'zstdhigh':1}
-#            elev_lwdict = {'zmean':1, 'zstdlow':0.5, 'zstdhigh':0.5}
-#            for nelev, elev_cn in enumerate(elev_cns2analyze):
-#        
-##                if debug:
-##                    print(nelev, elev_cn)
-#                debris_melt_df = pd.DataFrame(np.zeros((len(ds_ostrem.hd_cm.values),2)), 
-#                                          columns=['debris_thickness', 'melt_mwea'])
-#                debris_melt_df['debris_thickness'] = ds_ostrem.hd_cm.values / 100
-#                debris_melt_df['melt_mwea'] = ds_ostrem['melt_mwea'][:,stats_idx,nelev].values
-#                
-#                func_coeff = [ds_ostrem['b0'][stats_idx,nelev].values, ds_ostrem['k'][stats_idx,nelev].values]
-#                
-#                # Fitted curve
-#                debris_4curve = np.arange(0.02,5.01,0.01)
-#                melt_4curve = melt_fromdebris_func(debris_4curve, func_coeff[0], func_coeff[1])
-#                
-#                # Plot curve
-#                ax[0,0].plot(debris_melt_df['debris_thickness'], debris_melt_df['melt_mwea'], 'o', 
-#                             color=elev_colordict[elev_cn], markersize=3, markerfacecolor="None", markeredgewidth=0.75,
-#                             zorder=elev_zorderdict[elev_cn], label=elev_cn)
-#                ax[0,0].plot(debris_4curve, melt_4curve, 
-#                             color=elev_colordict[elev_cn], linewidth=elev_lwdict[elev_cn], linestyle='--', 
-#                             zorder=elev_zorderdict[elev_cn]+1)
-#                # text
-#                if nelev == 0:
-#                    ax[0,0].text(0.5, 1.05, plot_str, size=10, horizontalalignment='center', verticalalignment='top', 
-#                                 transform=ax[0,0].transAxes)
-#                    eqn_text = r'$b = \frac{b_{0}}{1 + kb_{0}h}$'
-#                    coeff1_text = r'$b_{0} = ' + str(np.round(func_coeff[0],2)) + '$' 
-#                    coeff2_text = r'$k = ' + str(np.round(func_coeff[1],2)) + '$' 
-#                    # coeff$\frac{b_{0}}{1 + 2kb_{0}h}$'
-#                    ax[0,0].text(0.9, 0.95, eqn_text, size=12, horizontalalignment='right', verticalalignment='top', 
-#                                 transform=ax[0,0].transAxes)
-#                    ax[0,0].text(0.615, 0.83, 'where', size=10, horizontalalignment='left', verticalalignment='top', 
-#                                 transform=ax[0,0].transAxes)
-#                    ax[0,0].text(0.66, 0.77, coeff1_text, size=10, horizontalalignment='left', verticalalignment='top', 
-#                                 transform=ax[0,0].transAxes)
-#                    ax[0,0].text(0.66, 0.7, coeff2_text, size=10, horizontalalignment='left', verticalalignment='top', 
-#                                 transform=ax[0,0].transAxes)
-#                    # X-label
-#                    ax[0,0].set_xlabel('Debris thickness(m)', size=12)
-#                    ax[0,0].set_xlim(0, 2.1)
-#                    #ax[0,0].set_xlim(0, debris_melt_df.debris_thickness.max())
-#                    ax[0,0].xaxis.set_tick_params(labelsize=12)
-#                    ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(0.5))
-#                    ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(0.1))  
-#                    # Y-label
-#                    ax[0,0].set_ylabel('Melt (mwea)', size=12)
-#                    ax[0,0].set_ylim(0,(int(debris_melt_df.melt_mwea.values.max()/0.1)+3)*0.1)
-#                    ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(1))
-#                    ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(0.1))
-#                    # Tick parameters
-#                    ax[0,0].yaxis.set_ticks_position('both')
-#                    ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
-#                    ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
-#                      
-#            # Save plot
-#            ax[0,0].legend(loc=(0.65,0.45), fontsize=10, labelspacing=0.25, handlelength=1, handletextpad=0.25, 
-#                           borderpad=0, frameon=False)
-#            fig.set_size_inches(4, 4)
-#            figure_fn = input.output_ostrem_fn_sample.replace('XXXX',plot_str).replace('.nc','.png')
-#            if os.path.exists(input.ostrem_fp) == False:
-#                os.makedirs(input.ostrem_fp)
-#            fig.savefig(input.ostrem_fp + figure_fn, bbox_inches='tight', dpi=300) 
 
     if debug:
         return ds_ostrem  
@@ -452,7 +336,7 @@ if __name__ == '__main__':
         with open(args.latlon_fn, 'rb') as f:
             latlon_list = pickle.load(f)
     else:
-        latlon_list = input.latlon_list    
+        latlon_list = debris_prms.latlon_list    
 
         #%%
     # Number of cores for parallel processing

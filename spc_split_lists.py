@@ -7,7 +7,8 @@ import os
 import numpy as np
 import pickle
 # Local libraries
-import globaldebris_input as input
+#import globaldebris_input as input
+import debrisglobal.globaldebris_input as debris_prms
 
 
 def getparser():
@@ -109,7 +110,7 @@ if __name__ == '__main__':
     for i in os.listdir():
             
         if args.ignore_regionname == 0:
-            check_str = input.roi + '_' + batch_str
+            check_str = debris_prms.roi + '_' + batch_str
         elif args.ignore_regionname == 1:
             check_str = batch_str
         
@@ -124,19 +125,19 @@ if __name__ == '__main__':
     #%%    
     # Check if need to update old batch files or not
     #  (different number of glaciers or batches)
-    if count_latlons != len(input.latlon_list) or args.n_batches != len(batch_list):
+    if count_latlons != len(debris_prms.latlon_list) or args.n_batches != len(batch_list):
         # Delete old files
         for i in batch_list:
             os.remove(i)
             
         # Split list of of lat/lons
         # Lat/lon lists to pass for parallel processing
-        latlon_lsts = split_list(input.latlon_list, n=args.n_batches, option_ordered=args.option_ordered)
+        latlon_lsts = split_list(debris_prms.latlon_list, n=args.n_batches, option_ordered=args.option_ordered)
     
         # Export new lists
         for n in range(len(latlon_lsts)):
             if args.ignore_regionname == 0:
-                batch_fn = input.roi + '_' + batch_str + str(n) + '.pkl'
+                batch_fn = debris_prms.roi + '_' + batch_str + str(n) + '.pkl'
             elif args.ignore_regionname == 1:
                 batch_fn = batch_str + str(n) + '.pkl'
                 

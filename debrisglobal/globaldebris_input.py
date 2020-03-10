@@ -31,9 +31,9 @@ ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 #roi = '08'
 #roi = '09'
 #roi = '10'
-roi = '11'
+#roi = '11'
 #roi = '12'
-#roi = 'HMA'
+roi = 'HMA'
 #roi = '16'
 #roi = '17'
 #roi = '18'
@@ -123,6 +123,12 @@ mb_dataset_fp_dict = {'braun': main_directory + '/../mb_data/Braun/binned_data/'
                       'larsen': main_directory + '/../mb_data/Larsen/binned_data/',
                       'mcnabb': main_directory + '/../mb_data/McNabb/binned_data/',
                       'shean': main_directory + '/../mb_data/Shean/binnedf_data/'}
+mb_yrfrac_dict = {'01': [2000.6, 2018.6],
+                  '02': None,
+                  '03': None,
+                  '11': [2000.128, 2013],
+                  'HMA': [2000.6, 2018.6],
+                  '18': None}
 dhdt_fn_dict = {'01': main_directory + '/../mb_data/McNabb/01_rgi60_Alaska_ls_dh.tif',
                 '02': None,
                 '03': main_directory + '/../mb_data/McNabb/03_rgi60_ArcticCanadaNorth_ls_dh.tif',
@@ -130,6 +136,7 @@ dhdt_fn_dict = {'01': main_directory + '/../mb_data/McNabb/01_rgi60_Alaska_ls_dh
                 'HMA': main_directory + '/../mb_data/Shean/' + 
                        'dem_align_ASTER_WV_index_2000-2018_aea_trend_3px_filt_mos_retile.tif',
                 '18': main_directory + '/../mb_data/Braun/region_18_NZ_dh_dt_on_ice.tif'}
+
 oggm_fp = main_directory + '/../oggm_project/debris_project/'
 width_min_dict = {'01': 240,
                   '02': 240,
@@ -151,10 +158,11 @@ min_bin_samp_count = 0
 
 # ===== CLIMATE DATA =====
 metdata_fp = main_directory + '/../climate_data/' + roi + '/'
+#metdata_fp = '/Volumes/LaCie/ERA5/hourly/' + roi + '/'
 metdata_elev_fn = 'ERA5_elev.nc'
 mb_binned_fp = main_directory + '/../output/mb_bins/csv/'
 mb_bin_size = 10
-output_fig_fp = main_directory + '/../output/mb_bins/figures/'
+output_fig_fp = main_directory + '/../output/figures/'
 mb_binned_fp_wdebris = main_directory + '/../output/mb_bins/csv/_wdebris/'
 mb_binned_fp_wdebris_hdts = main_directory + '/../output/mb_bins/csv/_wdebris_hdts/'
 era5_hrly_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
@@ -214,6 +222,8 @@ debriscover_fn_dict = {'01':'01_rgi60_L8ratio_fixed_v2.shp',
 dc_percarea_threshold = 5   # percent area threshold (%)
 dc_area_threshold = 1       # debris-covered area threshold (km2) for large glaciers with low % but significant debris
 min_glac_area = 2           # minimum glacier area (only work with large glaciers)
+term_elevrange_perc = 0.1   # Terminus elevation range (ex. 0.1 = lower 10% of glacier)
+term_area_perc = 10         # Terminus area percentage (ex. 10 = lower 10% of glacier by area)
 
 # Glacier data
 glac_shp_fn_dict = {
@@ -379,25 +389,6 @@ fn_prefix = 'Rounce2015_' + roi + '-'
 elev_cns = ['zmean']
 #elev_cns = ['zmean', 'zstdlow', 'zstdhigh']
 
-# Output info
-output_option = 2           # 1: csv of all fluxes and internal temps, 2: netcdf of melt and ts
-if output_option == 2:
-    mc_stat_cns = ['mean']
-elif output_option == 3:
-    mc_stat_cns = ['mean', 'std', '25%', '75%']
-    print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
-date_start = '20200223'
-#eb_fp_dict = {'01':'/Volumes/LaCie/debris_global_output/output/exp3/01_20200113/',
-#              '02': None,
-#              '03': None,
-#              '11': None,
-#              'HMA':'/Volumes/LaCie/debris_global_output/output/exp3/HMA_20200113/',
-#              '16': None,
-#              '17': None,
-#              '18': None}
-#eb_fp = eb_fp_dict[roi]
-#eb_fp = input.output_fp + 'exp' + str(input.experiment_no) + 'a/'
-
 # ===== Debris properties =====
 experiment_no = 3
 # Debris thickness
@@ -407,7 +398,6 @@ debris_thickness_all = np.array([0])
 #debris_thickness_all[1] = 0.02
 
 # Surface roughness, thermal conductivity, and albedo
-
 if experiment_no == 3:
     z0_random = np.array([0.016])
     k_random = np.array([1.])
@@ -436,6 +426,30 @@ Tsnow_threshold = 274.15      # Snow temperature threshold [K] - Regine get sour
 snow_min = 0.0001       # minimum snowfall (mwe) to include snow on surface; since the density of falling snow is
                         # much less (~50-100 kg m-3) 0.0001 m of snow w.e. will produce 0.001 - 0.002 m of snow
 rain_min = 0.0001
+
+
+
+# Output info
+output_option = 2           # 1: csv of all fluxes and internal temps, 2: netcdf of melt and ts
+if output_option == 2:
+    mc_stat_cns = ['mean']
+elif output_option == 3:
+    mc_stat_cns = ['mean', 'std', '25%', '75%']
+    print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
+date_start = '20200223'
+eb_fp_dict = {'01':'/Volumes/LaCie/debris_global_output/output/exp3/01_20200113/',
+              '02': None,
+              '03': None,
+              '04': None,
+              '05': None,
+              '11': output_fp + 'exp' + str(experiment_no) + '/',
+              '12': None,
+              'HMA': '/Volumes/LaCie/debris_output/exp3/HMA/',
+              '16': None,
+              '17': None,
+              '18': output_fp + 'exp' + str(experiment_no) + '/'}
+eb_fp = eb_fp_dict[roi]
+#eb_fp = output_fp + 'exp' + str(input.experiment_no) + '/'
 
 
 

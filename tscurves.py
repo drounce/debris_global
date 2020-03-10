@@ -23,15 +23,9 @@ from scipy.optimize import curve_fit
 import xarray as xr
 
 # Local libraries
-import globaldebris_input as input
+import debrisglobal.globaldebris_input as debris_prms
 from spc_split_lists import split_list
 
-#%% ===== SCRIPT SPECIFIC INFORMATION =====
-#eb_fp = input.main_directory + '/../output/exp3/'
-#eb_fn = input.fn_prefix + 'YYYYN-' + 'XXXXE-' + input.date_start + '.nc'
-#
-#elev_cns2analyze = ['zmean']
-#elev_cns2analyze = ['zmean', 'zstdlow', 'zstdhigh']
 
 #%% ===== FUNCTIONS =====
 def getparser():
@@ -113,7 +107,7 @@ def create_xrdataset_ts(ds, time_values):
                     'comment': 'elevation associated with the elevation column name (elev_cns)'},
             'stats': {
                     'long_name': 'variable statistics',
-                    'comment': str(input.k_random.shape[0]) + ' simulations; % refers to percentiles'},
+                    'comment': str(debris_prms.k_random.shape[0]) + ' simulations; % refers to percentiles'},
             'elev_cns': {
                     'long_name': 'elevation column names',
                     'comment': 'elevations used to run the simulations'},
@@ -177,11 +171,11 @@ def main(list_packed_vars):
     count = list_packed_vars[0]
     latlon_list = list_packed_vars[1]
     
-#    if debug:
-#        print(count, latlon_list)
+    if debug:
+        print(count, latlon_list)
         
     # Surface temperature information (year, day of year, hour)
-    ts_info_fullfn = input.ts_fp + input.roi + '_debris_tsinfo.nc'
+    ts_info_fullfn = debris_prms.ts_fp + debris_prms.roi + '_debris_tsinfo.nc'
     ds_ts_info = xr.open_dataset(ts_info_fullfn, decode_times=False)
     
     for nlatlon, latlon in enumerate(latlon_list):
@@ -196,27 +190,22 @@ def main(list_packed_vars):
         # stats column index (0=mean)
         stats_idx = 0
         
-        # Filename
-        plot_str = str(int(lat_deg*100)) + 'N-' + str(int(lon_deg*100)) + 'E'
-        ds_tscurve_fn = input.output_ts_fn_sample.replace('XXXX', plot_str)
-        
-        # Melt model output fn                
+        # Filenames            
         if lat_deg < 0:
             lat_str = 'S-'
         else:
             lat_str = 'N-'
-        ds_meltmodel_fn = (input.fn_prefix + str(int(abs(lat_deg*100))) + lat_str + str(int(lon_deg*100)) + 'E-' + 
-                           input.date_start + '.nc')
+        latlon_str = str(int(abs(lat_deg*100))) + lat_str + str(int(lon_deg*100)) + 'E-'
+        # Raw meltmodel output filename
+        ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + debris_prms.date_start + '.nc'
+        # Output processed surface temperature curve dataset
+        ds_tscurve_fn = debris_prms.output_ts_fn_sample.replace('XXXX', latlon_str)
         
-#        print(os.path.exists(input.tscurve_fp + ds_tscurve_fn) == False)
-#        print(os.path.exists(input.eb_fp + ds_meltmodel_fn) == True)
-#        print(input.eb_fp + ds_meltmodel_fn)
-        
-        if ((os.path.exists(input.tscurve_fp + ds_tscurve_fn) == False) and 
-            (os.path.exists(input.eb_fp + ds_meltmodel_fn) == True)):
+        if ((os.path.exists(debris_prms.tscurve_fp + ds_tscurve_fn) == False) and 
+            (os.path.exists(debris_prms.eb_fp + ds_meltmodel_fn) == True)):
             
             # Dataset from energy balance modeling
-            ds = xr.open_dataset(input.eb_fp + ds_meltmodel_fn)
+            ds = xr.open_dataset(debris_prms.eb_fp + ds_meltmodel_fn)
             
             # Time information of surface temperature
             lat_idx = np.abs(lat_deg - ds_ts_info['latitude'][:].values).argmin(axis=0)
@@ -244,7 +233,7 @@ def main(list_packed_vars):
                 # Output dataset
                 ds_ts, encoding = create_xrdataset_ts(ds, time_all_interpolated)
                 
-                for nelev, elev_cn in enumerate(input.elev_cns):
+                for nelev, elev_cn in enumerate(debris_prms.elev_cns):
 #                    if debug:
 #                        print(nelev, elev_cn)
                         
@@ -262,9 +251,9 @@ def main(list_packed_vars):
                     ds_ts['dsnow'][:,:,stats_idx,nelev] = dsnow_data
                         
                 # Export netcdf
-                if os.path.exists(input.tscurve_fp) == False:
-                    os.makedirs(input.tscurve_fp)
-                ds_ts.to_netcdf(input.tscurve_fp + ds_tscurve_fn)
+                if os.path.exists(debris_prms.tscurve_fp) == False:
+                    os.makedirs(debris_prms.tscurve_fp)
+                ds_ts.to_netcdf(debris_prms.tscurve_fp + ds_tscurve_fn)
 
     if debug:
         return ds_ts
@@ -289,7 +278,7 @@ if __name__ == '__main__':
         with open(args.latlon_fn, 'rb') as f:
             latlon_list = pickle.load(f)
     else:
-        latlon_list = input.latlon_list
+        latlon_list = debris_prms.latlon_list
     
     # Number of cores for parallel processing
     if args.option_parallels != 0:

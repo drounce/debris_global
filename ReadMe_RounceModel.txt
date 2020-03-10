@@ -32,7 +32,7 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 0. DEMs:
    - download OGGM's best DEM with ice thickness and widths:
 	 https://cluster.klima.uni-bremen.de/~fmaussion/output/debris_project/
-     Use wget:
+     Use wget and run from the oggm_project directory (i.e., change directory to oggm_project)
        wget -r -nH --cut-dirs=2 -np -R "index.html*" https://cluster.klima.uni-bremen.de/~fmaussion/output/debris_project/
 
 1. Debris cover extents:
@@ -53,6 +53,7 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 	    run this until get to first unique lat/lons such that you can process the relevant data
        c. python ERA5_preprocess_looplatlon.py -process_unique_latlon_data=1
             download and pre-process into netcdf files for each site with a glacier
+	  (or from external directly: python ERA5_preprocess_looplatlon.py -process_unique_latlon_data=1 -roi='12' -fromexternal='1')
 
 3. Mass Balance data:
    - process MB data: (this is done as part of the workflow now)
@@ -86,9 +87,6 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 2. meltmodel_global.py: 
     ---> run model to get melt/Ts/snow at every timestep
 
-
-
-
 3. meltcurves.py: 
     ---> processes meltmodel_global.py output to develop Ostrem curves for each glacier
 
@@ -97,12 +95,10 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 
 5. tscurves.py: processes meltmodel_global.py output to develop Ts-hd curves for each lat/lon
 
-6. global_melt2thickness.py: sub-debris melt inversion for debris thickness based on mass balance data and emergence velocities
-    --> pygem_v2 environment because debris_thickness_global has no array
-   #### MOVED THIS INTO HMA DEBRIS THICKNESS #####
 
-
-7. HMA_debris_thickness.ipynb: calibrate surface temperature inversion with sub-debris melt inversion
+6. debris_thickness.ipynb: 
+    ---> invert ostrem curves to estimate the binned debris thickness
+    ---> calibrate surface temperature inversion with sub-debris melt inversion
 
 
 # ===== SCRIPTS ACTUALLY USED (for clean-up of the repository) =====
@@ -111,6 +107,7 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
   - ERA5_preprocess_looplatlon.py
   - process_mb_bin.ipynb
   - globaldebris_input.py
+  - meltcuves.py
   - meltmodel_global.py
   - spc_run_meltmodel.sh
   - spc_split_lists.py
@@ -121,25 +118,29 @@ Alaska (01):
 '01.15645' # Kennicott  - good
 
 Western Canada (02):
-'02.12438' # Dome Glacier -    Mattson (2000) - 
+'02.12438' # Dome Glacier -    Mattson (2000)
 
 Europe (11):
-'11.01604' # Suldenferner (Lindsey has datasets)
-'11.02810' # Haut d'Arolla (Carenzo etal 2016)
-'11.03005' # Miage (Mihalcea et al. 2008; Foster et al. 2012; Ablation stake data from Reid and Brock 2010)
+'11.01604' # Suldenferner (0.32 +/- 0.10)
+'11.02810' # Haut d'Arolla (Carenzo etal 2016; 6 cm at an ablation stake +/- 3 cm)
+'11.03005' # Miage (Foster et al. 2012, Table 2 [E: 0.23 +/- 0.16 m at 2030 mass, C: 0.32 +/- 0.13 m at 2060 masl], Figure 8) 
+                   (Others: Mihalcea et al. 2008; Ablation stake data from Reid and Brock 2010)
 
 HMA (13,14,15):
 '13.43232' # Koxkar	- good (positive first bin)
 '14.04477' # Hispar 	- good
 '14.06794' # Baltoro 	- good
-'14.16042' # Batal      - good (Patel et al. 2016 - with altitude dependence)
-'14.15447' # Bara Shigri- good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
+'14.16042' # Batal       - good (Patel etal 2016 - with altitude dependence)
+'14.15447' # Bara Shigri - good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
 '15.03473' # Ngozumpa	- good
-'15.03733' # Khumbu 	- good (Gades et al 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus"
-'15.03734' # Changri Nup- good
-'15.04045' # Lirung	- good (McCarthy et al. 2017) Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus"
+'15.03733' # Khumbu 	- good (Gades etal 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus"
+'15.03734' # Changri Nup - good
+'15.04045' # Lirung	- good (McCarthy etal 2017) Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus"
 '15.04121' # Langtang	- good
-'15.07886' # Hailuogou  - HORRIBLE (Zhang et al. 2011, Figure 2)
+'15.07886' # Hailuogou   - good (Zhang etal 2011, Figure 2)
+
+South America (17):
+'17.13720' # Piramide	- (Ayala etal 2016)
 
 
 # ===== UNCERTAINTIES ====================================================================================================================
@@ -182,3 +183,12 @@ Is uncertainty associated with the model parameters parameters comparable to the
   a) using the full x-axis needed to show the full ranges and in  that case make  in  inlet figure with 0-5 m so that information does not get too  squeezed.
   b) indicate the number of samples per dot by using different symbol size. Would need to be the same  symbol  for  comparability  in which case you would need  to use colors for the different sites.
 
+
+
+Limitations/issues:
+  - 13.00604 - debris cover is up-glacier (this is a rock crop, not a DCG!): showcases issues with debris outlines and glacier outlines
+
+
+Discussion:
+  - additional benefit of temperature inversion over the sub-debris melt inversion method is that the temperature inversion can have debris thickness < 0.02,
+    while this is an indeterminate problem for the sub-debris melt inversion method since there are two correct answers 
