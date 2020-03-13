@@ -80,7 +80,8 @@ if __name__ == '__main__':
                 print(n, era5_fn)
             
             # Export subset
-            ds_out_fp = debris_prms.metdata_fp
+#            ds_out_fp = debris_prms.metdata_fp
+            ds_out_fp = debris_prms.main_directory + '/../climate_data/' + roi + '/'
             ds_out_fn = roi + '-' + era5_fn
             if os.path.exists(ds_out_fp) == False:
                 os.makedirs(ds_out_fp)
@@ -120,6 +121,7 @@ if __name__ == '__main__':
                     era5_reg_fns.append(i)
         era5_reg_fns = sorted(era5_reg_fns)
         
+        
         # Process unique lat/lons 
         #  (best to get pickle from the debris_stats.ipynb script)
         if debris_prms.latlon_list_raw == 'all':
@@ -141,7 +143,8 @@ if __name__ == '__main__':
             output_metdata_fn = (metdata_fn_sample.replace('XXXX', str(int(abs(lat_deg)*100)) + lat_str + 
                                                            str(int(lon_deg*100)) + 'E-'))
             
-            print(output_metdata_fn)
+#            print(output_metdata_fn, 'exists?', os.path.exists(output_metdata_fp + output_metdata_fn))
+            
             
             if os.path.exists(output_metdata_fp + output_metdata_fn) == False:
                 print('  ', output_metdata_fn)    

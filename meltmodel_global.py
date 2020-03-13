@@ -131,7 +131,8 @@ def pickle_data(fn, data):
         pickle.dump(data, f)
         
 def create_xrdataset(debris_thickness_all=debris_prms.debris_thickness_all, time_values=None, 
-                     stat_cns=debris_prms.mc_stat_cns, elev_cns=debris_prms.elev_cns):
+                     elev_values=None, stat_cns=debris_prms.mc_stat_cns, 
+                     lat_deg=None, lon_deg=None, roi=debris_prms.roi):
     """
     Create empty xarray dataset that will be used to record simulation runs.
 
@@ -157,56 +158,58 @@ def create_xrdataset(debris_thickness_all=debris_prms.debris_thickness_all, time
     """
     # Create empty datasets for each variable and merge them
     # Coordinate values
-    debris_cm_values = (debris_prms.debris_thickness_all*100).astype(int)
+    hd_cm_values = (debris_prms.debris_thickness_all*100).astype(int)
+    
     # Variable coordinates dictionary
-    output_coords_dict = {
-            'melt': collections.OrderedDict(
-                    [('hd_cm', debris_cm_values), ('time', time_values), 
-                     ('stats', stat_cns), ('elev_cns', elev_cns)]),
-            'ts': collections.OrderedDict(
-                    [('hd_cm', debris_cm_values), ('time', time_values), 
-                     ('stats', stat_cns), ('elev_cns', elev_cns)]),
-            'snow_depth': collections.OrderedDict(
-                    [('hd_cm', debris_cm_values), ('time', time_values), 
-                     ('stats', stat_cns), ('elev_cns', elev_cns)]),
-            'elev': collections.OrderedDict(
-                    [('elev_cns', elev_cns)])
-            }
+    output_coords_dict = collections.OrderedDict()
+#    output_coords_dict['latitude'] = lat_deg
+#    output_coords_dict['longitude'] = lon_deg
+#    output_coords_dict['roi'] = roi
+#    output_coords_dict['elev'] = collections.OrderedDict([('elev', elev_values)])
+    output_coords_dict['melt'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                          ('elev', elev_values)])
+    output_coords_dict['ts'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                        ('elev', elev_values)])
+    output_coords_dict['snow_depth'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                ('elev', elev_values)])
+    if 'std' in stat_cns:
+        output_coords_dict['melt_std'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                  ('elev', elev_values)])
+        output_coords_dict['ts_std'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                ('elev', elev_values)])
+        output_coords_dict['snow_depth_std'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                        ('elev', elev_values)])
     # Attributes dictionary
     output_attrs_dict = {
-            'time': {
-                    'long_name': 'date'},
-            'hd_cm': {
-                    'long_name': 'debris thickness in centimeters',
-                    'comment': 'cm so values are integers'},
-            'elev': {
-                    'long_name': 'elevation',
-                    'units': 'm a.s.l.',
-                    'comment': 'elevation associated with the elevation column name (elev_cns)'},
-            'stats': {
-                    'long_name': 'variable statistics',
-                    'comment': str(debris_prms.k_random.shape[0]) + ' simulations; % refers to percentiles'},
-            'elev_cns': {
-                    'long_name': 'elevation column names',
-                    'comment': 'elevations used to run the simulations'},
-            'melt': {
-                    'long_name': 'sub-debris glacier melt',
-                    'units': 'meters water equivalent',
-                    'temporal_resolution': 'hourly'},
-            'ts': {
-                    'long_name': 'debris surface temperature',
-                    'units': 'K',
-                    'temporal_resolution': 'hourly'},
-            'snow_depth': {
-                    'long_name': 'snow depth',
-                    'units': 'm',
-                    'temporal_resolution': 'hourly'}
+            'latitude': {'long_name': 'latitude',
+                         'units': 'degrees north'},
+            'longitude': {'long_name': 'longitude',
+                          'units': 'degrees_east'},
+            'roi': {'long_name': 'region of interest'},
+            'time': {'long_name': 'time'},
+            'hd_cm': {'long_name': 'debris thickness',
+                      'units:': 'cm'},
+            'elev': {'long_name': 'elevation',
+                     'units': 'm a.s.l.'},
+            'melt': {'long_name': 'glacier melt, in water equivalent',
+                     'units': 'm'},
+            'ts': {'long_name': 'surface temperature',
+                    'units': 'K'},
+            'snow_depth': {'long_name': 'snow depth',
+                           'units': 'm'},
+            'melt_std': {'long_name': 'glacier melt, in water equivalent, standard deviation',
+                         'units': 'm w.e.'},
+            'ts_std': {'long_name': 'surface temperature standard deviation',
+                    'units': 'K'},
+            'snow_depth_std': {'long_name': 'snow depth standard deviation',
+                               'units': 'm'}
             }
+            
+    #%%
     # Add variables to empty dataset and merge together
     count_vn = 0
     encoding = {}
-    noencoding_vn = ['stats', 'hd_cm', 'elev_cns', 'elev']
-    for vn in ['melt', 'ts', 'elev', 'snow_depth']:
+    for vn in output_coords_dict.keys():
         count_vn += 1
         empty_holder = np.zeros([len(output_coords_dict[vn][i]) for i in list(output_coords_dict[vn].keys())])
         output_ds = xr.Dataset({vn: (list(output_coords_dict[vn].keys()), empty_holder)},
@@ -216,16 +219,34 @@ def create_xrdataset(debris_thickness_all=debris_prms.debris_thickness_all, time
             output_ds_all = output_ds
         else:
             output_ds_all = xr.merge((output_ds_all, output_ds))
-
+            
+    noencoding_vn = []
     # Add attributes
-    for vn in ['melt', 'ts', 'snow_depth', 'time', 'hd_cm', 'stats', 'elev_cns', 'elev']:
+    for vn in output_ds_all.variables:
         try:
             output_ds_all[vn].attrs = output_attrs_dict[vn]
         except:
             pass
         # Encoding (specify _FillValue, offsets, etc.)
         if vn not in noencoding_vn:
-            encoding[vn] = {'_FillValue': False}
+            encoding[vn] = {'_FillValue': False,
+                            'zlib':True,
+                            'complevel':9
+                            }
+            
+    # Add values    
+    output_ds_all['latitude'] = lat_deg
+    output_ds_all['latitude'].attrs = output_attrs_dict['latitude']
+    output_ds_all['longitude'] = lon_deg
+    output_ds_all['longitude'].attrs = output_attrs_dict['longitude']
+    output_ds_all['time'].values = time_values
+    output_ds_all['hd_cm'].values = hd_cm_values
+    output_ds_all['elev'].values = elev_values
+    
+    # Add attributes
+    output_ds_all.attrs = {'institution': 'University of Alaska Fairbanks, Fairbanks, AK',
+                           'history': 'Created by David Rounce (drounce@alaska.edu) on ' + debris_prms.date_start,
+                           'references': 'doi:10.5194/tc-9-2295-2015'}
     return output_ds_all, encoding
 
 
@@ -355,11 +376,11 @@ def solar_calcs_NOAA(year, julian_day_of_year, time_frac, longitude_deg, latitud
     # Approx Atmospheric Refraction (deg)
     ApproxAtmosRefrac_deg = -20.772 / np.tan(SolarElevationAngle_rad)
     ApproxAtmosRefrac_deg[SolarElevationAngle_deg > 85] = 0
-    mask = [(SolarElevationAngle_deg > 5) & (SolarElevationAngle_deg <= 85)]
+    mask = np.where((SolarElevationAngle_deg > 5) & (SolarElevationAngle_deg <= 85))[0]
     ApproxAtmosRefrac_deg[mask] = (
             58.1 / np.tan(SolarElevationAngle_rad[mask]) - 0.07 / ((np.tan(SolarElevationAngle_rad[mask]))**3) +
             0.000086 / ((np.tan(SolarElevationAngle_rad[mask]))**5))
-    mask = [(SolarElevationAngle_deg > -0.575) & (SolarElevationAngle_deg <= 5)]
+    mask = np.where((SolarElevationAngle_deg > -0.575) & (SolarElevationAngle_deg <= 5))[0]
     ApproxAtmosRefrac_deg[mask] = (
             1735 + SolarElevationAngle_deg[mask] * (-518.2 + SolarElevationAngle_deg[mask] *
             (103.4 + SolarElevationAngle_deg[mask] * (-12.79 + SolarElevationAngle_deg[mask]*0.711))))
@@ -595,8 +616,8 @@ def calc_surface_fluxes(Td_i, Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Rain_
         albedo_snow = np.mean([albedo_v, albedo_ir])
         # Adjustments to albedo
         # ensure albedo is within bounds
-        if albedo_snow > 1:
-            albedo_snow = 1
+        if albedo_snow > 0.9:
+            albedo_snow = 0.9
         elif albedo_snow < 0:
             albedo_snow = 0
         # if snow less than 0.1 m, then underlying debris influences albedo
@@ -887,17 +908,18 @@ def calc_surface_fluxes_cleanice(Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Ra
         albedo_v = albedo_vd + 0.4 * f_psi * (1 - albedo_vd)
         albedo_ir = albedo_ird + 0.4 * f_psi * (1 - albedo_ird)
         albedo_snow = np.mean([albedo_v, albedo_ir])
+        
         # Adjustments to albedo
-        # ensure albedo is within bounds
-        if albedo_snow > 1:
-            albedo_snow = 1
+        # ensure albedo is within bounds (Hock and Holmgren, 2005)
+        if albedo_snow > 0.9:
+            albedo_snow = 0.9
         elif albedo_snow < 0:
             albedo_snow = 0
         # if snow less than 0.1 m, then underlying debris influences albedo
         if dsnow_i < 0.1:
             r_adj = (1 - dsnow_i/0.1)*np.exp(dsnow_i / (2*0.1))
             albedo_snow = r_adj * Albedo + (1 - r_adj) * albedo_snow
-
+            
         # Snow Energy Balance
         Rn_snow = (Sin_i * (1 - albedo_snow) + debris_prms.emissivity_snow * (Lin_AWS_i -
                    (debris_prms.stefan_boltzmann * tsnow_i**4)))
@@ -915,7 +937,7 @@ def calc_surface_fluxes_cleanice(Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Ra
         Pflux_snow = (Rain_AWS_i * (debris_prms.Lf * debris_prms.density_water + debris_prms.cW * 
                                     debris_prms.density_water * (np.max([273.15, Tair_i]) - 273.15)) / 
                       debris_prms.delta_t)
-        # Assume no flux between the snow and ice, i.e., assuming they're at the same temperature
+        # Assume no flux between the snow and ice (Huss and Holmgren 2005)
         Qc_snow_ice = 0
 
         # Net energy available for snow depends on latent heat flux
@@ -936,7 +958,12 @@ def calc_surface_fluxes_cleanice(Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Ra
 
         # Max energy spent cooling snowpack based on 1 degree temperature change
         Qcc_snow_neg1 = -1 * debris_prms.cSnow * debris_prms.density_water * dsnow_i / debris_prms.delta_t
-
+        
+        
+#        if i_step > 39900 and i_step < 40000:
+#            print('i:', i_step, 'albedo:', np.round(albedo_snow,2), 'dsnow:', np.round(dsnow_i,3), 
+#                  'Rn_snow:', np.round(Rn_snow), 'Tair:', np.round(Tair_i, 1))
+        
         # If Fnet_snow is positive and greater than cold content, then energy is going to warm the
         # snowpack to melting point and begin melting the snow.
         if Fnet_snow > Qcc_snow:
@@ -958,6 +985,9 @@ def calc_surface_fluxes_cleanice(Tair_i, RH_AWS_i, u_AWS_i, Sin_i, Lin_AWS_i, Ra
 
         # Total snow melt
         snow_melt = snow_melt_energy + snow_sublimation
+        
+#        if i_step > 39900 and i_step < 40000:
+#            print('  snow melt:', np.round(snow_melt,3), 'tsnow:', np.round(tsnow_i,2))
 
         # Snow depth [m w.e.]
         dsnow_i -= snow_melt
@@ -1074,8 +1104,19 @@ def main(list_packed_vars):
         hour = hour_all[start_idx:end_idx+1]
         minute = minute_all[start_idx:end_idx+1]
         
+        # Elevations
+        elev_list = []
+        for elev_cn in debris_prms.elev_cns:
+            if elev_cn == 'zmean':
+                elev_list.append(int(np.round(ds['dc_zmean'].values,0)))
+            elif elev_cn == 'zstdlow':
+                elev_list.append(int(np.round(ds['dc_zmean'].values - ds['dc_zstd'].values,0)))
+            elif elev_cn == 'zstdhigh':
+                elev_list.append(int(np.round(ds['dc_zmean'].values + ds['dc_zstd'].values,0)))
+        
         if debris_prms.output_option in [2,3]:
-            output_ds_all, encoding = create_xrdataset(time_values=time_pd)
+            output_ds_all, encoding = create_xrdataset(lat_deg=lat_deg, lon_deg=lon_deg, time_values=time_pd, 
+                                                       elev_values=elev_list)
         
         # Load meteorological data
         # Air temperature
@@ -1102,6 +1143,20 @@ def main(list_packed_vars):
         Snow_AWS = None
         # Assume no adjustments for slope/aspect from AWS
         Sin_timeseries = Sin_AWS
+        
+        # Lapse rate (monthly)
+        ds_lr = xr.open_dataset(debris_prms.metdata_lr_fullfn)
+        lat_idx = np.abs(lat_deg - ds_lr ['latitude'].values).argmin()
+        lon_idx = np.abs(lon_deg - ds_lr ['longitude'].values).argmin()
+        lr_monthly_all = ds_lr['lapserate'][:,lat_idx,lon_idx].values
+        lr_time_pd_all = pd.to_datetime(ds_lr.time.values)
+        lr_year_all = lr_time_pd_all.year
+        lr_month_all = np.array(lr_time_pd_all.month)
+        lr_time_yymm_all = [str(lr_year_all[x]) + '-' + str(lr_month_all[x]).zfill(2) 
+                            for x in np.arange(0,len(lr_time_pd_all))]
+        lr_monthly_dict = dict(zip(lr_time_yymm_all, lr_monthly_all))
+        yearmonth_str = [str(year[x]) + '-' + str(month[x]).zfill(2) for x in np.arange(0,len(year))]
+        lapserate = np.array([lr_monthly_dict[x] for x in yearmonth_str])
  
 #        # Add spinup
 #        nsteps_spinup = int(debris_prms.spinup_days*24*60*60/debris_prms.delta_t)
@@ -1113,13 +1168,14 @@ def main(list_packed_vars):
         julian_day_of_year = np.array([int(x) for x in df_datetime.dt.strftime('%j').tolist()])
         nsteps = len(Tair_AWS)
         
-        for nelev, elev_cn in enumerate(debris_prms.elev_cns):
-            if elev_cn == 'zmean':
-                Elevation_pixel = ds['dc_zmean'].values
-            elif elev_cn == 'zstdlow':
-                Elevation_pixel = ds['dc_zmean'].values - ds['dc_zstd'].values
-            elif elev_cn == 'zstdhigh':
-                Elevation_pixel = ds['dc_zmean'].values + ds['dc_zstd'].values
+        for nelev, elev in enumerate(elev_list):
+            Elevation_pixel = elev
+#            if elev_cn == 'zmean':
+#                Elevation_pixel = int(np.round(ds['dc_zmean'].values,0))
+#            elif elev_cn == 'zstdlow':
+#                Elevation_pixel = int(np.round(ds['dc_zmean'].values - ds['dc_zstd'].values,0))
+#            elif elev_cn == 'zstdhigh':
+#                Elevation_pixel = int(np.round(ds['dc_zmean'].values + ds['dc_zstd'].values,0))
             
             output_ds_all['elev'].values[nelev] = Elevation_pixel
             Sin = Sin_timeseries
@@ -1128,7 +1184,7 @@ def main(list_packed_vars):
             slope_rad = 0
             aspect_rad = 0
             if debug:
-                print('Elevation column name:', elev_cn, np.round(Elevation_pixel, 1), 'm')
+                print('Elevation pixel:', np.round(Elevation_pixel, 0), 'm')
 
             # ===== LOOP THROUGH RELEVANT DEBRIS THICKNESS AND/OR MC SIMULATIONS =====
             for n_thickness in range(debris_prms.debris_thickness_all.shape[0]):
@@ -1185,7 +1241,7 @@ def main(list_packed_vars):
                         P = debris_prms.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
             
                         # Air temperature
-                        Tair = Tair_AWS - debris_prms.lapserate*(Elevation_pixel-Elev_AWS)
+                        Tair = Tair_AWS - lapserate*(Elevation_pixel-Elev_AWS)
                         # Snow [m]
                         if debris_prms.option_snow_fromAWS == 1:
                             if Snow_AWS == None:
@@ -1341,13 +1397,14 @@ def main(list_packed_vars):
                             output_ds['d_snow [m]'] = dsnow
                         
                         elif debris_prms.output_option == 2:
-                            output_ds_all['melt'].values[n_thickness,:,0,nelev] = (
+                            output_ds_all['melt'].values[n_thickness,:,nelev] = (
                                     Melt * debris_prms.density_ice / debris_prms.density_water)
-                            output_ds_all['ts'].values[n_thickness,:,0,nelev] = Td[0,:]
-                            output_ds_all['snow_depth'].values[n_thickness,:,0,nelev] = dsnow
+                            output_ds_all['ts'].values[n_thickness,:,nelev] = Td[0,:]
+                            output_ds_all['snow_depth'].values[n_thickness,:,nelev] = dsnow
                         
     
-                        output_fp = debris_prms.output_fp + 'exp' + str(debris_prms.experiment_no) + '/'
+                        output_fp = (debris_prms.output_fp + 'exp' + str(debris_prms.experiment_no) + '/' + 
+                                     debris_prms.roi + '/')
                         if os.path.exists(output_fp) == False:
                             os.makedirs(output_fp)
                         # add debris thickness string
@@ -1390,7 +1447,7 @@ def main(list_packed_vars):
                     P = debris_prms.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
         
                     # Air temperature
-                    Tair = Tair_AWS - debris_prms.lapserate*(Elevation_pixel-Elev_AWS)
+                    Tair = Tair_AWS - lapserate*(Elevation_pixel-Elev_AWS)
                     # Snow [m]
                     if debris_prms.option_snow_fromAWS == 1:
                         if Snow_AWS == None:
@@ -1460,11 +1517,12 @@ def main(list_packed_vars):
                     
                     # EXPORT OUTPUT
                     if debris_prms.output_option == 2:
-                        output_ds_all['melt'].values[n_thickness,:,0,nelev] = (
+                        output_ds_all['melt'].values[n_thickness,:,nelev] = (
                                 Melt * debris_prms.density_ice / debris_prms.density_water)
-                        output_ds_all['snow_depth'].values[n_thickness,:,0,nelev] = dsnow
+                        output_ds_all['snow_depth'].values[n_thickness,:,nelev] = dsnow
                     
-                    output_fp = debris_prms.output_fp + 'exp' + str(debris_prms.experiment_no) + '/'
+                    output_fp = (debris_prms.output_fp + 'exp' + str(debris_prms.experiment_no) + '/' + 
+                                 debris_prms.roi + '/')
                     if os.path.exists(output_fp) == False:
                         os.makedirs(output_fp)
                     # add debris thickness string
@@ -1543,3 +1601,98 @@ if __name__ == '__main__':
                 main(list_packed_vars[n])
                 
     print('\nProcessing time of :',time.time()-time_start, 's')
+
+
+#%%
+#option_troubleshoot = False
+#
+#if option_troubleshoot:
+#    # Find where snow never melts completely again
+#    #A = dsnow.copy()
+#    #A[A>0] = 1
+#    #B = A[1:] - A[0:-1]
+#    #print(np.where(B == 1))
+#        
+#    def array_1d_to_2d(data):
+#        return data.reshape((len(data),1))
+#    
+#    time_df = pd.DataFrame(time_pd, columns=['date'])
+#    Tair_AWS = array_1d_to_2d(Tair_AWS)
+#    RH_AWS = array_1d_to_2d(RH_AWS)
+#    Rain_AWS = array_1d_to_2d(Rain_AWS)
+#    snow = array_1d_to_2d(snow)
+#    Sin_AWS = array_1d_to_2d(Sin_AWS)
+#    Lin_AWS = array_1d_to_2d(Lin_AWS)
+#    Rn = array_1d_to_2d(Rn)
+#    LE = array_1d_to_2d(LE)
+#    H_flux = array_1d_to_2d(H_flux)
+#    Qc = array_1d_to_2d(Qc)
+#    Melt = array_1d_to_2d(Melt)
+#    dsnow = array_1d_to_2d(dsnow)
+#    tsnow = array_1d_to_2d(tsnow)
+#    snow_tau = array_1d_to_2d(snow_tau)
+#    output = pd.DataFrame(np.concatenate((Tair_AWS, RH_AWS, snow, Sin_AWS, Lin_AWS, Rn, LE, H_flux, Qc, Melt, 
+#                                          dsnow, tsnow, snow_tau), axis=1), 
+#                          columns=['Tair_AWS', 'RH_AWS', 'snow', 'Sin_AWS', 'Lin_AWS', 'Rn', 'LE', 'H_flux', 'Qc', 
+#                                   'Melt', 'dsnow', 'tsnow', 'snow_tau'])
+#    output = pd.concat([time_df, output], axis=1)
+#    output.to_csv(debris_prms.output_fp + 'EB_debug.txt', index=False)
+#    
+#    import matplotlib.pyplot as plt
+#    #%%
+#    nrows = 8
+#    linewidth=0.25
+#    fig, ax = plt.subplots(nrows, 1, squeeze=False, sharex=True, sharey=False, gridspec_kw = {'wspace':0.4, 'hspace':0})             
+#    ax[0,0].plot(time_pd, dsnow, color='k', linewidth=1)
+#    # Snow
+#    ax[0,0].set_xlabel('Time', size=12)
+#    ax[0,0].set_ylabel('Snow depth (m)', size=12)
+#    # Air temperature
+#    ax[1,0].plot(time_pd, Tair_AWS, color='k', linewidth=0.2)
+#    ax[1,0].set_ylabel('Tair (degC)', size=12)
+#    # Melt
+#    ax[2,0].plot(time_pd, Melt, color='k', linewidth=0.1)
+#    ax[2,0].set_ylabel('Melt (W m-2)', size=12)
+#    # Sin_AWS
+#    ax[3,0].plot(time_pd, Sin_AWS, color='k', linewidth=0.1)
+#    ax[3,0].set_ylabel('Sin (W m-2)', size=12)
+#    # Lin_AWS
+#    ax[4,0].plot(time_pd, Lin_AWS, color='k', linewidth=0.1)
+#    ax[4,0].set_ylabel('Lin (W m-2)', size=12)
+#    # Rn
+#    ax[5,0].plot(time_pd, Rn, color='k', linewidth=0.1)
+#    ax[5,0].set_ylabel('Rn (W m-2)', size=12)
+#    # LE
+#    ax[6,0].plot(time_pd, LE, color='k', linewidth=0.1)
+#    ax[6,0].set_ylabel('LE (W m-2)', size=12)
+#    # H
+#    ax[7,0].plot(time_pd, H_flux, color='k', linewidth=0.1)
+#    ax[7,0].set_ylabel('H (W m-2)', size=12)
+#    
+#    fig.set_size_inches(6, 2*nrows)
+#    figure_fn = 'EB_output.png'
+#    fig.savefig(debris_prms.output_fp + figure_fn, bbox_inches='tight', dpi=300)
+#    
+#    
+#    #%% Lapse rate
+##    ds_lr = xr.open_dataset('/Users/davidrounce/Documents/Dave_Rounce/HiMAT/Climate_data/ERA5/ERA5_lapserates_monthly.nc')
+##    lat_idx = 118 #60.5N
+##    lon_idx = 846
+##    t1_idx = 180
+##    t2_idx = 480
+##    lr_monthly = ds_lr.lapserate[t1_idx:t2_idx,lat_idx,lon_idx].values
+##    time_values = ds_lr.time[t1_idx:t2_idx].values
+##    # Plot lapse rates
+##    fig, ax = plt.subplots(1, 1, squeeze=False, sharex=True, sharey=False, gridspec_kw = {'wspace':0.4, 'hspace':0})             
+##    ax[0,0].plot(time_values, lr_monthly, color='k', linewidth=1)
+##    ax[0,0].set_xlabel('Time', size=12)
+##    ax[0,0].set_ylabel('Lapse rate (degC m-1)', size=12)
+##
+##    fig.set_size_inches(4, 4)
+##    figure_fn = 'lapserates_monthly.png'
+##    fig.savefig(debris_prms.output_fp + figure_fn, bbox_inches='tight', dpi=300)
+#    
+    #%%
+    ds = xr.open_dataset('/Users/davidrounce/Documents/Dave_Rounce/DebrisGlaciers_WG/Melt_Intercomparison/output/' + 
+                         'exp3/01/Rounce2015_01-6050N-21150E-20200313.nc')
+    

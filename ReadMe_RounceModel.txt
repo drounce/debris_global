@@ -115,32 +115,50 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 
 # ===== Validation =========================================================================================================================
 Alaska (01):
-'01.15645' # Kennicott  - good
+'01.15645' # Kennicott     - good
 
 Western Canada (02):
-'02.12438' # Dome Glacier -    Mattson (2000)
+'02.12438' # Dome          - (Mattson 2000)
+'02.18792' # Eliot	   - (Lundstrom 1993, thickness and ablation measurements)
 
 Europe (11):
-'11.01604' # Suldenferner (0.32 +/- 0.10)
-'11.02810' # Haut d'Arolla (Carenzo etal 2016; 6 cm at an ablation stake +/- 3 cm)
-'11.03005' # Miage (Foster et al. 2012, Table 2 [E: 0.23 +/- 0.16 m at 2030 mass, C: 0.32 +/- 0.13 m at 2060 masl], Figure 8) 
-                   (Others: Mihalcea et al. 2008; Ablation stake data from Reid and Brock 2010)
+'11.01604' # Suldenferner  - (Nicholson - thesis? 0.32 +/- 0.10)
+'11.02810' # Haut d'Arolla - (Carenzo etal 2016; 6 cm at an ablation stake +/- 3 cm)
+'11.03005' # Miage         - (Foster et al. 2012, Table 2 [E: 0.23 +/- 0.16 m at 2030 mass, C: 0.32 +/- 0.13 m at 2060 masl], Figure 8) 
+                   	     (Others: Mihalcea et al. 2008; Ablation stake data from Reid and Brock 2010, good fit)
 
 HMA (13,14,15):
-'13.43232' # Koxkar	- good (positive first bin)
-'14.04477' # Hispar 	- good
-'14.06794' # Baltoro 	- good
-'14.16042' # Batal       - good (Patel etal 2016 - with altitude dependence)
-'14.15447' # Bara Shigri - good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
-'15.03473' # Ngozumpa	- good
-'15.03733' # Khumbu 	- good (Gades etal 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus"
-'15.03734' # Changri Nup - good
-'15.04045' # Lirung	- good (McCarthy etal 2017) Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus"
-'15.04121' # Langtang	- good
-'15.07886' # Hailuogou   - good (Zhang etal 2011, Figure 2)
+'13.43232' # Koxkar	   - good (positive first bin)
+'14.04477' # Hispar 	   - good
+'14.06794' # Baltoro 	   - good
+'14.16042' # Batal         - good (Patel etal 2016, debris thickness data [fig with altitude dependence; melt rate too - Table 1 good fit)
+'14.15447' # Bara Shigri   - good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
+'15.03473' # Ngozumpa	   - good
+'15.03733' # Khumbu 	   - good (Gades etal 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus")
+				  (Kayastha etal 2000, melt rates - Table 1, excellent fit)
+'15.03734' # Changri Nup   - good
+'15.04045' # Lirung	   - good (McCarthy etal 2017) Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus"
+'15.04121' # Langtang	   - good
+'15.07886' # Hailuogou     - good (Zhang etal 2011, debris thickness data [fig 2] and melt data [fig 5c] underestimated)
 
 South America (17):
-'17.13720' # Piramide	- (Ayala etal 2016)
+'17.13720' # Piramide	   - (Ayala etal 2016)
+
+New Zealand (18):
+'18.02342' # Tasman	   - (Kirkbride 1989, 150 measurements of debris over lower 10 km [fig 2.17]; melt rate estimated from field data [Table 2.20])
+			     (Kirkbride and Warren 1999, 15 debris thickness measurements (and estimated melt rate) from 1986)
+
+
+
+'14.20154' # Rakhiot	   - (Mattson etal 1989 - June 22 - August 8 1986, 10 stakes 0 - 0.4 m)
+
+Mattson etal 1989 other ostrem curves older
+Lundstrom metal 1993 - western North America
+
+
+
+Automatically digitize figures by clicking on points (very fast):
+   https://apps.automeris.io/wpd/
 
 
 # ===== UNCERTAINTIES ====================================================================================================================
@@ -192,3 +210,12 @@ Limitations/issues:
 Discussion:
   - additional benefit of temperature inversion over the sub-debris melt inversion method is that the temperature inversion can have debris thickness < 0.02,
     while this is an indeterminate problem for the sub-debris melt inversion method since there are two correct answers 
+    - fortunately, this doesn't affect us because the terminus bin inversions are typically thickness > 0.02 m
+
+
+# ===== Ideas =====
+print('IDEA FOR PROCESSING:\n  set a larger minimum DC area for processing (remove discontinuous DC sections' + 
+      '  --> then when clipping the debris thickness maps, clip using the original Scherler extents...')
+print('  right now there are still way too many small bins messing up binned signals')
+print('BETTER: SELECT ONLY THE BIGGEST POLYGON AND DISCARD THE REST?')
+

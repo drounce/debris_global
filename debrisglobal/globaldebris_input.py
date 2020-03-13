@@ -21,7 +21,7 @@ ostrem_fp = main_directory + '/../output/ostrem_curves/'
 ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
-#roi = '01'
+roi = '01'
 #roi = '02'
 #roi = '03'
 #roi = '04'
@@ -33,7 +33,7 @@ ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
 #roi = '10'
 #roi = '11'
 #roi = '12'
-roi = 'HMA'
+#roi = 'HMA'
 #roi = '16'
 #roi = '17'
 #roi = '18'
@@ -128,7 +128,7 @@ mb_yrfrac_dict = {'01': [2000.6, 2018.6],
                   '03': None,
                   '11': [2000.128, 2013],
                   'HMA': [2000.6, 2018.6],
-                  '18': None}
+                  '18': [2000.128, 2013]}
 dhdt_fn_dict = {'01': main_directory + '/../mb_data/McNabb/01_rgi60_Alaska_ls_dh.tif',
                 '02': None,
                 '03': main_directory + '/../mb_data/McNabb/03_rgi60_ArcticCanadaNorth_ls_dh.tif',
@@ -160,6 +160,7 @@ min_bin_samp_count = 0
 metdata_fp = main_directory + '/../climate_data/' + roi + '/'
 #metdata_fp = '/Volumes/LaCie/ERA5/hourly/' + roi + '/'
 metdata_elev_fn = 'ERA5_elev.nc'
+metdata_lr_fullfn = main_directory + '/../climate_data/ERA5_lapserates_monthly.nc'
 mb_binned_fp = main_directory + '/../output/mb_bins/csv/'
 mb_bin_size = 10
 output_fig_fp = main_directory + '/../output/figures/'
@@ -362,10 +363,14 @@ elif latlon_list_raw is not None:
 #latlon_list = [(55.25, 230.50)]
 #latlon_list = [(28.0, 86.75)]
 #latlon_list = [(45.75, 6.75)]
+#latlon_list = [(60.0, 218.25)]
+#latlon_list = [(60.5, 211.5)]
 
 #%%
 # Simulation data
-roi_datedict = {'01': ['1994-01-01', '2018-12-31'],
+roi_datedict = {
+                '01': ['1994-01-01', '2018-12-31'],
+#                '01': ['2000-01-01', '2002-12-31'],
                 '02': ['2000-01-01', '2018-12-31'],
                 '03': ['2000-01-01', '2018-12-31'],
                 '04': ['2000-01-01', '2018-12-31'],
@@ -392,10 +397,11 @@ elev_cns = ['zmean']
 # ===== Debris properties =====
 experiment_no = 3
 # Debris thickness
-debris_thickness_all = np.array([0])
+#debris_thickness_all = np.array([0])
+#debris_thickness_all = np.array([0.05])
 #debris_thickness_all = np.array([0, 0.02])
-#debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
-#debris_thickness_all[1] = 0.02
+debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
+debris_thickness_all[1] = 0.02
 
 # Surface roughness, thermal conductivity, and albedo
 if experiment_no == 3:
@@ -436,13 +442,13 @@ if output_option == 2:
 elif output_option == 3:
     mc_stat_cns = ['mean', 'std', '25%', '75%']
     print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
-date_start = '20200223'
-eb_fp_dict = {'01':'/Volumes/LaCie/debris_global_output/output/exp3/01_20200113/',
+date_start = '20200313'
+eb_fp_dict = {'01': '/Volumes/LaCie/debris_output/exp3/01/',
               '02': None,
               '03': None,
               '04': None,
               '05': None,
-              '11': output_fp + 'exp' + str(experiment_no) + '/',
+              '11': '/Volumes/LaCie/debris_output/exp3/11/',
               '12': None,
               'HMA': '/Volumes/LaCie/debris_output/exp3/HMA/',
               '16': None,
@@ -470,7 +476,7 @@ P0 = 101325                 # Standard Atmospheric Pressure (Pa)
 density_air_0 = 1.29        # Density of air (kg/m3)
 density_water = 1000        # Density of water (kg/m3)
 density_ice = 900           # Density of ice (kg/m3) (Nicholson and Benn, 2006)
-lapserate = 0.0065          # Temperature Lapse Rate (K/m)
+lapserate = 0.0055          # Temperature Lapse Rate (K/m)
 Kvk = 0.41                  # Von Karman's Constant
 Lv = 2.49e6                 # Latent Heat of Vaporation of water (J/kg)
 Lf = 3.335e5                # Latent Heat of Fusion of Water (J/kg)

@@ -100,12 +100,26 @@ if __name__ == '__main__':
             print(lon_W_idx, ds_elev['longitude'][lon_W_idx].values, lon_W)
     
         for n, era5_fn in enumerate(era5_fns):
+#        for n, era5_fn in enumerate(era5_fns[0:1]):
             if debug:
                 print(n, era5_fn)
             
             ds = xr.open_dataset(debris_prms.era5_hrly_fp + era5_fn)
-            ds_out = ds.sel(latitude=slice(ds_elev['latitude'][lat_N_idx].values,ds_elev['latitude'][lat_S_idx].values), 
-                            longitude=slice(ds_elev['longitude'][lon_W_idx].values,ds_elev['longitude'][lon_E_idx].values))
+            if lon_W_idx < lon_E_idx:
+                ds_out = ds.sel(latitude=slice(ds_elev['latitude'][lat_N_idx].values,
+                                               ds_elev['latitude'][lat_S_idx].values), 
+                                longitude=slice(ds_elev['longitude'][lon_W_idx].values,
+                                                ds_elev['longitude'][lon_E_idx].values))
+            else:
+                ds_out_W = ds.sel(latitude=slice(ds_elev['latitude'][lat_N_idx].values,
+                                                 ds_elev['latitude'][lat_S_idx].values), 
+                                  longitude=slice(ds_elev['longitude'][lon_W_idx].values,
+                                                  ds_elev['longitude'].values.max())) 
+                ds_out_E = ds.sel(latitude=slice(ds_elev['latitude'][lat_N_idx].values,
+                                                 ds_elev['latitude'][lat_S_idx].values), 
+                                  longitude=slice(ds_elev['longitude'].values.min(),
+                                                  ds_elev['longitude'][lon_E_idx].values)) 
+                ds_out = xr.concat((ds_out_W, ds_out_E), dim='longitude')
             
             # Export subset
             ds_out_fp = debris_prms.metdata_fp + '../' + roi + '/'
@@ -157,8 +171,9 @@ if __name__ == '__main__':
         lon_E = debris_prms.roi_latlon_dict[roi][2]
         lon_W = debris_prms.roi_latlon_dict[roi][3]
         
-        if (os.path.exists(output_metdata_fp + output_metdata_fn) == False and 
-            lat_deg <= lat_N and lat_deg >= lat_S and lon_deg >= lon_W and lon_deg <= lon_E):
+#        if (os.path.exists(output_metdata_fp + output_metdata_fn) == False and 
+#            lat_deg <= lat_N and lat_deg >= lat_S and lon_deg >= lon_W and lon_deg <= lon_E):
+        if os.path.exists(output_metdata_fp + output_metdata_fn) == False:
             # ===== Combine meteorological data =====
             ds_all = None
             years = list(np.arange(int(debris_prms.roi_years[roi][0]), int(debris_prms.roi_years[roi][1])+1))

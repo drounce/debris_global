@@ -313,3 +313,18 @@ if __name__ == '__main__':
     
     #%%
     
+#debris_thicknesses = ds_ts.hd_cm.values
+#fit_idx = list(np.where(debris_thicknesses >= 5)[0])
+#
+## Calculate statistics associated with surface temperature for each debris thickness
+#ts_cns = ['debris_thickness', 'ts_degC_mean', 'ts_degC_std', 'ts_degC_med', 'ts_degC_mad']
+#debris_ts_df_stats = pd.DataFrame(np.zeros((len(ds_ts['hd_cm'].values[fit_idx]),len(ts_cns))), columns=ts_cns)
+#debris_ts_df_stats['debris_thickness'] = debris_thicknesses[fit_idx] / 100
+#
+#ts_data = ds_ts['ts'][fit_idx,:,0,0].values
+#dsnow_data = ds_ts['dsnow'][fit_idx,:,0,0].values
+#ts_data[dsnow_data > 0] = np.nan
+#
+#debris_ts_df_stats['ts_degC_mean'] = np.nanmean(ts_data, axis=1) - 273.15
+#debris_ts_df_stats['ts_degC_std'] = np.nanstd(ts_data, axis=1)
+#debris_ts_df_stats['ts_degC_med'] = np.nanmedian(ts_data, axis=1) - 273.15

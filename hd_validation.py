@@ -26,28 +26,19 @@ import xarray as xr
 import debrisglobal.globaldebris_input as debris_prms
 from meltcurves import melt_fromdebris_func
 
-option_ostrem_miage = 0
-option_hd_comparison = 0
+#%%% ===== SCRIPT OPTIONS =====
+option_melt_comparison = True
+option_hd_comparison = False
 
 
-#%%
-if option_ostrem_miage == 1:
-    print('\nOstrem curve comparison with Reid and Brock (2010)\n')
-    
-    # Data from Reid and Brock (2010)
-    measured_hd = np.array([55, 26, 21, 19.5, 19.5, 19.5, 17, 16, 16, 16, 15, 12, 11, 10]) / 100
-    measured_melt =  np.array([7,  17, 16, 15,   19,   22,   17, 19, 20, 22, 20, 20, 22, 21])
-    
+#%% ===== FUNCTIONS =====
+def plot_hd_vs_melt_comparison(measured_hd, measured_melt, glac_name, fig_fn, melt_fn, start_yearfrac,
+                                       hd_min=0, hd_max=2, hd_tick_major=0.25, hd_tick_minor=0.05,
+                                       melt_min=0, melt_max=70, melt_tick_major=10, melt_tick_minor=5):
+    """ Plot comparison of debris vs. melt for various sites """
     # Dataset of melt data
-    glac_name = 'Miage Glacier (11.03005)'
-    fig_fn = '11.03005_Miage_debris_melt_curve_RB2010.png'
-    melt_fn = '4650N-1050E_debris_melt_curve.nc'
     melt_fp = debris_prms.ostrem_fp
     ds_ostrem = xr.open_dataset(melt_fp + melt_fn)
-    
-    # Manually estimate indices
-    start_yearfrac = 2005 + 172/365
-    end_yearfrac = 2005 + 247/365
     
     # ===== Ostrem Curve =====
     time_year = pd.to_datetime(ds_ostrem.time.values).year
@@ -62,9 +53,6 @@ if option_ostrem_miage == 1:
     debris_melt_df = pd.DataFrame(np.zeros((len(debris_thicknesses),2)), 
                                   columns=['debris_thickness', 'melt_mwea'])  
 
-    df_ostrem = pd.DataFrame(np.zeros((len(debris_prms.elev_cns),5)), 
-                             columns=['glac_str', 'melt_mwea_clean', 'melt_mwea_2cm', 'b0', 'k'])
-
     nelev = 0
     stats_idx = 0
     for ndebris, debris_thickness in enumerate(debris_thicknesses):    
@@ -78,25 +66,19 @@ if option_ostrem_miage == 1:
     func_coeff, pcov = curve_fit(melt_fromdebris_func, 
                                  debris_melt_df.debris_thickness.values[fit_idx], 
                                  debris_melt_df.melt_mwea.values[fit_idx])
-    melt_cleanice = debris_melt_df.loc[0,'melt_mwea']
-    idx_2cm = np.where(debris_thicknesses == 2)[0][0]
-    melt_2cm = debris_melt_df.loc[idx_2cm, 'melt_mwea']
+#    melt_cleanice = debris_melt_df.loc[0,'melt_mwea']
+#    idx_2cm = np.where(debris_thicknesses == 2)[0][0]
+#    melt_2cm = debris_melt_df.loc[idx_2cm, 'melt_mwea']
             
     # ===== PLOT DEBRIS VS. SURFACE LOWERING ===== 
     fig, ax = plt.subplots(1, 1, squeeze=False, sharex=False, sharey=False, 
                           gridspec_kw = {'wspace':0.4, 'hspace':0.15})
-
-    elev_colordict = {'zmean':'k', 'zstdlow':'r', 'zstdhigh':'b'}
-    elev_zorderdict = {'zmean':3, 'zstdlow':1, 'zstdhigh':1}
-    elev_lwdict = {'zmean':1, 'zstdlow':0.5, 'zstdhigh':0.5}
 
     # Fitted curve
     debris_4curve = np.arange(0.02,5.01,0.01)
     melt_4curve = melt_fromdebris_func(debris_4curve, func_coeff[0], func_coeff[1])
 
     # Plot curve
-#    ax[0,0].plot(debris_melt_df['debris_thickness'], debris_melt_df['melt_mwea'], 'o', 
-#                 color='k', markersize=3, markerfacecolor="None", markeredgewidth=0.75, zorder=1)
     ax[0,0].plot(measured_hd, measured_melt, 'D', 
                  color='k', markersize=3, markerfacecolor="None", markeredgewidth=0.75, zorder=1)
     ax[0,0].plot(debris_4curve, melt_4curve, 
@@ -118,16 +100,15 @@ if option_ostrem_miage == 1:
                  transform=ax[0,0].transAxes)
     # X-label
     ax[0,0].set_xlabel('Debris thickness(m)', size=12)
-    ax[0,0].set_xlim(0, 2.1)
-    #ax[0,0].set_xlim(0, debris_melt_df.debris_thickness.max())
+    ax[0,0].set_xlim(hd_min, hd_max)
     ax[0,0].xaxis.set_tick_params(labelsize=12)
-    ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(0.5))
-    ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(0.1))  
+    ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
+    ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))  
     # Y-label
     ax[0,0].set_ylabel('Melt (mm w.e. d$^{-1}$)', size=12)
-    ax[0,0].set_ylim(0,(int(debris_melt_df.melt_mwea.values.max()/0.1)+3)*0.1)
-    ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(10))
-    ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(5))
+    ax[0,0].set_ylim(melt_min, melt_max)
+    ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(melt_tick_major))
+    ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(melt_tick_minor))
     # Tick parameters
     ax[0,0].yaxis.set_ticks_position('both')
     ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
@@ -142,7 +123,157 @@ if option_ostrem_miage == 1:
 
 
 #%%
-if option_hd_comparison == 1:
+if option_melt_comparison:
+    
+    compare_khumbu = False
+    compare_hailuogou = False
+    compare_batal = False
+    compare_miage = False
+    
+    # ===== KHUMBU ====
+    if compare_khumbu:
+        print('\nOstrem curve comparison with Kayastha et al (2000)\n')
+        # Data from Kayastha et al. (2000)
+        # units: m
+        measured_hd = np.array([0, 0.3, 2, 5, 10, 20, 30, 40]) / 100
+        # units: mm w.e. d-1
+        measured_melt =  np.array([27.9, 57.6, 42.3, 29.7, 18, 12.6, 10.8, 9])
+
+        # Plot and filename details
+        glac_name = 'Khumbu Glacier (15.03733)'
+        fig_fn = '15.03733_melt_compare.png'
+        melt_fn = '2800N-8700E-_debris_melt_curve.nc'
+        
+        # Manually estimate indices
+        start_yearfrac = 2000 + 143/366
+        end_yearfrac = 2000 + 153/366
+        
+        hd_min = 0
+        hd_max = 0.45
+        hd_tick_major = 0.1
+        hd_tick_minor = 0.05
+        
+        melt_min = 0
+        melt_max = 70
+        melt_tick_major = 10
+        melt_tick_minor = 5
+        
+        plot_hd_vs_melt_comparison(measured_hd, measured_melt, glac_name, fig_fn, melt_fn, start_yearfrac,
+                                   hd_min=hd_min, hd_max=hd_max, 
+                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
+                                   melt_min=melt_min, melt_max=melt_max, 
+                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor)
+    
+    # ===== HAILUOGOU (15.07866) ====
+    if compare_hailuogou:
+        print('\nOstrem curve comparison with Zhang et al (2011)\n')
+        
+        # Data from Zhang et al. (2011)
+        # units: m
+        measured_hd = np.array([2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 5, 5, 6, 7, 7, 10, 10, 11, 13]) / 100
+        # units: mm w.e. d-1
+        measured_melt =  np.array([65.2, 55.4, 52.8, 51.6, 47.0, 53.4, 44.4, 50.3, 58, 48.9, 58.4, 54.4, 44.8, 
+                                   52.6, 43.7, 52.5, 38.5, 36.5, 34.2, 28.4])
+
+        # Plot and filename details
+        glac_name = 'Hailuogou Glacier (15.07866)'
+        fig_fn = '15.07866_melt_compare.png'
+        melt_fn = '2950N-10175E-_debris_melt_curve.nc'
+        
+        # Manually estimate indices
+        start_yearfrac = 2008 + 134/366
+        end_yearfrac = 2008 + 274/366
+        
+        hd_min = 0
+        hd_max = 0.2
+        hd_tick_major = 0.05
+        hd_tick_minor = 0.01
+        
+        melt_min = 0
+        melt_max = 70
+        melt_tick_major = 10
+        melt_tick_minor = 5
+        
+        plot_hd_vs_melt_comparison(measured_hd, measured_melt, glac_name, fig_fn, melt_fn, start_yearfrac,
+                                   hd_min=hd_min, hd_max=hd_max, 
+                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
+                                   melt_min=melt_min, melt_max=melt_max, 
+                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor)
+        
+        
+    # ===== BATAL (14.16042) ====
+    if compare_batal:
+        print('\nOstrem curve comparison with Patel et al (2016)\n')
+        
+        # Data from Patel et al (2016)
+        # units: m
+        measured_hd = np.array([51, 54, 43, 53, 24, 27, 27, 50, 5, 2, 0, 5, 0, 2]) / 100
+        # units: mm w.e. d-1
+        measured_melt =  np.array([5.75, 6.125, 11.875, 7.875, 8.625, 10.375, 9.75, 7.375, 12.875, 19.875, 
+                                   18.125, 14.375, 18.625, 10.75])
+
+        # Plot and filename details
+        glac_name = 'Batal Glacier (14.16042)'
+        fig_fn = '14.16042_melt_compare.png'
+        melt_fn = '3225N-7750E-_debris_melt_curve.nc'
+        
+        # Manually estimate indices
+        start_yearfrac = 2014 + 213/365
+        end_yearfrac = 2014 + 288/365
+        
+        hd_min = 0
+        hd_max = 0.6
+        hd_tick_major = 0.1
+        hd_tick_minor = 0.05
+        
+        melt_min = 0
+        melt_max = 50
+        melt_tick_major = 10
+        melt_tick_minor = 5
+        
+        plot_hd_vs_melt_comparison(measured_hd, measured_melt, glac_name, fig_fn, melt_fn, start_yearfrac,
+                                   hd_min=hd_min, hd_max=hd_max, 
+                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
+                                   melt_min=melt_min, melt_max=melt_max, 
+                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor)
+    
+    # ===== MIAGE (11.03005) ====
+    if compare_miage:
+        print('\nOstrem curve comparison with Reid and Brock (2010)\n')
+        
+        # Data from Reid and Brock (2010)
+        # units: m
+        measured_hd = np.array([55, 26, 21, 19.5, 19.5, 19.5, 17, 16, 16, 16, 15, 12, 11, 10]) / 100
+        # units: mm w.e. d-1
+        measured_melt =  np.array([7,  17, 16, 15,   19,   22,   17, 19, 20, 22, 20, 20, 22, 21])
+
+        # Plot and filename details
+        glac_name = 'Miage Glacier (11.03005)'
+        fig_fn = '11.03005_debris_melt_curve_RB2010.png'
+        melt_fn = '4650N-1050E_debris_melt_curve.nc'
+        
+        # Manually estimate indices
+        start_yearfrac = 2005 + 172/365
+        end_yearfrac = 2005 + 247/365
+        
+        hd_min = 0
+        hd_max = 0.6
+        hd_tick_major = 0.1
+        hd_tick_minor = 0.02
+        
+        melt_min = 0
+        melt_max = 50
+        melt_tick_major = 10
+        melt_tick_minor = 5
+        
+        plot_hd_vs_melt_comparison(measured_hd, measured_melt, glac_name, fig_fn, melt_fn, start_yearfrac,
+                                   hd_min=hd_min, hd_max=hd_max, 
+                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
+                                   melt_min=melt_min, melt_max=melt_max, 
+                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor)
+
+#%%
+if option_hd_comparison:
     #glaciers = ['1.15645', '15.03473', '15.03733', '15.03734', '15.04121', '15.04045', '14.06794', '14.04477', 
     #            '13.43232', '15.07886', '14.16042']
     glaciers = ['1.15645', '15.04045', '15.03473', '15.03743', '14.06794']
