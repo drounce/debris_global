@@ -86,70 +86,66 @@ def create_xrdataset_ts(ds, time_values):
     """
     # Create empty datasets for each variable and merge them
     # Variable coordinates dictionary
-    output_coords_dict = {
-            'ts': collections.OrderedDict(
-                    [('hd_cm', ds.hd_cm.values), ('time', time_values), ('stats', ds.stats.values), 
-                     ('elev_cns', ds.elev_cns.values)]),
-            'dsnow': collections.OrderedDict(
-                    [('hd_cm', ds.hd_cm.values), ('time', time_values), ('stats', ds.stats.values), 
-                     ('elev_cns', ds.elev_cns.values)]),
-            'elev': collections.OrderedDict(
-                    [('elev_cns', ds.elev_cns.values)])
-            }
+    output_coords_dict = collections.OrderedDict()
+    output_coords_dict['ts'] = collections.OrderedDict([('hd_cm', ds.hd_cm.values), ('time', time_values), 
+                                                        ('elev', ds.elev.values)])
+    output_coords_dict['dsnow'] = collections.OrderedDict([('hd_cm', ds.hd_cm.values), ('time', time_values), 
+                                                           ('elev', ds.elev.values)])
+            
     # Attributes dictionary
     output_attrs_dict = {
-            'hd_cm': {
-                    'long_name': 'debris thickness in centimeters',
-                    'comment': 'cm so values are integers'},
-            'elev': {
-                    'long_name': 'elevation',
-                    'units': 'm a.s.l.',
-                    'comment': 'elevation associated with the elevation column name (elev_cns)'},
-            'stats': {
-                    'long_name': 'variable statistics',
-                    'comment': str(debris_prms.k_random.shape[0]) + ' simulations; % refers to percentiles'},
-            'elev_cns': {
-                    'long_name': 'elevation column names',
-                    'comment': 'elevations used to run the simulations'},
-            'ts': {
-                    'long_name': 'debris surface temperature',
-                    'units': 'K',
-                    'temporal_resolution': 'hourly'},
-            'dsnow': {
-                    'long_name': 'snow depth',
-                    'units': 'm',
-                    'temporal_resolution': 'hourly'},
-            'time': {
-                    'long_name': 'time of satellite acquisition',
-#                    'units': '-',
-                    'temporal_resolution': 'daily'}
+            'latitude': {'long_name': 'latitude',
+                         'units': 'degrees north'},
+            'longitude': {'long_name': 'longitude',
+                          'units': 'degrees_east'},
+            'roi': {'long_name': 'region of interest'},
+            'time': {'long_name': 'time of satellite acquisition',
+                     'temporal_resolution': 'daily'},
+            'hd_cm': {'long_name': 'debris thickness',
+                      'units:': 'cm'},
+            'elev': {'long_name': 'elevation',
+                     'units': 'm a.s.l.'},
+            'ts': {'long_name': 'surface temperature',
+                    'units': 'K'},
+            'snow_depth': {'long_name': 'snow depth',
+                           'units': 'm'}
             }
+            
+    assert 'ts_std' not in list(ds.keys()), 'Need to process standard deviation and add to output'
+    
     # Add variables to empty dataset and merge together
     count_vn = 0
     encoding = {}
-    noencoding_vn = ['stats', 'hd_cm', 'elev_cns', 'elev']
-    for vn in ['ts', 'dsnow', 'elev']:
+    for vn in output_coords_dict.keys():
         count_vn += 1
         empty_holder = np.zeros([len(output_coords_dict[vn][i]) for i in list(output_coords_dict[vn].keys())])
         output_ds = xr.Dataset({vn: (list(output_coords_dict[vn].keys()), empty_holder)},
                                coords=output_coords_dict[vn])
-        if vn == 'elev':
-            output_ds['elev'].values = ds.elev.values
         # Merge datasets of stats into one output
         if count_vn == 1:
             output_ds_all = output_ds
         else:
             output_ds_all = xr.merge((output_ds_all, output_ds))
-
+            
     # Add attributes
-    for vn in ['ts', 'dsnow', 'hd_cm', 'stats', 'elev_cns', 'elev', 'time']:
+    for vn in output_ds_all.variables:
         try:
             output_ds_all[vn].attrs = output_attrs_dict[vn]
         except:
             pass
         # Encoding (specify _FillValue, offsets, etc.)
-        if vn not in noencoding_vn:
-            encoding[vn] = {'_FillValue': False}
+        encoding[vn] = {'_FillValue': False,
+                        'zlib':True,
+                        'complevel':9
+                        }            
+    # Add values    
+    output_ds_all['latitude'] = ds['latitude']
+    output_ds_all['longitude'] = ds['longitude']
+    output_ds_all['hd_cm'] = ds['hd_cm']
+    output_ds_all['elev']= ds['elev']
+    
+    # Add attributes
+    output_ds_all.attrs = ds.attrs
 
     return output_ds_all, encoding
 
@@ -173,7 +169,7 @@ def main(list_packed_vars):
     
     if debug:
         print(count, latlon_list)
-        
+
     # Surface temperature information (year, day of year, hour)
     ts_info_fullfn = debris_prms.ts_fp + debris_prms.roi + '_debris_tsinfo.nc'
     ds_ts_info = xr.open_dataset(ts_info_fullfn, decode_times=False)
@@ -186,10 +182,7 @@ def main(list_packed_vars):
         lat_deg = latlon[0]
         lon_deg = latlon[1]
         
-        # ===== Debris Thickness vs. Surface Lowering =====
-        # stats column index (0=mean)
-        stats_idx = 0
-        
+        # ===== Debris Thickness vs. Surface Lowering =====        
         # Filenames            
         if lat_deg < 0:
             lat_str = 'S-'
@@ -239,17 +232,17 @@ def main(list_packed_vars):
                         
                     # Select data
                     #  each row is a debris thickness
-                    ts_t1 = ds['ts'][:,time_idx_all,stats_idx,nelev].values
-                    ts_t2 = ds['ts'][:,time_idx_all+1,stats_idx,nelev].values
+                    ts_t1 = ds['ts'][:,time_idx_all,nelev].values
+                    ts_t2 = ds['ts'][:,time_idx_all+1,nelev].values
                     ts_data = ts_t1 + ts_hr%1 * (ts_t2 - ts_t1)
                     
-                    dsnow_t1 = ds['snow_depth'][:,time_idx_all,stats_idx,nelev].values
-                    dsnow_t2 = ds['snow_depth'][:,time_idx_all+1,stats_idx,nelev].values
+                    dsnow_t1 = ds['snow_depth'][:,time_idx_all,nelev].values
+                    dsnow_t2 = ds['snow_depth'][:,time_idx_all+1,nelev].values
                     dsnow_data = dsnow_t1 + ts_hr%1 * (dsnow_t2 - dsnow_t1)
                     
-                    ds_ts['ts'][:,:,stats_idx,nelev] = ts_data
-                    ds_ts['dsnow'][:,:,stats_idx,nelev] = dsnow_data
-                        
+                    ds_ts['ts'][:,:,nelev] = ts_data
+                    ds_ts['dsnow'][:,:,nelev] = dsnow_data
+                    
                 # Export netcdf
                 if os.path.exists(debris_prms.tscurve_fp) == False:
                     os.makedirs(debris_prms.tscurve_fp)

@@ -9,8 +9,6 @@ import pickle
 # External libraries
 import numpy as np
 import pandas as pd
-import xarray as xr
-
 
 #%%
 # Main directory
@@ -18,10 +16,10 @@ main_directory = os.getcwd()
 rgi_fp = main_directory + '/../00_rgi60_attribs/'
 output_fp = main_directory + '/../output/'
 ostrem_fp = main_directory + '/../output/ostrem_curves/'
-ostrem_fn_sample = 'XXXX_debris_melt_curve.nc'
+ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
-roi = '01'
+#roi = '01'
 #roi = '02'
 #roi = '03'
 #roi = '04'
@@ -31,12 +29,21 @@ roi = '01'
 #roi = '08'
 #roi = '09'
 #roi = '10'
-#roi = '11'
+roi = '11'
 #roi = '12'
 #roi = 'HMA'
 #roi = '16'
 #roi = '17'
 #roi = '18'
+
+# ===== Debris thickness =====
+experiment_no = 3
+#debris_thickness_all = np.array([0])
+#debris_thickness_all = np.array([0.05])
+#debris_thickness_all = np.array([0, 0.02])
+debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
+debris_thickness_all[1] = 0.02
+
 roi_latlon_dict = {'01':[71, 50, 233, 180],
                    '02':[66, 36, 256, 225],
                    '03':[84, 74, 300, 237],
@@ -102,27 +109,45 @@ latlon_unique_dict = {'01':'01_latlon_unique.pkl',
                       '16':'16_latlon_unique.pkl',
                       '17':'17_latlon_unique.pkl',
                       '18':'18_latlon_unique.pkl'}
-mb_datasets_dict = {'01': ['mcnabb'],
-                    '02': ['braun'],
-                    '03': ['mcnabb'],
-                    '04': ['mcnabb'],
-                    '05': ['mcnabb'],
-                    '06': ['mcnabb'],
-                    '07': ['mcnabb'],
-                    '08': ['mcnabb'],
-                    '09': ['mcnabb'],
-                    '10': ['braun'],
-                    '11': ['braun'],
-                    '12': ['braun'],
-                    'HMA': ['shean'],
-                    '16': ['braun'],
-                    '17': ['braun'],
-                    '18': ['braun']}
-mb_datasets = mb_datasets_dict[roi]
-mb_dataset_fp_dict = {'braun': main_directory + '/../mb_data/Braun/binned_data/',
-                      'larsen': main_directory + '/../mb_data/Larsen/binned_data/',
-                      'mcnabb': main_directory + '/../mb_data/McNabb/binned_data/',
-                      'shean': main_directory + '/../mb_data/Shean/binnedf_data/'}
+braun_fp =  main_directory + '/../mb_data/Braun/'
+shean_fp =  main_directory + '/../mb_data/Shean/'
+mb_fp_list_roi = {'01': ['mcnabb'],
+                  '02': [braun_fp + '02/'],
+                  '03': ['mcnabb'],
+                  '04': ['mcnabb'],
+                  '05': ['mcnabb'],
+                  '06': ['mcnabb'],
+                  '07': ['mcnabb'],
+                  '08': ['mcnabb'],
+                  '09': ['mcnabb'],
+                  '10': ['braun'],
+                  '11': [braun_fp + '11/'],
+                  '12': ['braun'],
+                  'HMA': [shean_fp + 'HMA/'],
+                  '16': [braun_fp + 'SouthAmerica/'],
+                  '17': [braun_fp + 'SouthAmerica/'],
+                  '18': [braun_fp + '18/']}
+#mb_datasets_dict = {'01': ['mcnabb'],
+#                    '02': ['braun'],
+#                    '03': ['mcnabb'],
+#                    '04': ['mcnabb'],
+#                    '05': ['mcnabb'],
+#                    '06': ['mcnabb'],
+#                    '07': ['mcnabb'],
+#                    '08': ['mcnabb'],
+#                    '09': ['mcnabb'],
+#                    '10': ['braun'],
+#                    '11': ['braun'],
+#                    '12': ['braun'],
+#                    'HMA': ['shean'],
+#                    '16': ['braun'],
+#                    '17': ['braun'],
+#                    '18': ['braun']}
+#mb_datasets = mb_datasets_dict[roi]
+#mb_dataset_fp_dict = {'braun': main_directory + '/../mb_data/Braun/binned_data/',
+#                      'larsen': main_directory + '/../mb_data/Larsen/binned_data/',
+#                      'mcnabb': main_directory + '/../mb_data/McNabb/binned_data/',
+#                      'shean': main_directory + '/../mb_data/Shean/binnedf_data/'}
 mb_yrfrac_dict = {'01': [2000.6, 2018.6],
                   '02': None,
                   '03': None,
@@ -152,7 +177,7 @@ width_min_dict = {'01': 240,
                   '12': 100,
                   'HMA': 240,
                   '16': 100,
-                  '17': 240,
+                  '17': 100,
                   '18': 100}
 min_bin_samp_count = 0
 
@@ -190,10 +215,9 @@ ts_doy_fn_dict = {'01':'01_debris_doy.tif',
                   'HMA':'hma_debris_doy.tif',
                   '18':'18_debris_doy.tif'}
 ts_stats_res = 50 # common resolution needed such that resolution does not interfere with regional stats
-#ts_fn = ts_fn_dict[roi]
 output_ts_csv_ending = '_ts_hd_opt.csv'
 tscurve_fp = ts_fp + 'ts_curves/'
-output_ts_fn_sample = 'XXXX_debris_ts_curve.nc'
+output_ts_fn_sample = 'XXXXdebris_ts_curve.nc'
 hd_fp = ts_fp + 'hd_tifs/'
 hd_fn_sample = 'XXXX_hdts_m.tif'
 mf_fp = ts_fp + 'hd_tifs/_meltfactor/'
@@ -252,70 +276,75 @@ if os.path.exists(glac_shp_proj_fp) == False:
 #DEM
 z1_dir_sample = main_directory + '/../oggm_dems/dem_qc/RGI60-XXXX/'
 z1_fn_sample = 'RGI60-XXXX-dem.tif'
-#z1_backup_dict = {'01': main_directory + '/../../../Satellite_Images/Alaska_albers_V3_mac/Alaska_albers_V3.tif',
-#                  '03': None,
-#                  '11': None,
-#                  'HMA': None,
-#                  '16': None,
-#                  '17': None,
-#                  '18': None}
-# Ice thickness
-#huss_dir_sample = None # update with OGGM database
-#huss_fn_sample = None # update with OGGM database
-#huss_dir_sample = (
-#        main_directory + '/../../../HiMAT/IceThickness_Farinotti/composite_thickness_RGI60-all_regions/RGI60-XXXX/')
-#huss_fn_sample = 'RGI60-XXXX_thickness.tif'
 # Surface velocity
-v_dir_dict = {'01': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '02': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '03': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '04': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '05': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '06': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '07': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '08': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/NORWAY/',
-              '09': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '10': None,
-              '11': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/ALPS/',
-              '12': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/Caucasus/',
-              'HMA': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '16': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/AndesBlanca/',
-              '17': main_directory + '/../../../Satellite_Images/ITS_Live/',
-              '18': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/NEWZEALAND/'
-             }
-v_dir = v_dir_dict[roi]
-vx_fn_dict = {'01': 'ALA_G0120_0000_vx.tif',
-              '02': 'ALA_G0120_0000_vx.tif',
-              '03': 'CAN_G0120_0000_vx.tif',
-              '04': 'CAN_G0120_0000_vx.tif',
-              '05': 'GRE_G0120_0000_vx.tif',
-              '06': 'ICE_G0120_0000_vx.tif',
-              '07': 'SRA_G0120_0000_vx.tif',
-              '08': 'Mosaic__vxo.tif',
-              '09': 'SRA_G0120_0000_vx.tif',
-              '10': None,
-              '11': 'Mosaic__vxo.tif',
-              '12': 'Mosaic__vxo.tif',
-              'HMA': 'HMA_G0120_0000_vx.tif',
-              '16': 'Mosaic__vxo.tif',
-              '17': 'PAT_G0120_0000_vx.tif',
-              '18': 'Mosaic__vxo.tif',}
-vy_fn_dict = {'01': 'ALA_G0120_0000_vy.tif',
-              '02': 'ALA_G0120_0000_vy.tif',
-              '03': 'CAN_G0120_0000_vy.tif',
-              '04': 'CAN_G0120_0000_vy.tif',
-              '05': 'GRE_G0120_0000_vy.tif',
-              '06': 'ICE_G0120_0000_vy.tif',
-              '07': 'SRA_G0120_0000_vy.tif',
-              '08': 'Mosaic__vyo.tif',
-              '09': 'SRA_G0120_0000_vy.tif',
-              '10': None,
-              '11': 'Mosaic__vyo.tif',
-              '12': 'Mosaic__vyo.tif',
-              'HMA': 'HMA_G0120_0000_vy.tif',
-              '16': 'Mosaic__vyo.tif',
-              '17': 'PAT_G0120_0000_vy.tif',
-              '18': 'Mosaic__vyo.tif',}
+sat_img_dir = main_directory + '/../../../Satellite_Images/'
+vx_dir_dict_list = {'01': [sat_img_dir + 'ITS_Live/ALA_G0120_0000_vx.tif'],
+                    '02': [sat_img_dir + 'ITS_Live/ALA_G0120_0000_vx.tif'],
+                    '03': [sat_img_dir + 'ITS_Live/CAN_G0120_0000_vx.tif'],
+                    '04': [sat_img_dir + 'ITS_Live/CAN_G0120_0000_vx.tif'],
+                    '05': [sat_img_dir + 'ITS_Live/GRE_G0120_0000_vx.tif'],
+                    '06': [sat_img_dir + 'ITS_Live/ICE_G0120_0000_vx.tif'],
+                    '07': [sat_img_dir + 'ITS_Live/SRA_G0120_0000_vx.tif'],
+                    '08': [sat_img_dir + 'romain_velocity/NORWAY/Mosaic__vxo.tif'],
+                    '09': [sat_img_dir + 'ITS_Live/SRA_G0120_0000_vx.tif'],
+                    '10': [sat_img_dir + 'romain_velocity/Asia_north/Mosaic__vxo.tif'],
+                    '11': [sat_img_dir + 'romain_velocity/ALPS/Mosaic__vxo.tif'],
+                    '12': [sat_img_dir + 'romain_velocity/Caucasus/Mosaic__vxo.tif'],
+                    'HMA': [sat_img_dir + 'ITS_Live/HMA_G0120_0000_vx.tif'],
+                    '16': [sat_img_dir + 'romain_velocity/AndesBlanca/Mosaic__vxo.tif'],
+                    '17': [sat_img_dir + 'romain_velocity/Cordillera_South/Mosaic__vxo.tif'],
+                    '18': [sat_img_dir + 'romain_velocity/NEWZEALAND/Mosaic__vxo.tif']
+                    }
+#v_dir_dict = {'01': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '02': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '03': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '04': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '05': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '06': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '07': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '08': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/NORWAY/',
+#              '09': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '10': None,
+#              '11': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/ALPS/',
+#              '12': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/Caucasus/',
+#              'HMA': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '16': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/AndesBlanca/',
+#              '17': main_directory + '/../../../Satellite_Images/ITS_Live/',
+#              '18': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/NEWZEALAND/'
+#             }
+#v_dir = v_dir_dict[roi]
+#vx_fn_dict = {'01': 'ALA_G0120_0000_vx.tif',
+#              '02': 'ALA_G0120_0000_vx.tif',
+#              '03': 'CAN_G0120_0000_vx.tif',
+#              '04': 'CAN_G0120_0000_vx.tif',
+#              '05': 'GRE_G0120_0000_vx.tif',
+#              '06': 'ICE_G0120_0000_vx.tif',
+#              '07': 'SRA_G0120_0000_vx.tif',
+#              '08': 'Mosaic__vxo.tif',
+#              '09': 'SRA_G0120_0000_vx.tif',
+#              '10': None,
+#              '11': 'Mosaic__vxo.tif',
+#              '12': 'Mosaic__vxo.tif',
+#              'HMA': 'HMA_G0120_0000_vx.tif',
+#              '16': 'Mosaic__vxo.tif',
+#              '17': 'PAT_G0120_0000_vx.tif',
+#              '18': 'Mosaic__vxo.tif',}
+#vy_fn_dict = {'01': 'ALA_G0120_0000_vy.tif',
+#              '02': 'ALA_G0120_0000_vy.tif',
+#              '03': 'CAN_G0120_0000_vy.tif',
+#              '04': 'CAN_G0120_0000_vy.tif',
+#              '05': 'GRE_G0120_0000_vy.tif',
+#              '06': 'ICE_G0120_0000_vy.tif',
+#              '07': 'SRA_G0120_0000_vy.tif',
+#              '08': 'Mosaic__vyo.tif',
+#              '09': 'SRA_G0120_0000_vy.tif',
+#              '10': None,
+#              '11': 'Mosaic__vyo.tif',
+#              '12': 'Mosaic__vyo.tif',
+#              'HMA': 'HMA_G0120_0000_vy.tif',
+#              '16': 'Mosaic__vyo.tif',
+#              '17': 'PAT_G0120_0000_vy.tif',
+#              '18': 'Mosaic__vyo.tif',}
 
 # Emergence Velocity data
 min_glac_area_writeout=0
@@ -333,7 +362,6 @@ startyear = roi_years[roi][0]
 endyear = roi_years[roi][1]
 timezone = 0
 metdata_fn_sample = roi + '_ERA5-metdata-XXXX' + str(startyear) + '_' + str(endyear) + '.nc'
-debris_elevstats_fullfn = main_directory + '/../hma_data/' + roi + '_debris_elevstats.nc'
 
 # Latitude and longitude index to run the model
 #  Longitude must be 0 - 360 degrees
@@ -342,21 +370,6 @@ latlon_list_raw = 'all'
 if latlon_list_raw == 'all':
     with open(latlon_unique_fp + latlon_unique_dict[roi], 'rb') as f:
         latlon_list = pickle.load(f)
-elif latlon_list_raw is not None:
-    ds_elevstats = xr.open_dataset(debris_elevstats_fullfn)
-    lat_list_raw = np.array([x[0] for x in latlon_list_raw])
-    lon_list_raw = np.array([x[1] for x in latlon_list_raw])
-    #  argmin() finds the minimum distance between the glacier lat/lon and the GCM pixel
-    lat_nearidx = np.abs(lat_list_raw[:,np.newaxis] - ds_elevstats['latitude'][:].values).argmin(axis=1)
-    lon_nearidx = np.abs(lon_list_raw[:,np.newaxis] - ds_elevstats['longitude'][:].values).argmin(axis=1)
-    latlon_nearidx = list(zip(lat_nearidx, lon_nearidx))
-    latlon_nearidx_unique = sorted(list(set(latlon_nearidx)))
-    latidx_list_unique = [x[0] for x in latlon_nearidx_unique]
-    lonidx_list_unique= [x[1] for x in latlon_nearidx_unique]
-    lat_list = ds_elevstats.latitude[latidx_list_unique].values
-    lon_list = ds_elevstats.longitude[lonidx_list_unique].values
-    latlon_list = list(tuple(zip(list(lat_list), list(lon_list))))
-
 #latlon_list = latlon_list[0:5]
 #latlon_list = [latlon_list[0]]
 #latlon_list = [(61.5, 217.0)]
@@ -388,21 +401,11 @@ roi_datedict = {
                 '18': ['2000-01-01', '2018-12-31']}
 start_date = roi_datedict[roi][0]  # start date for debris_ts_model.py
 end_date = roi_datedict[roi][1]     # end date for debris_ts_model.py
-#start_date = '2000-05-28'   # start date for debris_ts_model.py
-#end_date = '2018-05-28'     # end date for debris_ts_model.py
 fn_prefix = 'Rounce2015_' + roi + '-'
 elev_cns = ['zmean']
 #elev_cns = ['zmean', 'zstdlow', 'zstdhigh']
 
 # ===== Debris properties =====
-experiment_no = 3
-# Debris thickness
-#debris_thickness_all = np.array([0])
-#debris_thickness_all = np.array([0.05])
-#debris_thickness_all = np.array([0, 0.02])
-debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
-debris_thickness_all[1] = 0.02
-
 # Surface roughness, thermal conductivity, and albedo
 if experiment_no == 3:
     z0_random = np.array([0.016])
@@ -432,7 +435,7 @@ Tsnow_threshold = 274.15      # Snow temperature threshold [K] - Regine get sour
 snow_min = 0.0001       # minimum snowfall (mwe) to include snow on surface; since the density of falling snow is
                         # much less (~50-100 kg m-3) 0.0001 m of snow w.e. will produce 0.001 - 0.002 m of snow
 rain_min = 0.0001
-
+option_lr_fromdata = 1  # Switch to use lapse rate from data (e.g., ERA5) or specified value
 
 
 # Output info
@@ -448,20 +451,20 @@ eb_fp_dict = {'01': '/Volumes/LaCie/debris_output/exp3/01/',
               '03': None,
               '04': None,
               '05': None,
-              '11': '/Volumes/LaCie/debris_output/exp3/11/',
+#              '11': '/Volumes/LaCie/debris_output/exp3/11/',
+              '11': output_fp + 'exp3/11/',
               '12': None,
               'HMA': '/Volumes/LaCie/debris_output/exp3/HMA/',
               '16': None,
               '17': None,
-              '18': output_fp + 'exp' + str(experiment_no) + '/'}
+#              '18': output_fp + 'exp' + str(experiment_no) + '/',
+              '18': output_fp + 'exp3/18/'}
 eb_fp = eb_fp_dict[roi]
 #eb_fp = output_fp + 'exp' + str(input.experiment_no) + '/'
 
 
 
 #%%
-#debris_elev = roi_dict[roi][0]       # m a.s.l. of the debris modeling
-lr_gcm = -0.0065        # lapse rate from gcm to glacier [K m-1]
 delta_t = 60*60         # s, time step of AWS
 slope_AWS_deg = 0       # assuming AWS flat on top of ridge or Sky View Factor = 1
 aspect_AWS_deg = 0      # deg CW from N
@@ -476,7 +479,7 @@ P0 = 101325                 # Standard Atmospheric Pressure (Pa)
 density_air_0 = 1.29        # Density of air (kg/m3)
 density_water = 1000        # Density of water (kg/m3)
 density_ice = 900           # Density of ice (kg/m3) (Nicholson and Benn, 2006)
-lapserate = 0.0055          # Temperature Lapse Rate (K/m)
+lapserate = -0.0055          # Temperature Lapse Rate (K/m)
 Kvk = 0.41                  # Von Karman's Constant
 Lv = 2.49e6                 # Latent Heat of Vaporation of water (J/kg)
 Lf = 3.335e5                # Latent Heat of Fusion of Water (J/kg)

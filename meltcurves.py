@@ -91,90 +91,6 @@ def debris_frommelt_func(b, a, k):
     return 1 / k * (1 / b - 1 / a)
 
 
-#def create_xrdataset_ostrem(ds):
-#    """
-#    Create empty xarray dataset that will be used to record melt data from simulation runs.
-#
-#    Parameters
-#    ----------
-#    ds : xarray dataset
-#        dataframe containing energy balance model runs
-#
-#    Returns
-#    -------
-#    output_ds_all : xarray Dataset
-#        empty xarray dataset that contains variables and attributes to be filled in by simulation runs
-#    encoding : dictionary
-#        encoding used with exporting xarray dataset to netcdf
-#    """
-#    # Create empty datasets for each variable and merge them
-#    # Variable coordinates dictionary
-#    output_coords_dict = {
-#            'melt_mwea': collections.OrderedDict(
-#                    [('hd_cm', ds.hd_cm.values), ('stats', ds.stats.values), ('elev_cns', ds.elev_cns.values)]),
-#            'b0': collections.OrderedDict(
-#                    [('stats', ds.stats.values), ('elev_cns', ds.elev_cns.values)]),
-#            'k': collections.OrderedDict(
-#                    [('stats', ds.stats.values), ('elev_cns', ds.elev_cns.values)]),
-#            'elev': collections.OrderedDict(
-#                    [('elev_cns', ds.elev_cns.values)])
-#            }
-#    # Attributes dictionary
-#    output_attrs_dict = {
-#            'hd_cm': {
-#                    'long_name': 'debris thickness in centimeters',
-#                    'comment': 'cm so values are integers'},
-#            'elev': {
-#                    'long_name': 'elevation',
-#                    'units': 'm a.s.l.',
-#                    'comment': 'elevation associated with the elevation column name (elev_cns)'},
-#            'stats': {
-#                    'long_name': 'variable statistics',
-#                    'comment': str(debris_prms.k_random.shape[0]) + ' simulations; % refers to percentiles'},
-#            'elev_cns': {
-#                    'long_name': 'elevation column names',
-#                    'comment': 'elevations used to run the simulations'},
-#            'melt_mwea': {
-#                    'long_name': 'annual sub-debris glacier melt',
-#                    'units': 'meters water equivalent per year',
-#                    'temporal_resolution': 'annual',
-#                    'start_date': debris_prms.start_date,
-#                    'end_date': debris_prms.end_date},
-#            'b0': {
-#                    'long_name': 'second order reaction rate initial concentration',
-#                    'units': 'm w.e.'},
-#            'k': {
-#                    'long_name': 'second order reaction rate initial concentration',
-#                    'units': 'm w.e.'}
-#            }
-#    # Add variables to empty dataset and merge together
-#    count_vn = 0
-#    encoding = {}
-#    noencoding_vn = ['stats', 'hd_cm', 'elev_cns', 'elev']
-#    for vn in ['melt_mwea', 'b0', 'k', 'elev']:
-#        count_vn += 1
-#        empty_holder = np.zeros([len(output_coords_dict[vn][i]) for i in list(output_coords_dict[vn].keys())])
-#        output_ds = xr.Dataset({vn: (list(output_coords_dict[vn].keys()), empty_holder)},
-#                               coords=output_coords_dict[vn])
-#        if vn == 'elev':
-#            output_ds['elev'].values = ds.elev.values
-#        # Merge datasets of stats into one output
-#        if count_vn == 1:
-#            output_ds_all = output_ds
-#        else:
-#            output_ds_all = xr.merge((output_ds_all, output_ds))
-#
-#    # Add attributes
-#    for vn in ['melt', 'hd_cm', 'stats', 'elev_cns', 'elev', 'b0', 'k']:
-#        try:
-#            output_ds_all[vn].attrs = output_attrs_dict[vn]
-#        except:
-#            pass
-#        # Encoding (specify _FillValue, offsets, etc.)
-#        if vn not in noencoding_vn:
-#            encoding[vn] = {'_FillValue': False}
-#
-#    return output_ds_all, encoding
 def export_ds_daily_melt(ds):
     """
     Create empty xarray dataset that will be used to record melt data from simulation runs.
@@ -196,64 +112,65 @@ def export_ds_daily_melt(ds):
     
     # Melt daily
     ds_shape = ds.melt.values.shape
-    melt_daily = ds.melt.values.reshape((ds_shape[0], int(ds_shape[1] / 24), 24, ds_shape[2], ds_shape[3])).sum(axis=2)
-    
+    melt_daily = ds.melt.values.reshape((ds_shape[0], int(ds_shape[1] / 24), 24, ds_shape[2])).sum(axis=2)
+
     # Variable coordinates dictionary
-    output_coords_dict = {
-            'melt': collections.OrderedDict(
-                    [('hd_cm', ds.hd_cm.values), ('time', time_daily), 
-                     ('stats', ds.stats.values), ('elev_cns', ds.elev_cns.values)]),
-            'elev': collections.OrderedDict(
-                    [('elev_cns', ds.elev_cns.values)])
-            }
+    output_coords_dict = collections.OrderedDict()
+    output_coords_dict['melt'] = collections.OrderedDict([('hd_cm', ds.hd_cm.values), ('time', time_daily), 
+                                                          ('elev', ds.elev.values)])
     # Attributes dictionary
     output_attrs_dict = {
-            'hd_cm': {
-                    'long_name': 'debris thickness in centimeters',
-                    'comment': 'cm so values are integers'},
-            'elev': {
-                    'long_name': 'elevation',
-                    'units': 'm a.s.l.',
-                    'comment': 'elevation associated with the elevation column name (elev_cns)'},
-            'stats': {
-                    'long_name': 'variable statistics',
-                    'comment': str(debris_prms.k_random.shape[0]) + ' simulations; % refers to percentiles'},
-            'elev_cns': {
-                    'long_name': 'elevation column names',
-                    'comment': 'elevations used to run the simulations'},
-            'melt': {
-                    'long_name': 'glacier melt',
-                    'units': 'meters water equivalent',
-                    'temporal_resolution': 'daily'}
+            'latitude': {'long_name': 'latitude',
+                         'units': 'degrees north'},
+            'longitude': {'long_name': 'longitude',
+                          'units': 'degrees_east'},
+            'roi': {'long_name': 'region of interest'},
+            'time': {'long_name': 'time'},
+            'hd_cm': {'long_name': 'debris thickness',
+                      'units:': 'cm'},
+            'elev': {'long_name': 'elevation',
+                     'units': 'm a.s.l.'},
+            'melt': {'long_name': 'glacier melt, in water equivalent',
+                     'units': 'm'}
             }
+
+    assert 'melt_std' not in list(ds.keys()), 'Need to process standard deviation and add to output'
+    
     # Add variables to empty dataset and merge together
     count_vn = 0
     encoding = {}
-    noencoding_vn = ['stats', 'hd_cm', 'elev_cns', 'elev']
-    for vn in ['melt', 'elev']:
+    for vn in output_coords_dict.keys():
         count_vn += 1
         empty_holder = np.zeros([len(output_coords_dict[vn][i]) for i in list(output_coords_dict[vn].keys())])
         output_ds = xr.Dataset({vn: (list(output_coords_dict[vn].keys()), empty_holder)},
                                coords=output_coords_dict[vn])
-        if vn == 'elev':
-            output_ds['elev'].values = ds.elev.values
-        elif vn == 'melt':
-            output_ds['melt'].values = melt_daily
         # Merge datasets of stats into one output
         if count_vn == 1:
             output_ds_all = output_ds
         else:
             output_ds_all = xr.merge((output_ds_all, output_ds))
-
+            
     # Add attributes
-    for vn in ['melt', 'hd_cm', 'stats', 'elev_cns', 'elev', 'b0', 'k']:
+    for vn in output_ds_all.variables:
         try:
             output_ds_all[vn].attrs = output_attrs_dict[vn]
         except:
             pass
         # Encoding (specify _FillValue, offsets, etc.)
-        if vn not in noencoding_vn:
-            encoding[vn] = {'_FillValue': False}
+        encoding[vn] = {'_FillValue': False,
+                        'zlib':True,
+                        'complevel':9
+                        }
+            
+    # Add values    
+    output_ds_all['melt'].values = melt_daily
+    output_ds_all['latitude'] = ds['latitude']
+    output_ds_all['longitude'] = ds['longitude']
+    output_ds_all['hd_cm'] = ds['hd_cm']
+    output_ds_all['elev']= ds['elev']
+    
+    # Add attributes
+    output_ds_all.attrs = ds.attrs
 
     return output_ds_all, encoding
 
@@ -336,9 +253,8 @@ if __name__ == '__main__':
         with open(args.latlon_fn, 'rb') as f:
             latlon_list = pickle.load(f)
     else:
-        latlon_list = debris_prms.latlon_list    
-
-        #%%
+        latlon_list = debris_prms.latlon_list   
+        
     # Number of cores for parallel processing
     if args.option_parallels != 0:
         num_cores = int(np.min([len(latlon_list), args.num_simultaneous_processes]))

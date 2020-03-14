@@ -56,7 +56,7 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 	  (or from external directly: python ERA5_preprocess_looplatlon.py -process_unique_latlon_data=1 -roi='12' -fromexternal='1')
 
 3. Mass Balance data:
-   - process MB data: (this is done as part of the workflow now)
+   - process MB data:
 
 4. Surface temperature data:
    - Kraaijenbrink2017-ts-hma Google Earth Engine: surface temperature, etc.

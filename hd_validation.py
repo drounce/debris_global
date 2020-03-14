@@ -54,10 +54,9 @@ def plot_hd_vs_melt_comparison(measured_hd, measured_melt, glac_name, fig_fn, me
                                   columns=['debris_thickness', 'melt_mwea'])  
 
     nelev = 0
-    stats_idx = 0
     for ndebris, debris_thickness in enumerate(debris_thicknesses):    
         # Units: mm w.e. per day                
-        melt_mmwed = (ds_ostrem['melt'][ndebris,start_idx:end_idx,stats_idx,nelev].values.sum() 
+        melt_mmwed = (ds_ostrem['melt'][ndebris,start_idx:end_idx,nelev].values.sum() 
                       * 1000 / len(time_yearfrac[start_idx:end_idx]))
         debris_melt_df.loc[ndebris] = debris_thickness / 100, melt_mmwed
         
@@ -128,7 +127,7 @@ if option_melt_comparison:
     compare_khumbu = False
     compare_hailuogou = False
     compare_batal = False
-    compare_miage = False
+    compare_miage = True
     
     # ===== KHUMBU ====
     if compare_khumbu:
@@ -250,7 +249,7 @@ if option_melt_comparison:
         # Plot and filename details
         glac_name = 'Miage Glacier (11.03005)'
         fig_fn = '11.03005_debris_melt_curve_RB2010.png'
-        melt_fn = '4650N-1050E_debris_melt_curve.nc'
+        melt_fn = '4650N-1050E-debris_melt_curve.nc'
         
         # Manually estimate indices
         start_yearfrac = 2005 + 172/365

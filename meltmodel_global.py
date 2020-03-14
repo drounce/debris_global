@@ -162,10 +162,6 @@ def create_xrdataset(debris_thickness_all=debris_prms.debris_thickness_all, time
     
     # Variable coordinates dictionary
     output_coords_dict = collections.OrderedDict()
-#    output_coords_dict['latitude'] = lat_deg
-#    output_coords_dict['longitude'] = lon_deg
-#    output_coords_dict['roi'] = roi
-#    output_coords_dict['elev'] = collections.OrderedDict([('elev', elev_values)])
     output_coords_dict['melt'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
                                                           ('elev', elev_values)])
     output_coords_dict['ts'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
@@ -204,8 +200,7 @@ def create_xrdataset(debris_thickness_all=debris_prms.debris_thickness_all, time
             'snow_depth_std': {'long_name': 'snow depth standard deviation',
                                'units': 'm'}
             }
-            
-    #%%
+
     # Add variables to empty dataset and merge together
     count_vn = 0
     encoding = {}
@@ -1145,18 +1140,28 @@ def main(list_packed_vars):
         Sin_timeseries = Sin_AWS
         
         # Lapse rate (monthly)
-        ds_lr = xr.open_dataset(debris_prms.metdata_lr_fullfn)
-        lat_idx = np.abs(lat_deg - ds_lr ['latitude'].values).argmin()
-        lon_idx = np.abs(lon_deg - ds_lr ['longitude'].values).argmin()
-        lr_monthly_all = ds_lr['lapserate'][:,lat_idx,lon_idx].values
-        lr_time_pd_all = pd.to_datetime(ds_lr.time.values)
-        lr_year_all = lr_time_pd_all.year
-        lr_month_all = np.array(lr_time_pd_all.month)
-        lr_time_yymm_all = [str(lr_year_all[x]) + '-' + str(lr_month_all[x]).zfill(2) 
-                            for x in np.arange(0,len(lr_time_pd_all))]
-        lr_monthly_dict = dict(zip(lr_time_yymm_all, lr_monthly_all))
-        yearmonth_str = [str(year[x]) + '-' + str(month[x]).zfill(2) for x in np.arange(0,len(year))]
-        lapserate = np.array([lr_monthly_dict[x] for x in yearmonth_str])
+        if debris_prms.option_lr_fromdata == 1:
+            ds_lr = xr.open_dataset(debris_prms.metdata_lr_fullfn)
+            lat_idx = np.abs(lat_deg - ds_lr ['latitude'].values).argmin()
+            lon_idx = np.abs(lon_deg - ds_lr ['longitude'].values).argmin()
+            lr_monthly_all = ds_lr['lapserate'][:,lat_idx,lon_idx].values
+            lr_time_pd_all = pd.to_datetime(ds_lr.time.values)
+            lr_year_all = lr_time_pd_all.year
+            lr_month_all = np.array(lr_time_pd_all.month)
+            lr_time_yymm_all = [str(lr_year_all[x]) + '-' + str(lr_month_all[x]).zfill(2) 
+                                for x in np.arange(0,len(lr_time_pd_all))]
+            lr_monthly_dict = dict(zip(lr_time_yymm_all, lr_monthly_all))
+            yearmonth_str = [str(year[x]) + '-' + str(month[x]).zfill(2) for x in np.arange(0,len(year))]
+            lapserate = np.array([lr_monthly_dict[x] for x in yearmonth_str])
+        else:
+            lapserate = np.zeros(Tair_AWS.shape) + debris_prms.lapserate
+        # bounds for lapse rates
+#        lapserate[lapserate < ]
+        lapserate[lapserate < -0.009] = -0.009
+        lapserate[lapserate > -0.003] = -0.003
+#        print('lapserate:', lapserate.mean(), lapserate.min(), lapserate.max())
+        
+        
  
 #        # Add spinup
 #        nsteps_spinup = int(debris_prms.spinup_days*24*60*60/debris_prms.delta_t)
@@ -1241,7 +1246,7 @@ def main(list_packed_vars):
                         P = debris_prms.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
             
                         # Air temperature
-                        Tair = Tair_AWS - lapserate*(Elevation_pixel-Elev_AWS)
+                        Tair = Tair_AWS + lapserate*(Elevation_pixel-Elev_AWS)
                         # Snow [m]
                         if debris_prms.option_snow_fromAWS == 1:
                             if Snow_AWS == None:
@@ -1447,7 +1452,7 @@ def main(list_packed_vars):
                     P = debris_prms.P0*np.exp(-0.0289644*9.81*Elevation_pixel/(8.31447*288.15))
         
                     # Air temperature
-                    Tair = Tair_AWS - lapserate*(Elevation_pixel-Elev_AWS)
+                    Tair = Tair_AWS + lapserate*(Elevation_pixel-Elev_AWS)
                     # Snow [m]
                     if debris_prms.option_snow_fromAWS == 1:
                         if Snow_AWS == None:
@@ -1604,7 +1609,7 @@ if __name__ == '__main__':
 
 
 #%%
-#option_troubleshoot = False
+#option_troubleshoot = True
 #
 #if option_troubleshoot:
 #    # Find where snow never melts completely again
@@ -1672,27 +1677,27 @@ if __name__ == '__main__':
 #    fig.set_size_inches(6, 2*nrows)
 #    figure_fn = 'EB_output.png'
 #    fig.savefig(debris_prms.output_fp + figure_fn, bbox_inches='tight', dpi=300)
-#    
-#    
-#    #%% Lapse rate
-##    ds_lr = xr.open_dataset('/Users/davidrounce/Documents/Dave_Rounce/HiMAT/Climate_data/ERA5/ERA5_lapserates_monthly.nc')
-##    lat_idx = 118 #60.5N
-##    lon_idx = 846
-##    t1_idx = 180
-##    t2_idx = 480
-##    lr_monthly = ds_lr.lapserate[t1_idx:t2_idx,lat_idx,lon_idx].values
-##    time_values = ds_lr.time[t1_idx:t2_idx].values
-##    # Plot lapse rates
-##    fig, ax = plt.subplots(1, 1, squeeze=False, sharex=True, sharey=False, gridspec_kw = {'wspace':0.4, 'hspace':0})             
-##    ax[0,0].plot(time_values, lr_monthly, color='k', linewidth=1)
-##    ax[0,0].set_xlabel('Time', size=12)
-##    ax[0,0].set_ylabel('Lapse rate (degC m-1)', size=12)
-##
-##    fig.set_size_inches(4, 4)
-##    figure_fn = 'lapserates_monthly.png'
-##    fig.savefig(debris_prms.output_fp + figure_fn, bbox_inches='tight', dpi=300)
-#    
-    #%%
-    ds = xr.open_dataset('/Users/davidrounce/Documents/Dave_Rounce/DebrisGlaciers_WG/Melt_Intercomparison/output/' + 
-                         'exp3/01/Rounce2015_01-6050N-21150E-20200313.nc')
+    
+    
+    #%% Lapse rate
+#    ds_lr = xr.open_dataset('/Users/davidrounce/Documents/Dave_Rounce/HiMAT/Climate_data/ERA5/ERA5_lapserates_monthly.nc')
+#    lat_idx = 118 #60.5N
+#    lon_idx = 846
+#    t1_idx = 180
+#    t2_idx = 480
+#    lr_monthly = ds_lr.lapserate[t1_idx:t2_idx,lat_idx,lon_idx].values
+#    time_values = ds_lr.time[t1_idx:t2_idx].values
+#    # Plot lapse rates
+#    fig, ax = plt.subplots(1, 1, squeeze=False, sharex=True, sharey=False, gridspec_kw = {'wspace':0.4, 'hspace':0})             
+#    ax[0,0].plot(time_values, lr_monthly, color='k', linewidth=1)
+#    ax[0,0].set_xlabel('Time', size=12)
+#    ax[0,0].set_ylabel('Lapse rate (degC m-1)', size=12)
+#
+#    fig.set_size_inches(4, 4)
+#    figure_fn = 'lapserates_monthly.png'
+#    fig.savefig(debris_prms.output_fp + figure_fn, bbox_inches='tight', dpi=300)
+    
+#    #%%
+#    ds = xr.open_dataset('/Users/davidrounce/Documents/Dave_Rounce/DebrisGlaciers_WG/Melt_Intercomparison/output/' + 
+#                         'exp3/01/Rounce2015_01-6050N-21150E-20200313.nc')
     

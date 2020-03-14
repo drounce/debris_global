@@ -241,7 +241,7 @@ class GlacFeat:
         
     #%%
 #    def add_elev_data(self, thick_dir, thick_fn, verbose=False):
-    def add_layers(self, dc_shp_lyr, gf_add_dhdt=True, gf_add_vel=True, gf_add_ts=True, 
+    def add_layers(self, dc_shp_lyr, gf_add_dhdt=True, dhdt_fn=None, gf_add_vel=True, vx_fn=None, gf_add_ts=True, 
                    gf_add_ts_info=False, gf_add_slope_aspect=False, calc_emergence=False,
                    verbose=False, debug_emergence=False):
         
@@ -262,14 +262,13 @@ class GlacFeat:
         fn_dict['ice_thick'] = thick_dir + thick_fn
         # dh/dt
         if gf_add_dhdt:
-            dhdt_fn = debris_prms.dhdt_fn_dict[debris_prms.roi]
             if dhdt_fn is not None:
                 fn_dict['dhdt'] = dhdt_fn
         # Velocity
         if gf_add_vel:
-            if os.path.exists(debris_prms.v_dir + debris_prms.vx_fn_dict[debris_prms.roi]):
-                fn_dict['vx'] = debris_prms.v_dir + debris_prms.vx_fn_dict[debris_prms.roi]
-                fn_dict['vy'] = debris_prms.v_dir + debris_prms.vy_fn_dict[debris_prms.roi]
+            if vx_fn is not None:
+                fn_dict['vx'] = vx_fn
+                fn_dict['vy'] = vx_fn.replace('_vx', '_vy')
         # Surface temperature
         if gf_add_ts:
             if os.path.exists(debris_prms.ts_fp + debris_prms.ts_fn_dict[debris_prms.roi]):
