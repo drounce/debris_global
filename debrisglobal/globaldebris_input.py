@@ -29,9 +29,9 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '08'
 #roi = '09'
 #roi = '10'
-roi = '11'
+#roi = '11'
 #roi = '12'
-#roi = 'HMA'
+roi = 'HMA'
 #roi = '16'
 #roi = '17'
 #roi = '18'
@@ -345,6 +345,9 @@ vx_dir_dict_list = {'01': [sat_img_dir + 'ITS_Live/ALA_G0120_0000_vx.tif'],
 #              '16': 'Mosaic__vyo.tif',
 #              '17': 'PAT_G0120_0000_vy.tif',
 #              '18': 'Mosaic__vyo.tif',}
+
+dhdt_vel_fns_fp = output_fp + 'dhdt_vel_fns/'
+dhdt_vel_fns_fn = 'XXXX-dhdt_vel_fns.csv'
 
 # Emergence Velocity data
 min_glac_area_writeout=0
