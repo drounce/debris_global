@@ -271,16 +271,22 @@ class GlacFeat:
                 fn_dict['vy'] = vx_fn.replace('_vx', '_vy')
         # Surface temperature
         if gf_add_ts:
-            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_fn_dict[debris_prms.roi]):
-                fn_dict['ts'] = debris_prms.ts_fp + debris_prms.ts_fn_dict[debris_prms.roi]
+            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_fn):
+                fn_dict['ts'] = debris_prms.ts_fp + debris_prms.ts_fn
 
         if gf_add_ts_info:
-            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_dayfrac_fn_dict[debris_prms.roi]):
-                fn_dict['ts_dayfrac'] = debris_prms.ts_fp + debris_prms.ts_dayfrac_fn_dict[debris_prms.roi]
-            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_year_fn_dict[debris_prms.roi]):
-                fn_dict['ts_year'] = debris_prms.ts_fp + debris_prms.ts_year_fn_dict[debris_prms.roi]
-            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_doy_fn_dict[debris_prms.roi]):
-                fn_dict['ts_doy'] = debris_prms.ts_fp + debris_prms.ts_doy_fn_dict[debris_prms.roi]
+#            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_dayfrac_fn_dict[debris_prms.roi]):
+#                fn_dict['ts_dayfrac'] = debris_prms.ts_fp + debris_prms.ts_dayfrac_fn_dict[debris_prms.roi]
+#            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_year_fn_dict[debris_prms.roi]):
+#                fn_dict['ts_year'] = debris_prms.ts_fp + debris_prms.ts_year_fn_dict[debris_prms.roi]
+#            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_doy_fn_dict[debris_prms.roi]):
+#                fn_dict['ts_doy'] = debris_prms.ts_fp + debris_prms.ts_doy_fn_dict[debris_prms.roi]
+            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_dayfrac_fn):
+                fn_dict['ts_dayfrac'] = debris_prms.ts_fp + debris_prms.ts_dayfrac_fn
+            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_year_fn):
+                fn_dict['ts_year'] = debris_prms.ts_fp + debris_prms.ts_year_fn
+            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_doy_fn):
+                fn_dict['ts_doy'] = debris_prms.ts_fp + debris_prms.ts_doy_fn
 
 
         # ===== PROCESS THE DATA =====
@@ -295,8 +301,14 @@ class GlacFeat:
         #Warp everything to common res/extent/proj
         z1_gt = gdal.Open(fn_dict['z1']).GetGeoTransform()
         z1_res = np.min([z1_gt[1], -z1_gt[5]])
+        # resampling algorithm
+        if gf_add_ts_info:
+            # must be nearest neighbor for ts_info; otherwise issues with day of year
+            r_resampling = 'near'
+        else:
+            r_resampling = 'cubic'
         ds_list = warplib.memwarp_multi_fn(fn_dict.values(), res=z1_res, extent=warp_extent, 
-                                           t_srs=self.aea_srs, verbose=verbose, r='cubic')
+                                           t_srs=self.aea_srs, verbose=verbose, r=r_resampling)
         ds_dict = dict(zip(fn_dict.keys(), ds_list))
         self.ds_dict = ds_dict
 

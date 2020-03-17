@@ -169,6 +169,8 @@ def main(list_packed_vars):
     
     if debug:
         print(count, latlon_list)
+        
+    #%%
 
     # Surface temperature information (year, day of year, hour)
     ts_info_fullfn = debris_prms.ts_fp + debris_prms.roi + '_debris_tsinfo.nc'

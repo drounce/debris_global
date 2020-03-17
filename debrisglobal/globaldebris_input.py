@@ -10,7 +10,7 @@ import pickle
 import numpy as np
 import pandas as pd
 
-#%%
+#%% ===== FREQUENTLY CHANGED PARAMETERS (at top for convenience) =====
 # Main directory
 main_directory = os.getcwd()
 rgi_fp = main_directory + '/../00_rgi60_attribs/'
@@ -39,10 +39,48 @@ roi = 'HMA'
 # ===== Debris thickness =====
 experiment_no = 3
 #debris_thickness_all = np.array([0])
-#debris_thickness_all = np.array([0.05])
 #debris_thickness_all = np.array([0, 0.02])
 debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
 debris_thickness_all[1] = 0.02
+
+#eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
+eb_fp = '/Volumes/LaCie/debris_output/exp3-20200313/' + roi + '/'
+
+# Latitude and longitude index to run the model
+#  Longitude must be 0 - 360 degrees
+latlon_unique_fp = output_fp + 'latlon_unique/'
+latlon_unique_dict = {'01':'01_latlon_unique.pkl',
+                      '02':'02_latlon_unique.pkl',
+                      '03':'03_latlon_unique.pkl',
+                      '04':'04_latlon_unique.pkl',
+                      '05':'05_latlon_unique.pkl',
+                      '06':'06_latlon_unique.pkl',
+                      '07':'07_latlon_unique.pkl',
+                      '08':'08_latlon_unique.pkl',
+                      '09':'09_latlon_unique.pkl',
+                      '10':'10_latlon_unique.pkl',
+                      '11':'11_latlon_unique.pkl',
+                      '12':'12_latlon_unique.pkl',
+                      'HMA':'HMA_latlon_unique.pkl',
+                      '16':'16_latlon_unique.pkl',
+                      '17':'17_latlon_unique.pkl',
+                      '18':'18_latlon_unique.pkl'}
+latlon_list_raw = 'all'
+#latlon_list_raw = None
+if latlon_list_raw == 'all':
+    with open(latlon_unique_fp + latlon_unique_dict[roi], 'rb') as f:
+        latlon_list = pickle.load(f)
+#latlon_list = latlon_list[0:5]
+#latlon_list = [latlon_list[0]]
+#latlon_list = [(61.5, 217.0)]
+#latlon_list = [(55.25, 230.50)]
+#latlon_list = [(28.0, 86.75)]
+#latlon_list = [(45.75, 6.75)]
+#latlon_list = [(60.0, 218.25)]
+#latlon_list = [(60.5, 211.5)]
+#latlon_list = [(28.25, 87.5)]
+
+#%% ===== OTHER PARAMETERS =====
 
 roi_latlon_dict = {'01':[71, 50, 233, 180],
                    '02':[66, 36, 256, 225],
@@ -92,75 +130,49 @@ roi_years = {'01':[1994,2018],
              '16':[2000,2018],
              '17':[2000,2018],
              '18':[2000,2018]}
-latlon_unique_fp = output_fp + 'latlon_unique/'
-latlon_unique_dict = {'01':'01_latlon_unique.pkl',
-                      '02':'02_latlon_unique.pkl',
-                      '03':'03_latlon_unique.pkl',
-                      '04':'04_latlon_unique.pkl',
-                      '05':'05_latlon_unique.pkl',
-                      '06':'06_latlon_unique.pkl',
-                      '07':'07_latlon_unique.pkl',
-                      '08':'08_latlon_unique.pkl',
-                      '09':'09_latlon_unique.pkl',
-                      '10':'10_latlon_unique.pkl',
-                      '11':'11_latlon_unique.pkl',
-                      '12':'12_latlon_unique.pkl',
-                      'HMA':'HMA_latlon_unique.pkl',
-                      '16':'16_latlon_unique.pkl',
-                      '17':'17_latlon_unique.pkl',
-                      '18':'18_latlon_unique.pkl'}
+
 braun_fp =  main_directory + '/../mb_data/Braun/'
+mcnabb_fp = main_directory + '/../mb_data/McNabb/'
 shean_fp =  main_directory + '/../mb_data/Shean/'
-mb_fp_list_roi = {'01': ['mcnabb'],
+mb_fp_list_roi = {'01': [mcnabb_fp + '01/'],
                   '02': [braun_fp + '02/'],
-                  '03': ['mcnabb'],
-                  '04': ['mcnabb'],
-                  '05': ['mcnabb'],
-                  '06': ['mcnabb'],
-                  '07': ['mcnabb'],
-                  '08': ['mcnabb'],
-                  '09': ['mcnabb'],
-                  '10': ['braun'],
+                  '03': [mcnabb_fp + '03/'],
+                  '04': [mcnabb_fp + '04/'],
+                  '05': [mcnabb_fp + '05/'],
+                  '06': [mcnabb_fp + '06/'],
+                  '07': [mcnabb_fp + '07/'],
+                  '08': [mcnabb_fp + '08/'],
+                  '09': [mcnabb_fp + '09/'],
+                  '10': [braun_fp + '10/'],
                   '11': [braun_fp + '11/'],
-                  '12': ['braun'],
+                  '12': [braun_fp + '12/'],
                   'HMA': [shean_fp + 'HMA/'],
                   '16': [braun_fp + 'SouthAmerica/'],
                   '17': [braun_fp + 'SouthAmerica/'],
                   '18': [braun_fp + '18/']}
-#mb_datasets_dict = {'01': ['mcnabb'],
-#                    '02': ['braun'],
-#                    '03': ['mcnabb'],
-#                    '04': ['mcnabb'],
-#                    '05': ['mcnabb'],
-#                    '06': ['mcnabb'],
-#                    '07': ['mcnabb'],
-#                    '08': ['mcnabb'],
-#                    '09': ['mcnabb'],
-#                    '10': ['braun'],
-#                    '11': ['braun'],
-#                    '12': ['braun'],
-#                    'HMA': ['shean'],
-#                    '16': ['braun'],
-#                    '17': ['braun'],
-#                    '18': ['braun']}
-#mb_datasets = mb_datasets_dict[roi]
-#mb_dataset_fp_dict = {'braun': main_directory + '/../mb_data/Braun/binned_data/',
-#                      'larsen': main_directory + '/../mb_data/Larsen/binned_data/',
-#                      'mcnabb': main_directory + '/../mb_data/McNabb/binned_data/',
-#                      'shean': main_directory + '/../mb_data/Shean/binnedf_data/'}
 mb_yrfrac_dict = {'01': [2000.6, 2018.6],
                   '02': None,
-                  '03': None,
+                  '03': [2000.6, 2018.6],
+                  '04': [2000.6, 2018.6],
+                  '05': [2000.6, 2018.6],
+                  '06': [2000.6, 2018.6],
+                  '07': [2000.6, 2018.6],
+                  '08': [2000.6, 2018.6],
+                  '09': [2000.6, 2018.6],
+                  '10': None,
                   '11': [2000.128, 2013],
+                  '12': None,
                   'HMA': [2000.6, 2018.6],
+                  '16': None,
+                  '17': None,
                   '18': [2000.128, 2013]}
-dhdt_fn_dict = {'01': main_directory + '/../mb_data/McNabb/01_rgi60_Alaska_ls_dh.tif',
-                '02': None,
-                '03': main_directory + '/../mb_data/McNabb/03_rgi60_ArcticCanadaNorth_ls_dh.tif',
-                '11': main_directory + '/../mb_data/Braun/region_11_Europe_dh_dt_on_ice.tif',
-                'HMA': main_directory + '/../mb_data/Shean/' + 
-                       'dem_align_ASTER_WV_index_2000-2018_aea_trend_3px_filt_mos_retile.tif',
-                '18': main_directory + '/../mb_data/Braun/region_18_NZ_dh_dt_on_ice.tif'}
+#dhdt_fn_dict = {'01': main_directory + '/../mb_data/McNabb/01_rgi60_Alaska_ls_dh.tif',
+#                '02': None,
+#                '03': main_directory + '/../mb_data/McNabb/03_rgi60_ArcticCanadaNorth_ls_dh.tif',
+#                '11': main_directory + '/../mb_data/Braun/region_11_Europe_dh_dt_on_ice.tif',
+#                'HMA': main_directory + '/../mb_data/Shean/' + 
+#                       'dem_align_ASTER_WV_index_2000-2018_aea_trend_3px_filt_mos_retile.tif',
+#                '18': main_directory + '/../mb_data/Braun/region_18_NZ_dh_dt_on_ice.tif'}
 
 oggm_fp = main_directory + '/../oggm_project/debris_project/'
 width_min_dict = {'01': 240,
@@ -193,32 +205,36 @@ mb_binned_fp_wdebris = main_directory + '/../output/mb_bins/csv/_wdebris/'
 mb_binned_fp_wdebris_hdts = main_directory + '/../output/mb_bins/csv/_wdebris_hdts/'
 era5_hrly_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
 
-ts_fp = main_directory + '/../output/ts_tif/'
-ts_fn_dict = {'01':'01_debris_tsurfC.tif',
-              '03':None,
-              '11':'11_debris_tsurfC.tif',
-              'HMA':'hma_debris_tsurfC.tif',
-              '18':'18_debris_tsurfC.tif'}
-ts_dayfrac_fn_dict = {'01':'01_debris_dayfrac.tif',
-                      '03':None,
-                      '11':'11_debris_dayfrac.tif',
-                      'HMA':'hma_debris_dayfrac.tif',
-                      '18':'18_debris_dayfrac.tif'}
-ts_year_fn_dict = {'01':'01_debris_year.tif',
-                   '03':None,
-                   '11':'11_debris_year.tif',
-                   'HMA':'hma_debris_year.tif',
-                   '18':'18_debris_year.tif'}
-ts_doy_fn_dict = {'01':'01_debris_doy.tif',
-                  '03':None,
-                  '11':'11_debris_doy.tif',
-                  'HMA':'hma_debris_doy.tif',
-                  '18':'18_debris_doy.tif'}
+ts_fp = main_directory + '/../output/ts_tif/' + roi + '_ts_data/'
+ts_fn = roi + '_debris_tsurfC.tif'
+ts_dayfrac_fn = roi + '_debris_dayfrac.tif'
+ts_year_fn = roi + '_debris_year.tif'
+ts_doy_fn = roi + '_debris_doy.tif'
+#ts_fn_dict = {'01':'01_debris_tsurfC.tif',
+#              '03':None,
+#              '11':'11_debris_tsurfC.tif',
+#              'HMA':'hma_debris_tsurfC.tif',
+#              '18':'18_debris_tsurfC.tif'}
+#ts_dayfrac_fn_dict = {'01':'01_debris_dayfrac.tif',
+#                      '03':None,
+#                      '11':'11_debris_dayfrac.tif',
+#                      'HMA':'hma_debris_dayfrac.tif',
+#                      '18':'18_debris_dayfrac.tif'}
+#ts_year_fn_dict = {'01':'01_debris_year.tif',
+#                   '03':None,
+#                   '11':'11_debris_year.tif',
+#                   'HMA':'hma_debris_year.tif',
+#                   '18':'18_debris_year.tif'}
+#ts_doy_fn_dict = {'01':'01_debris_doy.tif',
+#                  '03':None,
+#                  '11':'11_debris_doy.tif',
+#                  'HMA':'hma_debris_doy.tif',
+#                  '18':'18_debris_doy.tif'}
 ts_stats_res = 50 # common resolution needed such that resolution does not interfere with regional stats
 output_ts_csv_ending = '_ts_hd_opt.csv'
-tscurve_fp = ts_fp + 'ts_curves/'
+tscurve_fp = ts_fp + '../ts_curves/'
 output_ts_fn_sample = 'XXXXdebris_ts_curve.nc'
-hd_fp = ts_fp + 'hd_tifs/'
+hd_fp = ts_fp + '../hd_tifs/' + roi + '/'
 hd_fn_sample = 'XXXX_hdts_m.tif'
 mf_fp = ts_fp + 'hd_tifs/_meltfactor/'
 mf_fn_sample = 'XXXX_meltfactor.tif'
@@ -295,57 +311,6 @@ vx_dir_dict_list = {'01': [sat_img_dir + 'ITS_Live/ALA_G0120_0000_vx.tif'],
                     '17': [sat_img_dir + 'romain_velocity/Cordillera_South/Mosaic__vxo.tif'],
                     '18': [sat_img_dir + 'romain_velocity/NEWZEALAND/Mosaic__vxo.tif']
                     }
-#v_dir_dict = {'01': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '02': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '03': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '04': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '05': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '06': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '07': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '08': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/NORWAY/',
-#              '09': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '10': None,
-#              '11': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/ALPS/',
-#              '12': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/Caucasus/',
-#              'HMA': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '16': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/AndesBlanca/',
-#              '17': main_directory + '/../../../Satellite_Images/ITS_Live/',
-#              '18': main_directory + '/../../../Satellite_Images/romain_velocity/DAVID_ROUNCE/NEWZEALAND/'
-#             }
-#v_dir = v_dir_dict[roi]
-#vx_fn_dict = {'01': 'ALA_G0120_0000_vx.tif',
-#              '02': 'ALA_G0120_0000_vx.tif',
-#              '03': 'CAN_G0120_0000_vx.tif',
-#              '04': 'CAN_G0120_0000_vx.tif',
-#              '05': 'GRE_G0120_0000_vx.tif',
-#              '06': 'ICE_G0120_0000_vx.tif',
-#              '07': 'SRA_G0120_0000_vx.tif',
-#              '08': 'Mosaic__vxo.tif',
-#              '09': 'SRA_G0120_0000_vx.tif',
-#              '10': None,
-#              '11': 'Mosaic__vxo.tif',
-#              '12': 'Mosaic__vxo.tif',
-#              'HMA': 'HMA_G0120_0000_vx.tif',
-#              '16': 'Mosaic__vxo.tif',
-#              '17': 'PAT_G0120_0000_vx.tif',
-#              '18': 'Mosaic__vxo.tif',}
-#vy_fn_dict = {'01': 'ALA_G0120_0000_vy.tif',
-#              '02': 'ALA_G0120_0000_vy.tif',
-#              '03': 'CAN_G0120_0000_vy.tif',
-#              '04': 'CAN_G0120_0000_vy.tif',
-#              '05': 'GRE_G0120_0000_vy.tif',
-#              '06': 'ICE_G0120_0000_vy.tif',
-#              '07': 'SRA_G0120_0000_vy.tif',
-#              '08': 'Mosaic__vyo.tif',
-#              '09': 'SRA_G0120_0000_vy.tif',
-#              '10': None,
-#              '11': 'Mosaic__vyo.tif',
-#              '12': 'Mosaic__vyo.tif',
-#              'HMA': 'HMA_G0120_0000_vy.tif',
-#              '16': 'Mosaic__vyo.tif',
-#              '17': 'PAT_G0120_0000_vy.tif',
-#              '18': 'Mosaic__vyo.tif',}
-
 dhdt_vel_fns_fp = output_fp + 'dhdt_vel_fns/'
 dhdt_vel_fns_fn = 'XXXX-dhdt_vel_fns.csv'
 
@@ -366,27 +331,9 @@ endyear = roi_years[roi][1]
 timezone = 0
 metdata_fn_sample = roi + '_ERA5-metdata-XXXX' + str(startyear) + '_' + str(endyear) + '.nc'
 
-# Latitude and longitude index to run the model
-#  Longitude must be 0 - 360 degrees
-latlon_list_raw = 'all'
-#latlon_list_raw = None
-if latlon_list_raw == 'all':
-    with open(latlon_unique_fp + latlon_unique_dict[roi], 'rb') as f:
-        latlon_list = pickle.load(f)
-#latlon_list = latlon_list[0:5]
-#latlon_list = [latlon_list[0]]
-#latlon_list = [(61.5, 217.0)]
-#latlon_list = [(55.25, 230.50)]
-#latlon_list = [(28.0, 86.75)]
-#latlon_list = [(45.75, 6.75)]
-#latlon_list = [(60.0, 218.25)]
-#latlon_list = [(60.5, 211.5)]
-
 #%%
 # Simulation data
-roi_datedict = {
-                '01': ['1994-01-01', '2018-12-31'],
-#                '01': ['2000-01-01', '2002-12-31'],
+roi_datedict = {'01': ['1994-01-01', '2018-12-31'],
                 '02': ['2000-01-01', '2018-12-31'],
                 '03': ['2000-01-01', '2018-12-31'],
                 '04': ['2000-01-01', '2018-12-31'],
@@ -422,10 +369,6 @@ elif experiment_no == 4:
     albedo_random = np.array([debris_properties[:,5]])
     print('\n\nNEED TO MAKE DEBRIS PROPERTIES RANDOM FOR MC SIMULATIONS\n\n')
 
-# Dates of satellite temperature data
-#ts_dates = ['2015-09-30']
-#ts_hr = roi_dict[roi][3]            # hour of satellite temperature data acquisition
-
 # Extra
 debris_albedo = 0.2     # -, debris albedo
 za = 2                  # m, height of air temperature instrument
@@ -449,21 +392,6 @@ elif output_option == 3:
     mc_stat_cns = ['mean', 'std', '25%', '75%']
     print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
 date_start = '20200313'
-eb_fp_dict = {'01': '/Volumes/LaCie/debris_output/exp3/01/',
-              '02': None,
-              '03': None,
-              '04': None,
-              '05': None,
-#              '11': '/Volumes/LaCie/debris_output/exp3/11/',
-              '11': output_fp + 'exp3/11/',
-              '12': None,
-              'HMA': '/Volumes/LaCie/debris_output/exp3/HMA/',
-              '16': None,
-              '17': None,
-#              '18': output_fp + 'exp' + str(experiment_no) + '/',
-              '18': output_fp + 'exp3/18/'}
-eb_fp = eb_fp_dict[roi]
-#eb_fp = output_fp + 'exp' + str(input.experiment_no) + '/'
 
 
 
