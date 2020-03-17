@@ -27,11 +27,11 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '06'
 #roi = '07'
 #roi = '08'
-#roi = '09'
+roi = '09'
 #roi = '10'
 #roi = '11'
 #roi = '12'
-roi = 'HMA'
+#roi = 'HMA'
 #roi = '16'
 #roi = '17'
 #roi = '18'
@@ -151,7 +151,7 @@ mb_fp_list_roi = {'01': [mcnabb_fp + '01/'],
                   '17': [braun_fp + 'SouthAmerica/'],
                   '18': [braun_fp + '18/']}
 mb_yrfrac_dict = {'01': [2000.6, 2018.6],
-                  '02': None,
+                  '02': [2000.128, 2012],
                   '03': [2000.6, 2018.6],
                   '04': [2000.6, 2018.6],
                   '05': [2000.6, 2018.6],
@@ -159,9 +159,9 @@ mb_yrfrac_dict = {'01': [2000.6, 2018.6],
                   '07': [2000.6, 2018.6],
                   '08': [2000.6, 2018.6],
                   '09': [2000.6, 2018.6],
-                  '10': None,
+                  '10': [2000.128, 2012],
                   '11': [2000.128, 2013],
-                  '12': None,
+                  '12': [2000.128, 2012],
                   'HMA': [2000.6, 2018.6],
                   '16': None,
                   '17': None,
@@ -206,6 +206,24 @@ mb_binned_fp_wdebris_hdts = main_directory + '/../output/mb_bins/csv/_wdebris_hd
 era5_hrly_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
 
 ts_fp = main_directory + '/../output/ts_tif/' + roi + '_ts_data/'
+ts_fns_fn = roi + '-ts_fns.csv'
+#ts_fn_dict_list = {'01': [ts_fp + 'ITS_Live/ALA_G0120_0000_vx.tif'],
+#                   '02': [ts_fp + 'ITS_Live/ALA_G0120_0000_vx.tif'],
+#                   '03': [ts_fp + 'ITS_Live/CAN_G0120_0000_vx.tif'],
+#                   '04': [ts_fp + 'ITS_Live/CAN_G0120_0000_vx.tif'],
+#                   '05': [ts_fp + 'ITS_Live/GRE_G0120_0000_vx.tif'],
+#                   '06': [ts_fp + 'ITS_Live/ICE_G0120_0000_vx.tif'],
+#                   '07': [ts_fp + 'ITS_Live/SRA_G0120_0000_vx.tif'],
+#                   '08': [ts_fp + 'romain_velocity/NORWAY/Mosaic__vxo.tif'],
+#                   '09': [ts_fp + 'ITS_Live/SRA_G0120_0000_vx.tif'],
+#                   '10': [ts_fp + 'romain_velocity/Asia_north/Mosaic__vxo.tif'],
+#                   '11': [ts_fp + 'romain_velocity/ALPS/Mosaic__vxo.tif'],
+#                   '12': [ts_fp + 'romain_velocity/Caucasus/Mosaic__vxo.tif'],
+#                   'HMA': [ts_fp + 'ITS_Live/HMA_G0120_0000_vx.tif'],
+#                   '16': [ts_fp + 'romain_velocity/AndesBlanca/Mosaic__vxo.tif'],
+#                   '17': [ts_fp + 'romain_velocity/Cordillera_South/Mosaic__vxo.tif'],
+#                   '18': [ts_fp + 'romain_velocity/NEWZEALAND/Mosaic__vxo.tif']
+#                    }
 ts_fn = roi + '_debris_tsurfC.tif'
 ts_dayfrac_fn = roi + '_debris_dayfrac.tif'
 ts_year_fn = roi + '_debris_year.tif'

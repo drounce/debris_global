@@ -118,7 +118,7 @@ Alaska (01):
 '01.15645' # Kennicott     - good
 
 Western Canada (02):
-'02.12438' # Dome          - (Mattson 2000)
+'02.12438' # Dome     - (Mattson 2000, debris up to 0.5 m thick along the margins)
 '02.18792' # Eliot	   - (Lundstrom 1993, thickness and ablation measurements)
 
 Europe (11):
@@ -160,6 +160,7 @@ Lundstrom metal 1993 - western North America
 Automatically digitize figures by clicking on points (very fast):
    https://apps.automeris.io/wpd/
 
+"Sample Raster Values" for direct comparison between bins and rasters
 
 # ===== UNCERTAINTIES ====================================================================================================================
 - Model parameter uncertainty
@@ -205,6 +206,9 @@ Is uncertainty associated with the model parameters parameters comparable to the
 
 Limitations/issues:
   - 13.00604 - debris cover is up-glacier (this is a rock crop, not a DCG!): showcases issues with debris outlines and glacier outlines
+  - Jan Mayen doesn't have surface temperature data from GEE for some reason
+  - Composite Ts image, so two different dates comes into play
+     --> Focused studies should apply method over known clear sky image
 
 
 Discussion:
@@ -218,4 +222,26 @@ print('IDEA FOR PROCESSING:\n  set a larger minimum DC area for processing (remo
       '  --> then when clipping the debris thickness maps, clip using the original Scherler extents...')
 print('  right now there are still way too many small bins messing up binned signals')
 print('BETTER: SELECT ONLY THE BIGGEST POLYGON AND DISCARD THE REST?')
+
+
+
+
+
+
+
+
+
+
+
+
+Suldenferner (RGI60-11.01604): clear case of poor glacier boundary
+  --> good reason not to clip the debris thickness maps
+
+
+
+
+
+
+
+
 

@@ -241,8 +241,12 @@ class GlacFeat:
         
     #%%
 #    def add_elev_data(self, thick_dir, thick_fn, verbose=False):
-    def add_layers(self, dc_shp_lyr, gf_add_dhdt=True, dhdt_fn=None, gf_add_vel=True, vx_fn=None, gf_add_ts=True, 
-                   gf_add_ts_info=False, gf_add_slope_aspect=False, calc_emergence=False,
+    def add_layers(self, dc_shp_lyr, 
+                   gf_add_dhdt=True, dhdt_fn=None, 
+                   gf_add_vel=True, vx_fn=None, 
+                   gf_add_ts=True, ts_fn=None,
+                   gf_add_ts_info=False, ts_year_fn=None, ts_doy_fn=None, ts_dayfrac_fn=None,
+                   gf_add_slope_aspect=False, calc_emergence=False,
                    verbose=False, debug_emergence=False):
         
         glac_str = self.glacnum
@@ -271,22 +275,30 @@ class GlacFeat:
                 fn_dict['vy'] = vx_fn.replace('_vx', '_vy')
         # Surface temperature
         if gf_add_ts:
-            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_fn):
-                fn_dict['ts'] = debris_prms.ts_fp + debris_prms.ts_fn
+            if ts_fn is not None:
+                fn_dict['ts'] = ts_fn
+#            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_fn):
+#                fn_dict['ts'] = debris_prms.ts_fp + debris_prms.ts_fn
 
         if gf_add_ts_info:
+            if ts_year_fn is not None:
+                fn_dict['ts_year'] = ts_year_fn
+            if ts_doy_fn is not None:
+                fn_dict['ts_doy'] = ts_doy_fn
+            if ts_dayfrac_fn is not None:
+                fn_dict['ts_dayfrac'] = ts_dayfrac_fn
 #            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_dayfrac_fn_dict[debris_prms.roi]):
 #                fn_dict['ts_dayfrac'] = debris_prms.ts_fp + debris_prms.ts_dayfrac_fn_dict[debris_prms.roi]
 #            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_year_fn_dict[debris_prms.roi]):
 #                fn_dict['ts_year'] = debris_prms.ts_fp + debris_prms.ts_year_fn_dict[debris_prms.roi]
 #            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_doy_fn_dict[debris_prms.roi]):
 #                fn_dict['ts_doy'] = debris_prms.ts_fp + debris_prms.ts_doy_fn_dict[debris_prms.roi]
-            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_dayfrac_fn):
-                fn_dict['ts_dayfrac'] = debris_prms.ts_fp + debris_prms.ts_dayfrac_fn
-            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_year_fn):
-                fn_dict['ts_year'] = debris_prms.ts_fp + debris_prms.ts_year_fn
-            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_doy_fn):
-                fn_dict['ts_doy'] = debris_prms.ts_fp + debris_prms.ts_doy_fn
+#            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_dayfrac_fn):
+#                fn_dict['ts_dayfrac'] = debris_prms.ts_fp + debris_prms.ts_dayfrac_fn
+#            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_year_fn):
+#                fn_dict['ts_year'] = debris_prms.ts_fp + debris_prms.ts_year_fn
+#            if os.path.exists(debris_prms.ts_fp + debris_prms.ts_doy_fn):
+#                fn_dict['ts_doy'] = debris_prms.ts_fp + debris_prms.ts_doy_fn
 
 
         # ===== PROCESS THE DATA =====
