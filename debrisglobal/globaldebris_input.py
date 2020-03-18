@@ -27,9 +27,9 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '06'
 #roi = '07'
 #roi = '08'
-roi = '09'
+#roi = '09'
 #roi = '10'
-#roi = '11'
+roi = '11'
 #roi = '12'
 #roi = 'HMA'
 #roi = '16'
@@ -205,29 +205,81 @@ mb_binned_fp_wdebris = main_directory + '/../output/mb_bins/csv/_wdebris/'
 mb_binned_fp_wdebris_hdts = main_directory + '/../output/mb_bins/csv/_wdebris_hdts/'
 era5_hrly_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
 
+oggm_ts_fp = oggm_fp + 'ts_dc/'
+oggm_ts_info_fp = oggm_fp + 'ts_info_dc/'
+
 ts_fp = main_directory + '/../output/ts_tif/' + roi + '_ts_data/'
 ts_fns_fn = roi + '-ts_fns.csv'
-#ts_fn_dict_list = {'01': [ts_fp + 'ITS_Live/ALA_G0120_0000_vx.tif'],
-#                   '02': [ts_fp + 'ITS_Live/ALA_G0120_0000_vx.tif'],
-#                   '03': [ts_fp + 'ITS_Live/CAN_G0120_0000_vx.tif'],
-#                   '04': [ts_fp + 'ITS_Live/CAN_G0120_0000_vx.tif'],
-#                   '05': [ts_fp + 'ITS_Live/GRE_G0120_0000_vx.tif'],
-#                   '06': [ts_fp + 'ITS_Live/ICE_G0120_0000_vx.tif'],
-#                   '07': [ts_fp + 'ITS_Live/SRA_G0120_0000_vx.tif'],
-#                   '08': [ts_fp + 'romain_velocity/NORWAY/Mosaic__vxo.tif'],
-#                   '09': [ts_fp + 'ITS_Live/SRA_G0120_0000_vx.tif'],
-#                   '10': [ts_fp + 'romain_velocity/Asia_north/Mosaic__vxo.tif'],
-#                   '11': [ts_fp + 'romain_velocity/ALPS/Mosaic__vxo.tif'],
-#                   '12': [ts_fp + 'romain_velocity/Caucasus/Mosaic__vxo.tif'],
-#                   'HMA': [ts_fp + 'ITS_Live/HMA_G0120_0000_vx.tif'],
-#                   '16': [ts_fp + 'romain_velocity/AndesBlanca/Mosaic__vxo.tif'],
-#                   '17': [ts_fp + 'romain_velocity/Cordillera_South/Mosaic__vxo.tif'],
-#                   '18': [ts_fp + 'romain_velocity/NEWZEALAND/Mosaic__vxo.tif']
-#                    }
-ts_fn = roi + '_debris_tsurfC.tif'
-ts_dayfrac_fn = roi + '_debris_dayfrac.tif'
-ts_year_fn = roi + '_debris_year.tif'
-ts_doy_fn = roi + '_debris_doy.tif'
+#ts_fn = roi + '_debris_tsurfC.tif'
+#ts_dayfrac_fn = roi + '_debris_dayfrac.tif'
+#ts_year_fn = roi + '_debris_year.tif'
+#ts_doy_fn = roi + '_debris_doy.tif'
+
+ts_fullfns_dict = {'01': [ts_fp + '01_debris_tsurfC.tif'],
+                   '02': [ts_fp + '02_debris_tsurfC.tif'],
+                   '03': [ts_fp + '03_debris_tsurfC.tif'],
+                   '04': [ts_fp + '04_debris_tsurfC.tif'],
+                   '05': None,
+                   '06': [ts_fp + '06_debris_tsurfC.tif'],
+                   '07': [ts_fp + '07_debris_tsurfC.tif'],
+                   '08': [ts_fp + '08_debris_tsurfC.tif'],
+                   '09': [ts_fp + '09_debris_tsurfC.tif'],
+                   '10': None,
+                   '11': [ts_fp + '11_debris_tsurfC.tif'],
+                   '12': [ts_fp + '12_debris_tsurfC.tif'],
+                   'HMA': [ts_fp + 'HMA_debris_tsurfC.tif'],
+                   '16': None,
+                   '17': [ts_fp + '17_debris_tsurfC.tif'],
+                   '18': [ts_fp + '18_debris_tsurfC.tif'],}
+ts_year_fullfns_dict = {'01': [ts_fp + '01_debris_year.tif'],
+                        '02': [ts_fp + '02_debris_year.tif'],
+                        '03': [ts_fp + '03_debris_year.tif'],
+                        '04': [ts_fp + '04_debris_year.tif'],
+                        '05': None,
+                        '06': [ts_fp + '06_debris_year.tif'],
+                        '07': [ts_fp + '07_debris_year.tif'],
+                        '08': [ts_fp + '08_debris_year.tif'],
+                        '09': [ts_fp + '09_debris_year.tif'],
+                        '10': None,
+                        '11': [ts_fp + '11_debris_year.tif'],
+                        '12': [ts_fp + '12_debris_year.tif'],
+                        'HMA': [ts_fp + 'HMA_debris_year.tif'],
+                        '16': None,
+                        '17': [ts_fp + '17_debris_year.tif'],
+                        '18': [ts_fp + '18_debris_year.tif'],}
+ts_doy_fullfns_dict = {'01': [ts_fp + '01_debris_doy.tif'],
+                       '02': [ts_fp + '02_debris_doy.tif'],
+                       '03': [ts_fp + '03_debris_doy.tif'],
+                       '04': [ts_fp + '04_debris_doy.tif'],
+                       '05': None,
+                       '06': [ts_fp + '06_debris_doy.tif'],
+                       '07': [ts_fp + '07_debris_doy.tif'],
+                       '08': [ts_fp + '08_debris_doy.tif'],
+                       '09': [ts_fp + '09_debris_doy.tif'],
+                       '10': None,
+                       '11': [ts_fp + '11_debris_doy.tif'],
+                       '12': [ts_fp + '12_debris_doy.tif'],
+                       'HMA': [ts_fp + 'HMA_debris_doy.tif'],
+                       '16': None,
+                       '17': [ts_fp + '17_debris_doy.tif'],
+                       '18': [ts_fp + '18_debris_doy.tif'],}
+ts_dayfrac_fullfns_dict = {'01': [ts_fp + '01_debris_dayfrac.tif'],
+                           '02': [ts_fp + '02_debris_dayfrac.tif'],
+                           '03': [ts_fp + '03_debris_dayfrac.tif'],
+                           '04': [ts_fp + '04_debris_dayfrac.tif'],
+                           '05': None,
+                           '06': [ts_fp + '06_debris_dayfrac.tif'],
+                           '07': [ts_fp + '07_debris_dayfrac.tif'],
+                           '08': [ts_fp + '08_debris_dayfrac.tif'],
+                           '09': [ts_fp + '09_debris_dayfrac.tif'],
+                           '10': None,
+                           '11': [ts_fp + '11_debris_dayfrac.tif'],
+                           '12': [ts_fp + '12_debris_dayfrac.tif'],
+                           'HMA': [ts_fp + 'HMA_debris_dayfrac.tif'],
+                           '16': None,
+                           '17': [ts_fp + '17_debris_dayfrac.tif'],
+                           '18': [ts_fp + '18_debris_dayfrac.tif'],}
+
 #ts_fn_dict = {'01':'01_debris_tsurfC.tif',
 #              '03':None,
 #              '11':'11_debris_tsurfC.tif',

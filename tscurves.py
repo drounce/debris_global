@@ -183,7 +183,7 @@ def main(list_packed_vars):
         
         lat_deg = latlon[0]
         lon_deg = latlon[1]
-        
+        #%%
         # ===== Debris Thickness vs. Surface Lowering =====        
         # Filenames            
         if lat_deg < 0:
@@ -249,6 +249,8 @@ def main(list_packed_vars):
                 if os.path.exists(debris_prms.tscurve_fp) == False:
                     os.makedirs(debris_prms.tscurve_fp)
                 ds_ts.to_netcdf(debris_prms.tscurve_fp + ds_tscurve_fn)
+                
+                #%%
 
     if debug:
         return ds_ts

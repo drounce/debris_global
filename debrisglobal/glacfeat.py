@@ -429,7 +429,7 @@ class GlacFeat:
             #Load surface temperature maps
             self.ts = np.ma.array(iolib.ds_getma(ds_dict['ts']), mask=glac_geom_mask_copy)
             self.ts.mask = np.ma.mask_or(glac_geom_mask, 
-                                       np.ma.getmask(np.ma.masked_array(self.ts.data, np.isnan(self.ts.data))))
+                                         np.ma.getmask(np.ma.masked_array(self.ts.data, np.isnan(self.ts.data))))
             # Debris only
             self.dc_ts = self.ts.copy()
             self.dc_ts.mask = self.dc_mask
