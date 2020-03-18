@@ -20,7 +20,7 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
 #roi = '01'
-#roi = '02'
+roi = '02'
 #roi = '03'
 #roi = '04'
 #roi = '05'
@@ -29,7 +29,7 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '08'
 #roi = '09'
 #roi = '10'
-roi = '11'
+#roi = '11'
 #roi = '12'
 #roi = 'HMA'
 #roi = '16'
@@ -219,7 +219,7 @@ ts_fullfns_dict = {'01': [ts_fp + '01_debris_tsurfC.tif'],
                    '02': [ts_fp + '02_debris_tsurfC.tif'],
                    '03': [ts_fp + '03_debris_tsurfC.tif'],
                    '04': [ts_fp + '04_debris_tsurfC.tif'],
-                   '05': None,
+                   '05': [ts_fp + '05_debris_tsurfC.tif'],
                    '06': [ts_fp + '06_debris_tsurfC.tif'],
                    '07': [ts_fp + '07_debris_tsurfC.tif'],
                    '08': [ts_fp + '08_debris_tsurfC.tif'],
@@ -235,7 +235,7 @@ ts_year_fullfns_dict = {'01': [ts_fp + '01_debris_year.tif'],
                         '02': [ts_fp + '02_debris_year.tif'],
                         '03': [ts_fp + '03_debris_year.tif'],
                         '04': [ts_fp + '04_debris_year.tif'],
-                        '05': None,
+                        '05': [ts_fp + '05_debris_year.tif'],
                         '06': [ts_fp + '06_debris_year.tif'],
                         '07': [ts_fp + '07_debris_year.tif'],
                         '08': [ts_fp + '08_debris_year.tif'],
@@ -251,7 +251,7 @@ ts_doy_fullfns_dict = {'01': [ts_fp + '01_debris_doy.tif'],
                        '02': [ts_fp + '02_debris_doy.tif'],
                        '03': [ts_fp + '03_debris_doy.tif'],
                        '04': [ts_fp + '04_debris_doy.tif'],
-                       '05': None,
+                       '05': [ts_fp + '05_debris_doy.tif'],
                        '06': [ts_fp + '06_debris_doy.tif'],
                        '07': [ts_fp + '07_debris_doy.tif'],
                        '08': [ts_fp + '08_debris_doy.tif'],
@@ -267,7 +267,7 @@ ts_dayfrac_fullfns_dict = {'01': [ts_fp + '01_debris_dayfrac.tif'],
                            '02': [ts_fp + '02_debris_dayfrac.tif'],
                            '03': [ts_fp + '03_debris_dayfrac.tif'],
                            '04': [ts_fp + '04_debris_dayfrac.tif'],
-                           '05': None,
+                           '05': [ts_fp + '05_debris_dayfrac.tif'],
                            '06': [ts_fp + '06_debris_dayfrac.tif'],
                            '07': [ts_fp + '07_debris_dayfrac.tif'],
                            '08': [ts_fp + '08_debris_dayfrac.tif'],
@@ -279,27 +279,6 @@ ts_dayfrac_fullfns_dict = {'01': [ts_fp + '01_debris_dayfrac.tif'],
                            '16': None,
                            '17': [ts_fp + '17_debris_dayfrac.tif'],
                            '18': [ts_fp + '18_debris_dayfrac.tif'],}
-
-#ts_fn_dict = {'01':'01_debris_tsurfC.tif',
-#              '03':None,
-#              '11':'11_debris_tsurfC.tif',
-#              'HMA':'hma_debris_tsurfC.tif',
-#              '18':'18_debris_tsurfC.tif'}
-#ts_dayfrac_fn_dict = {'01':'01_debris_dayfrac.tif',
-#                      '03':None,
-#                      '11':'11_debris_dayfrac.tif',
-#                      'HMA':'hma_debris_dayfrac.tif',
-#                      '18':'18_debris_dayfrac.tif'}
-#ts_year_fn_dict = {'01':'01_debris_year.tif',
-#                   '03':None,
-#                   '11':'11_debris_year.tif',
-#                   'HMA':'hma_debris_year.tif',
-#                   '18':'18_debris_year.tif'}
-#ts_doy_fn_dict = {'01':'01_debris_doy.tif',
-#                  '03':None,
-#                  '11':'11_debris_doy.tif',
-#                  'HMA':'hma_debris_doy.tif',
-#                  '18':'18_debris_doy.tif'}
 ts_stats_res = 50 # common resolution needed such that resolution does not interfere with regional stats
 output_ts_csv_ending = '_ts_hd_opt.csv'
 tscurve_fp = ts_fp + '../ts_curves/'

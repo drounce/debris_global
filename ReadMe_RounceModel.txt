@@ -142,10 +142,10 @@ HMA (13,14,15):
 '15.07886' # Hailuogou     - good (Zhang etal 2011, debris thickness data [fig 2] and melt data [fig 5c] underestimated)
 
 South America (17):
-'17.13720' # Piramide	   - (Ayala etal 2016)
+'17.13720' # Piramide	   - (Ayala etal 2016): use QGIS and map to get the distances roughly, then center over the DCG
 
 New Zealand (18):
-'18.02342' # Tasman	   - (Kirkbride 1989, 150 measurements of debris over lower 10 km [fig 2.17]; melt rate estimated from field data [Table 2.20])
+'18.02342' # Tasman	   - (Kirkbride 1989, 150 measurements of debris over lower 10 km [fig 2.18]; melt rate estimated from field data [Table 2.20, fig 2.17, fig 2.2 shows stake locations])
 			     (Kirkbride and Warren 1999, 15 debris thickness measurements (and estimated melt rate) from 1986)
 
 
@@ -209,6 +209,7 @@ Limitations/issues:
   - Jan Mayen doesn't have surface temperature data from GEE for some reason
   - Composite Ts image, so two different dates comes into play
      --> Focused studies should apply method over known clear sky image
+  - glacial lakes show up as very thin debris due to cool temperatures
 
 
 Discussion:
