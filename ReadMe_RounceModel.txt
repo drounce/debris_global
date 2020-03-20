@@ -114,43 +114,78 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
 
 
 # ===== Validation =========================================================================================================================
+* = melt rates measurements
+^ = debris thickness measurements
+
 Alaska (01):
-'01.15645' # Kennicott     - good
+'01.15645' # Kennicott*     - (Anderson etal 2019a, debris thickness and melt rates [Fig 7])
 
 Western Canada (02):
-'02.12438' # Dome     - (Mattson 2000, debris up to 0.5 m thick along the margins)
-'02.18792' # Eliot	   - (Lundstrom 1993, thickness and ablation measurements)
+'02.12438' # Dome           - (Mattson 2000, debris up to 0.5 m thick along the margins)
+'02.18792' # Eliot	    - (Lundstrom 1993, thickness and ablation measurements)
+'02.14297' # Emmons*        - (Moore etal 2019, ablation measurements July 31 - Aug 10 2014 [Table 1, Figure 4]])
+'' Sierra Nevada region - (Clark etal 1994)
+
+Iceland (06):
+'06.00474' # Svinafellsjokull (Moller etal 2016, melt rates from May 17-30 2013, but only can compare melt factor curves)
+
+Svalbard (07):
+'07.01044' # Larsbreen*     - (Nicholson and Benn 2006, melt rates from July 9-20 2002 from 0.0005 to 0.10 m)
+
+North Asia (10):
+'10.01732' # Maliy Aktru    - (Mayer etal 2011 TCD discussion, 2007 ablation stakes, but only DDFs shown, could compare the melt factor curves)
 
 Europe (11):
-'11.01604' # Suldenferner  - (Nicholson - thesis? 0.32 +/- 0.10)
-'11.02810' # Haut d'Arolla - (Carenzo etal 2016; 6 cm at an ablation stake +/- 3 cm)
-'11.03005' # Miage         - (Foster et al. 2012, Table 2 [E: 0.23 +/- 0.16 m at 2030 mass, C: 0.32 +/- 0.13 m at 2060 masl], Figure 8) 
-                   	     (Others: Mihalcea et al. 2008; Ablation stake data from Reid and Brock 2010, good fit)
+'11.00719' # Vernagtferner* - (Juen etal 2013, melt rates June 25 - July 10 2010 [Fig 3])
+'11.01604' # Suldenferner   - (del Gobbo 2017, 0.32 +/- 0.10)
+'11.02810' # Haut d'Arolla* - (Reid et al. 2012; debris thicknesses [0.05 +/- 0.12 m, Table 4 and Fig 3] and ablation stakes [Fig 6])
+'11.02858' # Belvedere*     - (Nicholson and Benn 2006 stake data)
+'11.03005' # Miage*         - (Foster et al. 2012, Table 2 [E: 0.23 +/- 0.16 m at 2030 mass, C: 0.32 +/- 0.13 m at 2060 masl], Figure 8) 
+                   	       (Others: Mihalcea et al. 2008; Ablation stake data from Reid and Brock 2010, good fit)
+
+Caucasus and Middle East (12):
+'12.01012' # Zopkhito*      - (Lambrecht etal 2011, ablation stakes - data not in paper, could compare the melt factor curves)
+'12.01132' # Djankuat*      - (Popovnin and Rozova 2002, maps of debris thickness at various elevation bins from 1994 [Table 1])
+		 	      (Lambrecht etal 2011, ablation stakes - data not in paper only DDF, could compare the melt factor curves)
 
 HMA (13,14,15):
-'13.43232' # Koxkar	   - good (positive first bin)
-'14.04477' # Hispar 	   - good
-'14.06794' # Baltoro 	   - good
-'14.16042' # Batal         - good (Patel etal 2016, debris thickness data [fig with altitude dependence; melt rate too - Table 1 good fit)
-'14.15447' # Bara Shigri   - good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
-'15.03473' # Ngozumpa	   - good
-'15.03733' # Khumbu 	   - good (Gades etal 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus")
+'13.05000' # S Inylcheck*   - good (Hagg etal 2008, melt rates from July 30 - August 10[Fig 2])
+'13.43232' # Koxkar*	    - good (Juen etal 2014, no ablation stake only degree-day factors, so compare could be melt factors; 
+				    Wu and Liu thickness)
+'14.04477' # Hispar 	    - good
+'14.06794' # Baltoro* 	    - good (Mihalcea et al. 2006, melt rate [Fig 7, Table 1, July 4-14 2004])
+		 		   (Groos etal 2017, melt rate July 22 - Aug 10 2011 [Table 3, Fig 4])
+'14.16042' # Batal*         - good (Patel etal 2016, debris thickness data [fig with altitude dependence; melt rate too - Table 1 good fit)
+'14.15447' # Bara Shigri    - good (Schauwecker etal 2015; no measurements?--> our analysis suggest debris is thicker)
+'14.20154' # Rakhiot	   - (Mattson etal 1989 - June 22 - August 8 1986, 10 stakes 0 - 0.4 m)
+'15.03473' # Ngozumpa	    - good
+'15.03733' # Khumbu* 	    - good (Gades etal 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus")
 				  (Kayastha etal 2000, melt rates - Table 1, excellent fit)
-'15.03734' # Changri Nup   - good
-'15.04045' # Lirung	   - good (McCarthy etal 2017) Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus"
-'15.04121' # Langtang	   - good
-'15.07886' # Hailuogou     - good (Zhang etal 2011, debris thickness data [fig 2] and melt data [fig 5c] underestimated)
+'15.03734' # Changri Nup    - good
+'15.04045' # Lirung	    - good (McCarthy etal 2017 - thickness, Chand etal 2015 melt rates seasonally) 
+				   (Dahal 2015 Thesis  [April 6-16, 2004; Table 3.2 for heights Fig 4.11 - m w.e.d])
+				   (Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus")
+'15.04121' # Langtang	    - good
+'15.07886' # Hailuogou      - good (Zhang etal 2011, debris thickness data [fig 2] and melt data [fig 5c] underestimated)
+
+'' # 24K  - Yang etal 2010 debris thickness and stake data
+
+Zhang et al. 2016 - Hailougou glacier and a couple others (Dagongba and Xiaogongba) measured in 1982) debris thicknesses at various elevations [Fig 4] from Li and Su (1996, in Chinese)
 
 South America (17):
-'17.13720' # Piramide	   - (Ayala etal 2016): use QGIS and map to get the distances roughly, then center over the DCG
+'17.13720' # Piramide	    - (Ayala etal 2016): use QGIS and map to get the distances roughly, then center over the DCG
 
 New Zealand (18):
-'18.02342' # Tasman	   - (Kirkbride 1989, 150 measurements of debris over lower 10 km [fig 2.18]; melt rate estimated from field data [Table 2.20, fig 2.17, fig 2.2 shows stake locations])
-			     (Kirkbride and Warren 1999, 15 debris thickness measurements (and estimated melt rate) from 1986)
+'18.02397' # Franz Josef*   - (Brook etal 2013, debris thickness [Fig 4] and melt rates from February 7-16 2012 [Table 1])
+'18.02342' # Tasman	    - (Kirkbride 1989, 150 measurements of debris over lower 10 km [fig 2.18]; melt rate estimated from field data [Table 
+			       2.20, fig 2.17, fig 2.2 shows stake locations])
+			      (Kirkbride and Warren 1999, 15 debris thickness measurements (and estimated melt rate) from 1986)
+			      (Purdie and Fitzharris 1999, one estimate from conduction method and some clean ice from 1995)
 
 
 
-'14.20154' # Rakhiot	   - (Mattson etal 1989 - June 22 - August 8 1986, 10 stakes 0 - 0.4 m)
+Fujita and Ageta 2000 - Xiao Dongkemadi glacier from 1992-1993
+
 
 Mattson etal 1989 other ostrem curves older
 Lundstrom metal 1993 - western North America
@@ -180,23 +215,7 @@ Is uncertainty associated with the model parameters parameters comparable to the
 
 
 # ===== TO-DO LIST ========================================================================================================================
-
-- PROCESS ERA5 DATA FOR ALL OTHER REGIONS
-
-- SEE NOTES FROM .IPYNB FILES
-  - convert .ipynb 'debris_stats' and 'HMA_debris_thickness' to .py scripts
-
 - Ts for each region from GEE
-
-- 15.07886: Hailuogou Glacier is HORRIBLE - the reason is emissivity - now fixed
-  --> still the velocity is super low likely because the glacier is very
-  --> add max terminus cells (e.g., lowest 10% based on elevation?)
-
-  --> 10% of the elevation as opposed to the jump cells
-
-
--LIMIT MELTFACTOR BASED ON 2 CM
-
 
 - Validation figure
   a) using the full x-axis needed to show the full ranges and in  that case make  in  inlet figure with 0-5 m so that information does not get too  squeezed.
@@ -230,13 +249,16 @@ print('BETTER: SELECT ONLY THE BIGGEST POLYGON AND DISCARD THE REST?')
 
 
 
-
+Melt rate data based on those that are publicly available with multiple debris thicknesses and specified time period.
 
 
 
 
 Suldenferner (RGI60-11.01604): clear case of poor glacier boundary
   --> good reason not to clip the debris thickness maps
+
+
+Test extrapolation method by comparing Ngozumpa and some other well-known glaciers (assuming they didn't have data...)
 
 
 
