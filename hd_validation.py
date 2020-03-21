@@ -727,8 +727,8 @@ if option_melt_comparison:
 
 #%%
 if option_hd_comparison: 
-    glaciers = ['1.15645']
-#    glaciers = ['11.01604']
+#    glaciers = ['1.15645', ''11.01604'']
+    glaciers = ['11.01604']
 #    glaciers = ['11.02810']
     #glaciers = ['1.15645', '15.03473', '15.03733', '15.03734', '15.04121', '15.04045', '14.06794', '14.04477', 
     #            '13.43232', '15.07886', '14.16042']
@@ -777,17 +777,14 @@ if option_hd_comparison:
                 mb_df = pd.read_csv(hdts_fp + hdts_fn)
 
             mb_df.loc[:,:] = mb_df.values.astype(np.float64)
-            
+
+            # ALL ELEVATION BINS TOGETHER           
             if hd_obs['elev'].isnull().all():
-                print('combine all bins')
-                
-                #%%
                 hd_bin_mean = hd_obs['hd_m'].mean()
                 hd_bin_std = hd_obs['hd_m'].std()
                 hd_bin_med = np.median(hd_obs['hd_m'])
                 hd_bin_mad = np.median(abs(hd_obs['hd_m'] - np.median(hd_obs['hd_m'])))
                 
-                #%%
                 mb_df_idxs = np.where(mb_df['dc_bin_count_valid'].values > 0)[0]
 
                 hd_list = []
@@ -824,10 +821,9 @@ if option_hd_comparison:
                 else:
                     hd_compare_all_array = np.concatenate((hd_compare_all_array, bin_data))
                 ds_name_list.append(hd_ds)
-                #%%
  
+            # ===== BINNED ELEVATIONS ====
             else:
-        
                 # Bins
                 zmin = hd_obs.elev.min()
                 zmax = hd_obs.elev.max()
@@ -847,6 +843,7 @@ if option_hd_comparison:
                     zbincenter_max = zbincenter + bin_width/2
                     elev_idx_obs = np.where((hd_obs['elev'].values >= zbincenter_min) & 
                                             (hd_obs['elev'].values < zbincenter_max))[0]
+                    obs_count = 0
                     if len(elev_idx_obs) > 1:
                         # Observations
                         hd_obs_subset = hd_obs.loc[elev_idx_obs,'hd_m']
@@ -854,6 +851,7 @@ if option_hd_comparison:
                         hd_bin_std = hd_obs_subset.std()
                         hd_bin_med = np.median(hd_obs_subset)
                         hd_bin_mad = np.median(abs(hd_obs_subset - np.median(hd_obs_subset)))
+                        obs_count += hd_obs_subset.shape[0]
                         
                         # Model
                         mb_df_elevs = mb_df['bin_center_elev_m'].values
@@ -884,9 +882,9 @@ if option_hd_comparison:
                               '  ', np.round(hd_bin_mean,2), '+/-', np.round(hd_bin_std,2), 'vs',
                               '  ', np.round(mb_df_mean,2), '+/-', np.round(mb_df_std,2))
                         
-                        bin_data = np.array([reg, glacno, zbincenter, 
+                        bin_data = np.array([reg, glacno, zbincenter, obs_count,
                                              hd_bin_mean, hd_bin_std, hd_bin_med, hd_bin_std,
-                                             mb_df_mean, mb_df_std, mb_df_med, mb_df_mad]).reshape(1,11)
+                                             mb_df_mean, mb_df_std, mb_df_med, mb_df_mad]).reshape(1,12)
                         
                         if hd_compare_all_array is None:
                             hd_compare_all_array = bin_data
@@ -894,7 +892,7 @@ if option_hd_comparison:
                             hd_compare_all_array = np.concatenate((hd_compare_all_array, bin_data))
                         ds_name_list.append(hd_ds)
               
-    hd_compare_all_cns = ['region', 'glacno', 'zbin', 
+    hd_compare_all_cns = ['region', 'glacno', 'zbin', 'obs_count', 
                           'hd_obs_mean', 'hd_obs_std', 'hd_obs_med', 'hd_obs_mad', 
                           'hd_ts_mean_m', 'hd_ts_std_m', 'hd_ts_med_m', 'hd_ts_mad_m']
     hd_compare_all = pd.DataFrame(hd_compare_all_array, columns=hd_compare_all_cns)
@@ -902,23 +900,44 @@ if option_hd_comparison:
         
     #%% 
     # ===== Individual comparisons =====
-    def plot_hd_obs_comparison(hd_compare_all_subset, glac_name, fig_fn, ds_names=None,
-                               xmin=0, xmax=2, ymin=0, ymax=2):
+    def plot_hd_obs_comparison(hd_compare_all_subset, glac_str, fig_fn, 
+                               hd_min=0, hd_max=2, hd_tick_major=0.2, hd_tick_minor=0.05):
         fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
+        ds_list = []
         for ndata, region in enumerate(hd_compare_all_subset.region):
+            ds_name = hd_compare_all_subset.loc[ndata,'hd_ds_name']
+            if ds_name not in ds_list:
+                label_str = ds_name + '\n(n = ' + str(int(hd_compare_all_subset['obs_count'].sum())) + ')'
+                ds_list.append(ds_name)
+            else:
+                label_str = None
             ax[0,0].scatter(hd_compare_all_subset.loc[ndata,cn_center_obs], 
                             hd_compare_all_subset.loc[ndata,cn_center_ts], 
-                            color='k', marker='o', facecolor='none', s=30, zorder=3)
-            ax[0,0].errorbar(hd_compare_all_subset.loc[ndata,cn_center_obs], hd_compare_all_subset.loc[ndata,cn_center_ts], 
+                            color='k', marker='o', facecolor='none', s=30, zorder=3, label=label_str)
+            ax[0,0].errorbar(hd_compare_all_subset.loc[ndata,cn_center_obs], 
+                             hd_compare_all_subset.loc[ndata,cn_center_ts], 
                              xerr=hd_compare_all_subset.loc[ndata,cn_spread_obs], 
                              yerr=hd_compare_all_subset.loc[ndata,cn_spread_ts], 
-                             capsize=1, linewidth=0.5, color='darkgrey', zorder=2)    
+                             capsize=1, linewidth=0.5, color='darkgrey', zorder=2)
+        # Labels
         ax[0,0].set_xlabel('Observed $h_d$ (m)', size=12)    
         ax[0,0].set_ylabel('Modeled $h_d$ (m)', size=12)
-        ax[0,0].set_xlim(xmin,xmax)
-        ax[0,0].set_ylim(ymin,ymax)
-        ax[0,0].plot([np.min([xmin,ymin]),np.max([xmax,ymax])], [np.min([xmin,ymin]),np.max([xmax,ymax])], color='k', 
-                     linewidth=0.5, zorder=1)
+        ax[0,0].set_xlim(hd_min,hd_max)
+        ax[0,0].set_ylim(hd_min,hd_max)
+        ax[0,0].plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
+#        ax[0,0].xaxis.set_tick_params(labelsize=12)
+        ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
+        ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))  
+#        ax[0,0].yaxis.set_tick_params(labelsize=12)
+        ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
+        ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))
+#        # Tick parameters
+#        ax[0,0].yaxis.set_ticks_position('both')
+        ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+        ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+        # Legend
+        ax[0,0].legend(loc='lower right', ncol=1, fontsize=10, frameon=True, handlelength=1, 
+                       handletextpad=0.15, columnspacing=0.5, borderpad=0.25, labelspacing=0.5)
         fig.text(0.5, 0.9, glac_name_dict[glac_str] + ' (' + glac_str + ')', va='bottom', ha='center', size=12)
         fig.set_size_inches(3.45,3.45)
         fig.savefig(hd_compare_fp + fig_fn, bbox_inches='tight', dpi=300)
@@ -928,18 +947,17 @@ if option_hd_comparison:
         print('\nhd comparison with Anderson et al 2019')
         glac_str = '1.15645'
         fig_fn = glac_str + '-hd_bin' + str(bin_width) + 'm_And2019.png'
-        ymin, ymax = 0, 0.75
-        xmin, xmax = 0, 0.75
-        ds_names = ['Anderson et al 2019']
+        hd_min, hd_max = 0, 0.75
+        hd_tick_major, hd_tick_minor = 0.1, 0.05
         reg = int(glac_str.split('.')[0])
         glacno = int(glac_str.split('.')[1])
         hd_compare_all_subset = hd_compare_all[(hd_compare_all.region == reg) & (hd_compare_all.glacno == glacno)]
         hd_compare_all_subset.reset_index(inplace=True, drop=True)
-        
-            
-            
-#    # ------ Suldenferner -------
-#    glac_str = '11.01604'
+        plot_hd_obs_comparison(hd_compare_all_subset, glac_str, fig_fn, 
+                               hd_min=hd_min, hd_max=hd_max, hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor)
+
+    # ------ Suldenferner -------
+    glac_str = '11.01604'
 #    reg = int(glac_str.split('.')[0])
 #    glacno = int(glac_str.split('.')[1])
 #    glac_idxs = np.where((hd_compare_all['region'].values == reg) & (hd_compare_all['glacno'] == glacno))[0]

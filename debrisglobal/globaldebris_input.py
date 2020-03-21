@@ -13,6 +13,7 @@ import pandas as pd
 #%% ===== FREQUENTLY CHANGED PARAMETERS (at top for convenience) =====
 # Main directory
 main_directory = os.getcwd()
+date_start = '20200313'
 rgi_fp = main_directory + '/../00_rgi60_attribs/'
 output_fp = main_directory + '/../output/'
 ostrem_fp = main_directory + '/../output/ostrem_curves/'
@@ -29,56 +30,56 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '08'
 #roi = '09'
 #roi = '10'
-#roi = '11'
+roi = '11'
 #roi = '12'
 #roi = 'HMA'
 #roi = '16'
-roi = '17'
+#roi = '17'
 #roi = '18'
 
 # ===== Debris thickness =====
-experiment_no = 3
 #debris_thickness_all = np.array([0])
-#debris_thickness_all = np.array([0, 0.02])
-debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
-debris_thickness_all[1] = 0.02
+debris_thickness_all = np.array([0, 0.02])
+#debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
+#debris_thickness_all[1] = 0.02
+
+# Experiment number 3 is single run, 4 is Monte Carlo simulations 
+experiment_no = 4
+if experiment_no == 4:
+    mc_simulations = 100
+    mc_stat_cns = ['mean', 'std']
+else:
+    mc_simulations = 1
+    mc_stat_cns = ['mean']
 
 #eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
 eb_fp = '/Volumes/LaCie/debris_output/exp3-20200313/' + roi + '/'
 
 # Latitude and longitude index to run the model
 #  Longitude must be 0 - 360 degrees
-latlon_unique_fp = output_fp + 'latlon_unique/'
-latlon_unique_dict = {'01':'01_latlon_unique.pkl',
-                      '02':'02_latlon_unique.pkl',
-                      '03':'03_latlon_unique.pkl',
-                      '04':'04_latlon_unique.pkl',
-                      '05':'05_latlon_unique.pkl',
-                      '06':'06_latlon_unique.pkl',
-                      '07':'07_latlon_unique.pkl',
-                      '08':'08_latlon_unique.pkl',
-                      '09':'09_latlon_unique.pkl',
-                      '10':'10_latlon_unique.pkl',
-                      '11':'11_latlon_unique.pkl',
-                      '12':'12_latlon_unique.pkl',
-                      'HMA':'HMA_latlon_unique.pkl',
-                      '16':'16_latlon_unique.pkl',
-                      '17':'17_latlon_unique.pkl',
-                      '18':'18_latlon_unique.pkl'}
-latlon_list_raw = 'all'
-#latlon_list_raw = None
-if latlon_list_raw == 'all':
+latlon_list = [(46.5, 10.5)] # Miage (11.03005)
+#latlon_list = None
+if latlon_list is None:
+    latlon_unique_fp = output_fp + 'latlon_unique/'
+    latlon_unique_dict = {'01':'01_latlon_unique.pkl',
+                          '02':'02_latlon_unique.pkl',
+                          '03':'03_latlon_unique.pkl',
+                          '04':'04_latlon_unique.pkl',
+                          '05':'05_latlon_unique.pkl',
+                          '06':'06_latlon_unique.pkl',
+                          '07':'07_latlon_unique.pkl',
+                          '08':'08_latlon_unique.pkl',
+                          '09':'09_latlon_unique.pkl',
+                          '10':'10_latlon_unique.pkl',
+                          '11':'11_latlon_unique.pkl',
+                          '12':'12_latlon_unique.pkl',
+                          'HMA':'HMA_latlon_unique.pkl',
+                          '16':'16_latlon_unique.pkl',
+                          '17':'17_latlon_unique.pkl',
+                          '18':'18_latlon_unique.pkl'}
     with open(latlon_unique_fp + latlon_unique_dict[roi], 'rb') as f:
         latlon_list = pickle.load(f)
-#latlon_list = latlon_list[0:5]
-#latlon_list = [latlon_list[0]]
-#latlon_list = [(61.5, 217.0)]
-#latlon_list = [(55.25, 230.50)]
-#latlon_list = [(28.0, 86.75)]
-#latlon_list = [(45.75, 6.75)]
-#latlon_list = [(60.0, 218.25)]
-#latlon_list = [(60.5, 211.5)]
-#latlon_list = [(28.25, 87.5)]
+
 
 #%% ===== OTHER PARAMETERS =====
 
@@ -224,7 +225,13 @@ ts_fullfns_dict = {'01': [ts_fp + '01_debris_tsurfC.tif'],
                    '07': [ts_fp + '07_debris_tsurfC.tif'],
                    '08': [ts_fp + '08_debris_tsurfC.tif'],
                    '09': [ts_fp + '09_debris_tsurfC.tif'],
-                   '10': None,
+                   '10': [ts_fp + '10-01_debris_tsurfC.tif',
+                          ts_fp + '10-02_debris_tsurfC.tif',
+                          ts_fp + '10-03_debris_tsurfC.tif',
+                          ts_fp + '10-04_debris_tsurfC.tif',
+                          ts_fp + '10-05_debris_tsurfC.tif',
+                          ts_fp + '10-06_debris_tsurfC.tif',
+                          ts_fp + '10-07_debris_tsurfC.tif'],
                    '11': [ts_fp + '11_debris_tsurfC.tif'],
                    '12': [ts_fp + '12_debris_tsurfC.tif'],
                    'HMA': [ts_fp + 'HMA_debris_tsurfC.tif'],
@@ -242,7 +249,13 @@ ts_year_fullfns_dict = {'01': [ts_fp + '01_debris_year.tif'],
                         '07': [ts_fp + '07_debris_year.tif'],
                         '08': [ts_fp + '08_debris_year.tif'],
                         '09': [ts_fp + '09_debris_year.tif'],
-                        '10': None,
+                        '10': [ts_fp + '10-01_debris_year.tif',
+                               ts_fp + '10-02_debris_year.tif',
+                               ts_fp + '10-03_debris_year.tif',
+                               ts_fp + '10-04_debris_year.tif',
+                               ts_fp + '10-05_debris_year.tif',
+                               ts_fp + '10-06_debris_year.tif',
+                               ts_fp + '10-07_debris_year.tif'],
                         '11': [ts_fp + '11_debris_year.tif'],
                         '12': [ts_fp + '12_debris_year.tif'],
                         'HMA': [ts_fp + 'HMA_debris_year.tif'],
@@ -260,7 +273,13 @@ ts_doy_fullfns_dict = {'01': [ts_fp + '01_debris_doy.tif'],
                        '07': [ts_fp + '07_debris_doy.tif'],
                        '08': [ts_fp + '08_debris_doy.tif'],
                        '09': [ts_fp + '09_debris_doy.tif'],
-                       '10': None,
+                       '10': [ts_fp + '10-01_debris_doy.tif',
+                              ts_fp + '10-02_debris_doy.tif',
+                              ts_fp + '10-03_debris_doy.tif',
+                              ts_fp + '10-04_debris_doy.tif',
+                              ts_fp + '10-05_debris_doy.tif',
+                              ts_fp + '10-06_debris_doy.tif',
+                              ts_fp + '10-07_debris_doy.tif'],
                        '11': [ts_fp + '11_debris_doy.tif'],
                        '12': [ts_fp + '12_debris_doy.tif'],
                        'HMA': [ts_fp + 'HMA_debris_doy.tif'],
@@ -278,7 +297,13 @@ ts_dayfrac_fullfns_dict = {'01': [ts_fp + '01_debris_dayfrac.tif'],
                            '07': [ts_fp + '07_debris_dayfrac.tif'],
                            '08': [ts_fp + '08_debris_dayfrac.tif'],
                            '09': [ts_fp + '09_debris_dayfrac.tif'],
-                           '10': None,
+                           '10': [ts_fp + '10-01_debris_dayfrac.tif',
+                                  ts_fp + '10-02_debris_dayfrac.tif',
+                                  ts_fp + '10-03_debris_dayfrac.tif',
+                                  ts_fp + '10-04_debris_dayfrac.tif',
+                                  ts_fp + '10-05_debris_dayfrac.tif',
+                                  ts_fp + '10-06_debris_dayfrac.tif',
+                                  ts_fp + '10-07_debris_dayfrac.tif'],
                            '11': [ts_fp + '11_debris_dayfrac.tif'],
                            '12': [ts_fp + '12_debris_dayfrac.tif'],
                            'HMA': [ts_fp + 'HMA_debris_dayfrac.tif'],
@@ -418,16 +443,49 @@ if experiment_no == 3:
     z0_random = np.array([0.016])
     k_random = np.array([1.])
     albedo_random = np.array([0.2])
+    z0_random_ice = np.array([0.002])             # Brock etal (2006)
+    z0_random_snow = np.array([z0_random_ice])    # Hock and Holmgren (2005) - 0.0001 to 0.0027, z0_ice = z0_snow
+    albedo_random_ice = np.array([0.4])           # Gardner and Sharp (2010); Hock (2005)
+    sin_factor_random = np.array([1.])            # multiplicative factor
+    
 elif experiment_no == 4:
-    debris_properties_fullfn = main_directory + '/../hma_debris_properties.csv'
-    debris_properties = np.genfromtxt(debris_properties_fullfn, delimiter=',', skip_header=1)
-    z0_random = debris_properties[:,1]
-    k_random = debris_properties[:,2]
-    albedo_random = np.array([debris_properties[:,5]])
-    print('\n\nNEED TO MAKE DEBRIS PROPERTIES RANDOM FOR MC SIMULATIONS\n\n')
+    debris_properties_fp = output_fp + 'debris_properties/'
+    debris_properties_fn = 'debris_properties_global.csv'
+    if os.path.exists(debris_properties_fp + debris_properties_fn):
+        debris_properties_df = pd.read_csv(debris_properties_fp + debris_properties_fn)
+        albedo_random = debris_properties_df['albedo'].values
+        z0_random = debris_properties_df['z0'].values
+        k_random = debris_properties_df['k'].values
+        albedo_random_ice = debris_properties_df['albedo_ice'].values
+        z0_random_ice = debris_properties_df['z0_ice'].values
+        z0_random_snow = z0_random_ice
+        sin_factor_random = debris_properties_df['Sin_factor'].values
+    else:
+        # Albedo (uniform distribution 0.1 - 0.3)
+        albedo_random = np.random.uniform(low=0.1, high=0.3, size=mc_simulations)
+        # Surface roughness (m)
+        z0_random = np.random.uniform(low=0.008, high=0.024, size=mc_simulations)
+        # Thermal conductivity (uniform distribution 0.5 - 1.5 W m-1 K-1)
+        k_random = np.random.uniform(low=0.5, high=1.5, size=mc_simulations)
+        # Clean ice albedo (uniform distribution 0.3 - 0.5)
+        albedo_random_ice = np.random.uniform(low=0.3, high=0.5, size=mc_simulations)
+        # Clean ice surface roughness (m)
+        z0_random_ice = np.random.uniform(low=0.0001, high=0.004, size=mc_simulations)
+        z0_random_snow = z0_random_ice
+        # Sin multiplicative factor to adjust Sin for topography, etc. (uniform distribution 0.8 - 1.2)
+        sin_factor_random = np.random.uniform(low=0.8, high=1.2, size=mc_simulations)
+        
+        debris_properties_values = np.column_stack((albedo_random, k_random, z0_random, 
+                                                    albedo_random_ice, z0_random_ice, sin_factor_random))
+        # Export properties
+        debris_properties_cns = ['albedo', 'k', 'z0', 'albedo_ice', 'z0_ice', 'Sin_factor']
+        debris_properties_df = pd.DataFrame(debris_properties_values, columns=debris_properties_cns)
+        if not os.path.exists(debris_properties_fp):
+            os.makedirs(debris_properties_fp)
+        debris_properties_df.to_csv(debris_properties_fp + debris_properties_fn, index=False)
 
 # Extra
-debris_albedo = 0.2     # -, debris albedo
+#debris_albedo = 0.2     # -, debris albedo
 za = 2                  # m, height of air temperature instrument
 zw = 10                 # m, height of wind instrument
 
@@ -439,18 +497,6 @@ snow_min = 0.0001       # minimum snowfall (mwe) to include snow on surface; sin
                         # much less (~50-100 kg m-3) 0.0001 m of snow w.e. will produce 0.001 - 0.002 m of snow
 rain_min = 0.0001
 option_lr_fromdata = 1  # Switch to use lapse rate from data (e.g., ERA5) or specified value
-
-
-# Output info
-output_option = 2           # 1: csv of all fluxes and internal temps, 2: netcdf of melt and ts
-if output_option == 2:
-    mc_stat_cns = ['mean']
-elif output_option == 3:
-    mc_stat_cns = ['mean', 'std', '25%', '75%']
-    print('\nSTOP!!!!! NEED TO STORE ATTRIBUTES FOR STATISTICS!!!!\n\n')
-date_start = '20200313'
-
-
 
 #%%
 delta_t = 60*60         # s, time step of AWS
@@ -485,16 +531,12 @@ snow_c_ir = 0.5             # sensitivity of near infrared albedo to snow surfac
 albedo_vo = 0.85            # fresh snow reflectance for visible band
 albedo_iro = 0.65           # fresh snow reflectance for near infrared band
 snow_tau_0 = 1e6            # non-dimensional snow surface age constant [s]
-z0_snow = 0.002             # Brock etal (2006)
 emissivity_snow = 0.99      # emissivity of snow (Tarboten and Luce, 1996); Collier etal (2014) use 0.97
 eS_snow = 610.5             # Saturated vapor pressure of snow (Pa) (Colbeck 1990)
 k_snow = 0.10               # Rahimi and Konrad (2012), Sturm etal (2002), Sturm etal (1997)
 #density_snow = 150         # Density of snow (kg/m3) - Lejeune et al. (2007)
 #albedo_snow = 0.75         # Collier etal (2014)
 
-# Clean ice melt model constants
-albedo_ice = 0.4            # Gardner and Sharp (2010); Hock (2005)
-z0_ice = z0_snow            # Hock and Holmgren (2005) - vary from 0.0001 to 0.0027, assume z0_ice = z0_snow
 #k_ice = 1
 
 # Newton-Raphson Method constants
