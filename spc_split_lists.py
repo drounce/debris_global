@@ -125,7 +125,8 @@ if __name__ == '__main__':
     #%%    
     # Check if need to update old batch files or not
     #  (different number of glaciers or batches)
-    if count_latlons != len(debris_prms.latlon_list) or args.n_batches != len(batch_list):
+    if (count_latlons != len(debris_prms.latlon_list) or args.n_batches != len(batch_list) or 
+        debris_prms.overwrite_batches):
         # Delete old files
         for i in batch_list:
             os.remove(i)

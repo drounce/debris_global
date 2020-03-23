@@ -389,20 +389,20 @@ def solar_calcs_NOAA(year, julian_day_of_year, time_frac, longitude_deg, latitud
     SolarZenithAngleCorr_rad = SolarZenithAngleCorr_deg * np.pi/180
     # Solar Azimuth Angle (deg CW from N)
     SolarAzimuthAngle_deg[HourAngle_deg > 0] = (
-            ((180/np.pi * (np.arccos(((np.sin(latitude_deg * np.pi/180) *
+            ((180/np.pi * (np.arccos(np.round(((np.sin(latitude_deg * np.pi/180) *
               np.cos(SolarZenithAngle_rad[HourAngle_deg > 0])) - np.sin(SunDeclin_rad[HourAngle_deg > 0])) /
-              (np.cos(latitude_deg * np.pi/180) * np.sin(SolarZenithAngle_rad[HourAngle_deg > 0])))) + 180) / 360 -
-             np.floor((180/np.pi * (np.arccos(((np.sin(latitude_deg * np.pi/180) *
+              (np.cos(latitude_deg * np.pi/180) * np.sin(SolarZenithAngle_rad[HourAngle_deg > 0])),12))) + 180) / 360 -
+             np.floor((180/np.pi * (np.arccos(np.round(((np.sin(latitude_deg * np.pi/180) *
              np.cos(SolarZenithAngle_rad[HourAngle_deg > 0])) - np.sin(SunDeclin_rad[HourAngle_deg > 0])) /
-             (np.cos(latitude_deg * np.pi/180) * np.sin(SolarZenithAngle_rad[HourAngle_deg > 0])))) + 180) / 360))
+             (np.cos(latitude_deg * np.pi/180) * np.sin(SolarZenithAngle_rad[HourAngle_deg > 0])),12))) + 180) / 360))
             * 360)
     SolarAzimuthAngle_deg[HourAngle_deg <= 0] = (
-            ((540 - 180/np.pi * (np.arccos(((np.sin(latitude_deg * np.pi/180) *
+            ((540 - 180/np.pi * (np.arccos(np.round(((np.sin(latitude_deg * np.pi/180) *
               np.cos(SolarZenithAngle_rad[HourAngle_deg <= 0])) - np.sin(SunDeclin_rad[HourAngle_deg <= 0])) /
-              (np.cos(latitude_deg * np.pi/180) * np.sin(SolarZenithAngle_rad[HourAngle_deg <= 0]))))) / 360 -
-             np.floor((540 - 180/np.pi * (np.arccos(((np.sin(latitude_deg * np.pi/180) *
+              (np.cos(latitude_deg * np.pi/180) * np.sin(SolarZenithAngle_rad[HourAngle_deg <= 0])),12)))) / 360 -
+             np.floor((540 - 180/np.pi * (np.arccos(np.round(((np.sin(latitude_deg * np.pi/180) *
              np.cos(SolarZenithAngle_rad[HourAngle_deg <= 0])) - np.sin(SunDeclin_rad[HourAngle_deg <= 0])) /
-             (np.cos(latitude_deg * np.pi/180) * np.sin(SolarZenithAngle_rad[HourAngle_deg <= 0]))))) / 360)) * 360)
+             (np.cos(latitude_deg * np.pi/180) * np.sin(SolarZenithAngle_rad[HourAngle_deg <= 0])),12)))) / 360)) * 360)
     SolarAzimuthAngle_rad = SolarAzimuthAngle_deg * np.pi/180
     # Distance from sun based on eccentricity of orbit (r/rm)^2 based on Stamnes (2015)
     # Day number [radians]
@@ -1258,7 +1258,7 @@ def main(list_packed_vars):
                         #  if slope & aspect are 0 degrees, then this is equal to the zenith angle
                         ill_angle_rad = (np.arccos(np.cos(slope_rad) * np.cos(zenith_angle_rad) + np.sin(slope_rad) *
                                          np.sin(zenith_angle_rad) * np.cos(azimuth_angle_rad - aspect_rad)))
-            
+
                         # ===== DEBRIS-COVERED GLACIER ENERGY BALANCE MODEL =====
                         # Constant defined by Reid and Brock (2010) for Crank-Nicholson Scheme
                         C = k * debris_prms.delta_t / (2 * debris_prms.row_d * debris_prms.c_d * h**2)
@@ -1384,23 +1384,7 @@ def main(list_packed_vars):
                                   '  Melt[m ice/yr]:', np.round(np.sum(Melt) / (len(Melt) / 24 / 365),3), 
                                   'Ts_max[degC]:', np.round(np.max(Td[0,:]),1), 
                                   'Ts_min[degC]:', np.round(np.min(Td[0,:]),1))
-                        
-                    if debug:
-                        print('Summary:', lat_deg, lon_deg, 'hd [m]:', debris_thickness, 
-                              '  Melt[m ice/yr]:', np.round(np.sum(Melt_all.mean(axis=1)) / (len(Melt) / 24 / 365),3))
-                        
-                    # RECORD OUTPUT
-                    output_ds_all['melt'].values[n_thickness,:,nelev] = (
-                            Melt_all.mean(axis=1) * debris_prms.density_ice / debris_prms.density_water)
-                    output_ds_all['snow_depth'].values[n_thickness,:,nelev] = dsnow_all.mean(axis=1)
-                    output_ds_all['ts'].values[n_thickness,:,nelev] = Ts_all.mean(axis=1)
-                    if 'std' in debris_prms.mc_stat_cns:
-                        output_ds_all['melt_std'].values[n_thickness,:,nelev] = (
-                            Melt_all.std(axis=1) * debris_prms.density_ice / debris_prms.density_water)
-                        output_ds_all['snow_depth_std'].values[n_thickness,:,nelev] = dsnow_all.std(axis=1)
-                        output_ds_all['ts_std'].values[n_thickness,:,nelev] = Ts_all.std(axis=1)
 
-                
                 #%% ===== CLEAN ICE MODEL =============================================================================
                 else:
 
@@ -1455,7 +1439,7 @@ def main(list_packed_vars):
                         #  if slope & aspect are 0 degrees, then this is equal to the zenith angle
                         ill_angle_rad = (np.arccos(np.cos(slope_rad) * np.cos(zenith_angle_rad) + np.sin(slope_rad) *
                                          np.sin(zenith_angle_rad) * np.cos(azimuth_angle_rad - aspect_rad)))
-            
+                        
                         # ===== CLEAN ICE GLACIER ENERGY BALANCE MODEL =====                    
                         Rn = np.zeros((nsteps))
                         LE = np.zeros((nsteps))
@@ -1505,35 +1489,54 @@ def main(list_packed_vars):
                             print(lat_deg, lon_deg, 'hd [m]:', debris_thickness, 
                                   '  Melt[m ice/yr]:', np.round(np.sum(Melt) / (len(Melt) / 24 / 365),3))
 
-                    if debug:
+                # EXPORT OUTPUT
+                if debug:
                         print('Summary:', lat_deg, lon_deg, 'hd [m]:', debris_thickness, 
                               '  Melt[m ice/yr]:', np.round(np.sum(Melt_all.mean(axis=1)) / (len(Melt) / 24 / 365),3))
                         
-                    # EXPORT OUTPUT
-                    output_ds_all['melt'].values[n_thickness,:,nelev] = (
-                            Melt_all.mean(axis=1) * debris_prms.density_ice / debris_prms.density_water)
-                    output_ds_all['snow_depth'].values[n_thickness,:,nelev] = dsnow_all.mean(axis=1)
-                    if 'std' in debris_prms.mc_stat_cns:
-                        output_ds_all['melt_std'].values[n_thickness,:,nelev] = (
-                            Melt_all.std(axis=1) * debris_prms.density_ice / debris_prms.density_water)
-                        output_ds_all['snow_depth_std'].values[n_thickness,:,nelev] = dsnow_all.std(axis=1)
+                # RECORD OUTPUT
+                output_ds_all['melt'].values[n_thickness,:,nelev] = (
+                        Melt_all.mean(axis=1) * debris_prms.density_ice / debris_prms.density_water)
+                output_ds_all['snow_depth'].values[n_thickness,:,nelev] = dsnow_all.mean(axis=1)
+                if debris_thickness > 0:
+                    output_ds_all['ts'].values[n_thickness,:,nelev] = Ts_all.mean(axis=1)
+                if 'std' in debris_prms.mc_stat_cns:
+                    output_ds_all['melt_std'].values[n_thickness,:,nelev] = (
+                        Melt_all.std(axis=1) * debris_prms.density_ice / debris_prms.density_water)
+                    output_ds_all['snow_depth_std'].values[n_thickness,:,nelev] = dsnow_all.std(axis=1)
+                    if debris_thickness > 0:
+                        output_ds_all['ts_std'].values[n_thickness,:,nelev] = Ts_all.std(axis=1)
+                        
+#                # Kennicott check
+#                print('\nKENNICOTT CHECK - DELETE ME ONCE DONE, DO WE NEED THE MEDIAN?')
+#                melt_mean = Melt_all.mean(axis=1)
+#                melt_std = Melt_all.std(axis=1)
+#                melt_95 = np.percentile(Melt_all, 95, axis=1)
+#                melt_5 = np.percentile(Melt_all, 5, axis=1)
+#                print('  melt mmwed:', np.round(melt_mean[153048:154488].sum() / (6437-6377) * 1000,1),
+#                      '+/-', np.round(melt_std[153048:154488].sum() / (6437-6377) * 1000,1))
+#                print('      5%:', np.round(melt_5[153048:154488].sum() / (6437-6377) * 1000,1))
+#                print('     95%:', np.round(melt_95[153048:154488].sum() / (6437-6377) * 1000,1))
                         
             
         # ===== EXPORT OUTPUT DATASET ===== 
         output_fp = debris_prms.output_fp + 'exp' + str(debris_prms.experiment_no) + '/' + debris_prms.roi + '/'
         if os.path.exists(output_fp) == False:
             os.makedirs(output_fp)
-        # add MC string
+        # add MC string and count string
         if debris_prms.experiment_no == 3:
             mc_str = ''
+            count_str = ''
         else:
             mc_str = str(int(debris_prms.mc_simulations)) + 'MC_'
+            count_str = '--' + str(count)
+        # Latitude string
         if lat_deg < 0:
             lat_str = 'S-'
         else:
             lat_str = 'N-'
         output_ds_fn = (debris_prms.fn_prefix + str(int(abs(lat_deg)*100)) + lat_str + str(int(lon_deg*100)) + 'E-'
-                        + mc_str + debris_prms.date_start + '.nc')
+                        + mc_str + debris_prms.date_start + count_str + '.nc')
         # Export netcdf
         output_ds_all.to_netcdf(output_fp + output_ds_fn, encoding=encoding)
                 
@@ -1606,6 +1609,39 @@ if __name__ == '__main__':
             else:
                 main(list_packed_vars[n])
                 
+    
+    # Merge the datasets for experiment 4
+    if debris_prms.experiment_no == 4:
+        output_fp = debris_prms.output_fp + 'exp' + str(debris_prms.experiment_no) + '/' + debris_prms.roi + '/'
+        for latlon in latlon_list:
+            lat_deg, lon_deg = latlon[0], latlon[1]
+            lat_str = 'N-'
+            if lat_deg < 0:
+                lat_str = 'S-'
+            mc_str = str(int(debris_prms.mc_simulations)) + 'MC_'
+            ds_prefix = (debris_prms.fn_prefix + str(int(abs(lat_deg)*100)) + lat_str + str(int(lon_deg*100)) + 'E-'
+                         + mc_str + debris_prms.date_start)
+            fns_2merge = []
+            for i in os.listdir(output_fp):
+                if i.startswith(ds_prefix + '--') and i.endswith('.nc'):
+                    fns_2merge.append(i)
+            fns_2merge = sorted(fns_2merge)
+            # MERGE AND EXPORT
+            if len(fns_2merge) == num_cores:
+                ds_all = None
+                for fn in fns_2merge:
+                    ds = xr.open_dataset(output_fp + fn)
+                    # Merge datasets of stats into one output
+                    if ds_all is None:
+                        ds_all = ds
+                    else:
+                        ds_all = xr.concat([ds_all, ds], 'hd_cm')
+                ds_all.to_netcdf(output_fp + ds_prefix + '.nc')
+            # Clean up directory
+            for fn in fns_2merge:
+                os.remove(output_fp + fn)
+            
+                            
     print('\nProcessing time of :',time.time()-time_start, 's')
 
 

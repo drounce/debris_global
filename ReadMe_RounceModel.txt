@@ -161,6 +161,7 @@ HMA (13,14,15):
 '15.03473' # Ngozumpa	    - good
 '15.03733' # Khumbu* 	    - good (Gades etal 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus")
 				  (Kayastha etal 2000, melt rates - Table 1, excellent fit)
+				  (Soncini etal 2016 up to 3.0 m with a mean value of 0.35 m (n = 64))
 '15.03734' # Changri Nup    - good
 '15.04045' # Lirung	    - good (McCarthy etal 2017 - thickness, Chand etal 2015 melt rates seasonally) 
 				   (Dahal 2015 Thesis  [April 6-16, 2004; Table 3.2 for heights Fig 4.11 - m w.e.d])

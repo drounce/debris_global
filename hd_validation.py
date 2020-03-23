@@ -29,8 +29,8 @@ import debrisglobal.globaldebris_input as debris_prms
 from meltcurves import melt_fromdebris_func
 
 #%%% ===== SCRIPT OPTIONS =====
-option_melt_comparison = False
-option_hd_comparison = True
+option_melt_comparison = True
+option_hd_comparison = False
 option_hd_spatial_compare = False
 
 melt_compare_fp = debris_prms.main_directory + '/../hd_obs/figures/hd_melt_compare/'
@@ -71,8 +71,9 @@ if os.path.exists(hd_compare_fp) == False:
     os.makedirs(hd_compare_fp)
 
 #%% ===== FUNCTIONS =====
-def plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, melt_fn,
-                               ds_names=None, hd_min=0, hd_max=2, hd_tick_major=0.25, hd_tick_minor=0.05,
+def plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
+                               melt_fp, melt_fn, ds_names=None, 
+                               hd_min=0, hd_max=2, hd_tick_major=0.25, hd_tick_minor=0.05, 
                                melt_min=0, melt_max=70, melt_tick_major=10, melt_tick_minor=5,
                                plot_meltfactor=False):
     """ Plot comparison of debris vs. melt for various sites """
@@ -187,13 +188,12 @@ def plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_l
 
 #%%
 if option_melt_comparison:
-    print('Iceland? Moller etal 2016')
-    
 #    glaciers = ['1.15645', '2.14297', '6.00474', '7.01044', '10.01732', '11.00719', '11.02810', '11.02858', '11.03005', 
 #                '12.01012', '12.01132', '13.05000', '13.43232', '14.06794', '14.16042', '15.03733', '15.07886', 
 #                '15.11758', '18.02397']
 #    glaciers = ['10.01732']
-    glaciers = ['6.00474']
+#    glaciers = ['6.00474']
+    glaciers = ['7.01044']
     
     # ===== KENNICOTT (1.15645) ====
     if '1.15645' in glaciers:
@@ -205,6 +205,7 @@ if option_melt_comparison:
         glac_name = "Kennicott Glacier (1.15645)"
         fig_fn = '1.15645_hd_melt_And2019.png'
         ds_names = ['Anderson et al 2019\n(6/18/11 - 8/16/11)']
+#        melt_fp = 
         melt_fn = '6150N-21700E-debris_melt_curve.nc'
         yearfracs_list = [[2011 + 169/365, 2011 + 228/365]]
 
@@ -216,7 +217,8 @@ if option_melt_comparison:
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
         
-        plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, melt_fn,
+        plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
+                                   melt_fp, melt_fn,
                                    ds_names=ds_names, hd_min=hd_min, hd_max=hd_max, 
                                    hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
                                    melt_min=melt_min, melt_max=melt_max, 
@@ -257,7 +259,7 @@ if option_melt_comparison:
         measured_hd_list = [mb_df.hd_m.values]
         measured_melt_list = [mb_df['melt_mf'].values]
         glac_name = "Svinafellsjokull Glacier (6.00474)"
-        fig_fn = '6.00474_hd_melt_Moller2016.png'
+        fig_fn = '6.00474_hd_melt_Moller2016-test.png'
         ds_names = ['Moller et al 2016\n(5/17/13 - 5/30/13)']
         melt_fn = '6400N-34325E-debris_melt_curve.nc'
         yearfracs_list = [[2013 + 137/365, 2013 + 150/365]]
@@ -289,7 +291,10 @@ if option_melt_comparison:
         glac_name = "Larsbreen Glacier (7.01044)"
         fig_fn = '7.01044_hd_melt_NichBenn2006.png'
         ds_names = ['Nicholson and Benn 2006\n(7/09/02 - 7/20/02)']
-        melt_fn = '7825N-1600E-debris_melt_curve.nc'
+        melt_fp = debris_prms.output_fp + 'exp4_spc/07/'
+#        melt_fn = '7825N-1600E-debris_melt_curve.nc'
+        melt_fn = 'Rounce2015_07-7825N-1600E-100MC_20200313.nc'
+        print('SWITCH TO OSTREM')
         yearfracs_list = [[2002 + 191/366, 2002 + 202/366]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
@@ -559,7 +564,7 @@ if option_melt_comparison:
                                    melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor,
                                    plot_meltfactor=True)
     
-    # ===== BALTORO (14.06794) ====
+    # ===== Baltoro (14.06794) ====
     if '14.06794' in glaciers:
         print('\nmelt comparison with Mihalcea et al 2008 and Groos et al 2017')
         # Data: debris thickness (m) and melt rate (mm w.e. d-1)
@@ -592,7 +597,7 @@ if option_melt_comparison:
                                    melt_min=melt_min, melt_max=melt_max, 
                                    melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor)
         
-    # ===== BATAL (14.16042) ====
+    # ===== Batal (14.16042) ====
     if '14.16042' in glaciers:
         print('\nmelt comparison with Patel et al (2016)')
         # Data: debris thickness (m) and melt rate (mm w.e. d-1)
@@ -643,7 +648,7 @@ if option_melt_comparison:
                                    melt_min=melt_min, melt_max=melt_max, 
                                    melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor)
         
-    # ===== HAILUOGOU (15.07886) ====
+    # ===== Hailuogou (15.07886) ====
     if '15.07886' in glaciers:
         print('\nmelt comparison with Zhang et al (2011)')
         # Data: debris thickness (m) and melt rate (mm w.e. d-1)

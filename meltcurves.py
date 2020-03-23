@@ -107,17 +107,21 @@ def export_ds_daily_melt(ds):
     encoding : dictionary
         encoding used with exporting xarray dataset to netcdf
     """
+    #%%
     # Extract time values
     time_daily = pd.to_datetime(ds.time.values[0::24])
     
     # Melt daily
     ds_shape = ds.melt.values.shape
     melt_daily = ds.melt.values.reshape((ds_shape[0], int(ds_shape[1] / 24), 24, ds_shape[2])).sum(axis=2)
-
+    melt_daily_std = ds.melt_std.values.reshape((ds_shape[0], int(ds_shape[1] / 24), 24, ds_shape[2])).sum(axis=2)
+    #%%
     # Variable coordinates dictionary
     output_coords_dict = collections.OrderedDict()
     output_coords_dict['melt'] = collections.OrderedDict([('hd_cm', ds.hd_cm.values), ('time', time_daily), 
                                                           ('elev', ds.elev.values)])
+    output_coords_dict['melt_std'] = collections.OrderedDict([('hd_cm', ds.hd_cm.values), ('time', time_daily), 
+                                                              ('elev', ds.elev.values)])
     # Attributes dictionary
     output_attrs_dict = {
             'latitude': {'long_name': 'latitude',
@@ -131,11 +135,13 @@ def export_ds_daily_melt(ds):
             'elev': {'long_name': 'elevation',
                      'units': 'm a.s.l.'},
             'melt': {'long_name': 'glacier melt, in water equivalent',
-                     'units': 'm'}
+                     'units': 'm'},
+            'melt_std': {'long_name': 'glacier melt, in water equivalant, standard deviation',
+                         'units': 'm'}
             }
 
-    assert 'melt_std' not in list(ds.keys()), 'Need to process standard deviation and add to output'
-    
+#    assert 'melt_std' not in list(ds.keys()), 'Need to process standard deviation and add to output'
+    #%%
     # Add variables to empty dataset and merge together
     count_vn = 0
     encoding = {}
@@ -164,6 +170,7 @@ def export_ds_daily_melt(ds):
             
     # Add values    
     output_ds_all['melt'].values = melt_daily
+    output_ds_all['melt_std'].values = melt_daily_std
     output_ds_all['latitude'] = ds['latitude']
     output_ds_all['longitude'] = ds['longitude']
     output_ds_all['hd_cm'] = ds['hd_cm']
@@ -171,7 +178,12 @@ def export_ds_daily_melt(ds):
     
     # Add attributes
     output_ds_all.attrs = ds.attrs
-
+    
+    
+#    print('DELETE ME!')
+#    output_ds_all.melt[0,6377:6437,0].sum() / (6437-6377) * 1000
+    
+    #%%
     return output_ds_all, encoding
 
 
@@ -194,7 +206,7 @@ def main(list_packed_vars):
     
     if debug:
         print(count, latlon_list)
-    
+    #%%
     for nlatlon, latlon in enumerate(latlon_list):
 
         print(nlatlon, latlon)
@@ -213,21 +225,31 @@ def main(list_packed_vars):
         else:
             lat_str = 'N-'
         latlon_str = str(int(abs(lat_deg*100))) + lat_str + str(int(lon_deg*100)) + 'E-'
+        if debris_prms.experiment_no == 3:
+            mc_str = ''
+        else:
+            mc_str = str(int(debris_prms.mc_simulations)) + 'MC_'
         # Raw meltmodel output filename
-        ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + debris_prms.date_start + '.nc'
+#        ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + debris_prms.date_start + '.nc'
+        ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + mc_str + debris_prms.date_start + '.nc'
+        
+        print(ds_meltmodel_fn)
+        
         # Processed "ostrem" filename, although this is really only daily data to enable each glacier to choose correct
         #  dates over which to sum the melt consistent with the DEM differencing
         ds_ostrem_fn = debris_prms.ostrem_fn_sample.replace('XXXX', latlon_str)
         
+        if debris_prms.experiment_no == 4:
+            ostrem_fp = debris_prms.ostrem_fp + 'exp' + str(debris_prms.experiment_no) + '/'
         
-        if os.path.exists(debris_prms.ostrem_fp + ds_ostrem_fn) == False:
-            
+        if os.path.exists(ostrem_fp + ds_ostrem_fn) == False:
             # Debris thickness vs. melt dataset from energy balance modeling
             ds = xr.open_dataset(debris_prms.eb_fp + ds_meltmodel_fn)
-            
+            #%%
             ds_ostrem, encoding = export_ds_daily_melt(ds)
             # Export netcdf
-            ds_ostrem.to_netcdf(debris_prms.ostrem_fp + ds_ostrem_fn)
+#            print(ostrem_fp + ds_ostrem_fn)
+            ds_ostrem.to_netcdf(ostrem_fp + ds_ostrem_fn)
             
 
     if debug:

@@ -14,6 +14,7 @@ import pandas as pd
 # Main directory
 main_directory = os.getcwd()
 date_start = '20200313'
+overwrite_batches = True
 rgi_fp = main_directory + '/../00_rgi60_attribs/'
 output_fp = main_directory + '/../output/'
 ostrem_fp = main_directory + '/../output/ostrem_curves/'
@@ -30,21 +31,21 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '08'
 #roi = '09'
 #roi = '10'
-roi = '11'
+#roi = '11'
 #roi = '12'
 #roi = 'HMA'
-#roi = '16'
+roi = '16'
 #roi = '17'
 #roi = '18'
 
 # ===== Debris thickness =====
-#debris_thickness_all = np.array([0])
-debris_thickness_all = np.array([0, 0.02])
+debris_thickness_all = np.array([0]) 
+#debris_thickness_all = np.array([0, 0.02])
 #debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
 #debris_thickness_all[1] = 0.02
 
 # Experiment number 3 is single run, 4 is Monte Carlo simulations 
-experiment_no = 4
+experiment_no = 3
 if experiment_no == 4:
     mc_simulations = 100
     mc_stat_cns = ['mean', 'std']
@@ -52,14 +53,35 @@ else:
     mc_simulations = 1
     mc_stat_cns = ['mean']
 
-#eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
-eb_fp = '/Volumes/LaCie/debris_output/exp3-20200313/' + roi + '/'
+eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
+#eb_fp = '/Volumes/LaCie/debris_output/exp3-20200313/' + roi + '/'
 
 # Latitude and longitude index to run the model
 #  Longitude must be 0 - 360 degrees
-latlon_list = [(46.5, 10.5)] # Miage (11.03005)
+#latlon_list = [(61.5, 217.0)]   # Kennicott (1.15645)
+#latlon_list = [(47.0, 238.25)]  # Emmons (2.14297)
+#latlon_list = [(64.0, 343.25)]  # Svinafellsjokull (6.00474)
+#latlon_list = [(78.25, 16.0)]   # Larsbreen (7.01044)
+#latlon_list = [(50.0, 87.75)]   # Maliy Aktru (10.01732)
+#latlon_list = [(47.0, 10.75)]   # Vernagtferner (11.00719)
+#latlon_list = [(46.0, 7.5)]     # Arolla (11.02810)
+#latlon_list = [(46.0, 8.0)]     # Belvedere (11.02858)
+#latlon_list = [(46.5, 10.5)]    # Miage (11.03005)
+#latlon_list = [(43.0, 43.5)]    # Zopkhito (12.01012)
+#latlon_list = [(43.25, 42.75)]  # Djankuat (12.01132)
+#latlon_list = [(42.0, 80.25)]   # S Inylchek (13.05000)
+#latlon_list = [(41.75, 80.0)]   # Koxkar (13.43232)
+#latlon_list = [(35.75, 76.5)]   # Baltoro (14.06794)
+#latlon_list = [(32.25, 77.5)]   # Batal (14.16042)
+#latlon_list = [(28.0, 87.0)]    # Khumbu (13.03733)
+#latlon_list = [(28.25, 85.5)]   # Lirung (15.04045)
+#latlon_list = [(29.5, 102.0)]   # Hailuogou (15.07886)
+#latlon_list = [(29.75, 95.75)]  # 24K (15.11758)
+#latlon_list = [(-43.5, 170.25)] # Franz Josef (18.02397)
+#latlon_list = 'all'
+latlon_list = [(-9.0, 282.25)]
 #latlon_list = None
-if latlon_list is None:
+if latlon_list == 'all':
     latlon_unique_fp = output_fp + 'latlon_unique/'
     latlon_unique_dict = {'01':'01_latlon_unique.pkl',
                           '02':'02_latlon_unique.pkl',
@@ -164,7 +186,7 @@ mb_yrfrac_dict = {'01': [2000.6, 2018.6],
                   '11': [2000.128, 2013],
                   '12': [2000.128, 2012],
                   'HMA': [2000.6, 2018.6],
-                  '16': None,
+                  '16': [2000.128, 2013.128],
                   '17': None,
                   '18': [2000.128, 2013]}
 #dhdt_fn_dict = {'01': main_directory + '/../mb_data/McNabb/01_rgi60_Alaska_ls_dh.tif',
@@ -424,7 +446,7 @@ roi_datedict = {'01': ['1994-01-01', '2018-12-31'],
                 '07': ['2000-01-01', '2018-12-31'],
                 '08': ['2000-01-01', '2018-12-31'],
                 '09': ['2000-01-01', '2018-12-31'],
-                '10': ['2000-01-01', '2018-12-31'],
+                '10': ['2000-01-01', '2018-12-31'],                
                 '11': ['2000-01-01', '2018-12-31'],
                 '12': ['2000-01-01', '2018-12-31'],
                 'HMA': ['2000-01-01', '2018-12-31'],
