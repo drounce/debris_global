@@ -38,7 +38,7 @@ do
   echo $BATCHNO
   
   # run the file on a separate node (& tells the command to move to the next loop for any empty nodes)
-  srun -N 1 -n 1 python tscurves.py -num_simultaneous_processes=$SLURM_NTASKS_PER_NODE -latlon_fn=$i&
+  srun -N 1 -n 1 python tscurves.py -num_simultaneous_processes=24 -latlon_fn=$i&
 done
 # wait tells the loop to not move on until all the srun commands are completed
 wait

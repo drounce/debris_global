@@ -33,22 +33,22 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '10'
 #roi = '11'
 #roi = '12'
-#roi = 'HMA'
-roi = '16'
+roi = 'HMA'
+#roi = '16'
 #roi = '17'
 #roi = '18'
 
 # ===== Debris thickness =====
-debris_thickness_all = np.array([0]) 
+#debris_thickness_all = np.array([0]) 
 #debris_thickness_all = np.array([0, 0.02])
-#debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
-#debris_thickness_all[1] = 0.02
+debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
+debris_thickness_all[1] = 0.02
 
 # Experiment number 3 is single run, 4 is Monte Carlo simulations 
 experiment_no = 3
 if experiment_no == 4:
     mc_simulations = 100
-    mc_stat_cns = ['mean', 'std']
+    mc_stat_cns = ['mean', 'std', 'med', 'mad']
 else:
     mc_simulations = 1
     mc_stat_cns = ['mean']
@@ -66,6 +66,7 @@ eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
 #latlon_list = [(47.0, 10.75)]   # Vernagtferner (11.00719)
 #latlon_list = [(46.0, 7.5)]     # Arolla (11.02810)
 #latlon_list = [(46.0, 8.0)]     # Belvedere (11.02858)
+#latlon_list = [(46.25, 10.5)]   # Venerocolo (11.03005)
 #latlon_list = [(46.5, 10.5)]    # Miage (11.03005)
 #latlon_list = [(43.0, 43.5)]    # Zopkhito (12.01012)
 #latlon_list = [(43.25, 42.75)]  # Djankuat (12.01132)
@@ -78,8 +79,7 @@ eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
 #latlon_list = [(29.5, 102.0)]   # Hailuogou (15.07886)
 #latlon_list = [(29.75, 95.75)]  # 24K (15.11758)
 #latlon_list = [(-43.5, 170.25)] # Franz Josef (18.02397)
-#latlon_list = 'all'
-latlon_list = [(-9.0, 282.25)]
+latlon_list = 'all'
 #latlon_list = None
 if latlon_list == 'all':
     latlon_unique_fp = output_fp + 'latlon_unique/'
@@ -187,7 +187,7 @@ mb_yrfrac_dict = {'01': [2000.6, 2018.6],
                   '12': [2000.128, 2012],
                   'HMA': [2000.6, 2018.6],
                   '16': [2000.128, 2013.128],
-                  '17': None,
+                  '17': [2000.128, 2013.128],
                   '18': [2000.128, 2013]}
 #dhdt_fn_dict = {'01': main_directory + '/../mb_data/McNabb/01_rgi60_Alaska_ls_dh.tif',
 #                '02': None,
@@ -212,7 +212,7 @@ width_min_dict = {'01': 240,
                   '12': 100,
                   'HMA': 240,
                   '16': 100,
-                  '17': 100,
+                  '17': 240,
                   '18': 100}
 min_bin_samp_count = 0
 
@@ -412,7 +412,7 @@ vx_dir_dict_list = {'01': [sat_img_dir + 'ITS_Live/ALA_G0120_0000_vx.tif'],
                     '12': [sat_img_dir + 'romain_velocity/Caucasus/Mosaic__vxo.tif'],
                     'HMA': [sat_img_dir + 'ITS_Live/HMA_G0120_0000_vx.tif'],
                     '16': [sat_img_dir + 'romain_velocity/AndesBlanca/Mosaic__vxo.tif'],
-                    '17': [sat_img_dir + 'romain_velocity/Cordillera_South/Mosaic__vxo.tif'],
+                    '17': [sat_img_dir + 'romain_velocity/17_mosaic_romain_itslive_vx.tif'],
                     '18': [sat_img_dir + 'romain_velocity/NEWZEALAND/Mosaic__vxo.tif']
                     }
 dhdt_vel_fns_fp = output_fp + 'dhdt_vel_fns/'

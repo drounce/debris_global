@@ -64,6 +64,7 @@ import time
 #import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.stats import median_absolute_deviation
 import xarray as xr
 # Local libraries
 import debrisglobal.globaldebris_input as debris_prms
@@ -177,6 +178,21 @@ def create_xrdataset(debris_thickness_all=debris_prms.debris_thickness_all, time
                                                                 ('elev', elev_values)])
         output_coords_dict['snow_depth_std'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
                                                                         ('elev', elev_values)])
+    if 'med' in stat_cns:
+        output_coords_dict['melt_med'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                  ('elev', elev_values)])
+        output_coords_dict['ts_med'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                ('elev', elev_values)])
+        output_coords_dict['snow_depth_med'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                        ('elev', elev_values)])
+    if 'mad' in stat_cns:
+        output_coords_dict['melt_mad'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                  ('elev', elev_values)])
+        output_coords_dict['ts_mad'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                ('elev', elev_values)])
+        output_coords_dict['snow_depth_mad'] = collections.OrderedDict([('hd_cm', hd_cm_values), ('time', time_values), 
+                                                                        ('elev', elev_values)])
+    
     # Attributes dictionary
     output_attrs_dict = {
             'latitude': {'long_name': 'latitude',
@@ -200,7 +216,19 @@ def create_xrdataset(debris_thickness_all=debris_prms.debris_thickness_all, time
             'ts_std': {'long_name': 'surface temperature standard deviation',
                     'units': 'K'},
             'snow_depth_std': {'long_name': 'snow depth standard deviation',
-                               'units': 'm'}
+                               'units': 'm'},
+            'melt_med': {'long_name': 'glacier melt, in water equivalent, median',
+                         'units': 'm w.e.'},
+            'ts_med': {'long_name': 'surface temperature median',
+                    'units': 'K'},
+            'snow_depth_med': {'long_name': 'snow depth median',
+                               'units': 'm'},
+            'melt_mad': {'long_name': 'glacier melt, in water equivalent, median absolute deviation',
+                         'units': 'm w.e.'},
+            'ts_mad': {'long_name': 'surface temperature median absolute deviation',
+                    'units': 'K'},
+            'snow_depth_mad': {'long_name': 'snow depth median absolute deviation',
+                               'units': 'm'},
             }
 
     # Add variables to empty dataset and merge together
@@ -1506,6 +1534,21 @@ def main(list_packed_vars):
                     output_ds_all['snow_depth_std'].values[n_thickness,:,nelev] = dsnow_all.std(axis=1)
                     if debris_thickness > 0:
                         output_ds_all['ts_std'].values[n_thickness,:,nelev] = Ts_all.std(axis=1)
+                if 'med' in debris_prms.mc_stat_cns:
+                    output_ds_all['melt_med'].values[n_thickness,:,nelev] = (
+                        np.median(Melt_all, axis=1) * debris_prms.density_ice / debris_prms.density_water)
+                    output_ds_all['snow_depth_med'].values[n_thickness,:,nelev] = np.median(dsnow_all, axis=1)
+                    if debris_thickness > 0:
+                        output_ds_all['ts_med'].values[n_thickness,:,nelev] = np.median(Ts_all, axis=1)
+                if 'mad' in debris_prms.mc_stat_cns:
+                    output_ds_all['melt_mad'].values[n_thickness,:,nelev] = (
+                        median_absolute_deviation(Melt_all, axis=1) 
+                        * debris_prms.density_ice / debris_prms.density_water)
+                    output_ds_all['snow_depth_mad'].values[n_thickness,:,nelev] = (
+                            median_absolute_deviation(dsnow_all, axis=1))
+                    if debris_thickness > 0:
+                        output_ds_all['ts_mad'].values[n_thickness,:,nelev] = (
+                                median_absolute_deviation(Ts_all, axis=1))
                         
 #                # Kennicott check
 #                print('\nKENNICOTT CHECK - DELETE ME ONCE DONE, DO WE NEED THE MEDIAN?')
@@ -1636,6 +1679,7 @@ if __name__ == '__main__':
                         ds_all = ds
                     else:
                         ds_all = xr.concat([ds_all, ds], 'hd_cm')
+                ds_all = ds_all.sortby('hd_cm')
                 ds_all.to_netcdf(output_fp + ds_prefix + '.nc')
             # Clean up directory
             for fn in fns_2merge:

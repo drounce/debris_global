@@ -124,9 +124,10 @@ if __name__ == '__main__':
         
         # Process unique lat/lons 
         #  (best to get pickle from the debris_stats.ipynb script)
-        if debris_prms.latlon_list_raw == 'all':
-            with open(debris_prms.latlon_unique_fp + debris_prms.latlon_unique_dict[roi], 'rb') as f:
-                latlon_list = pickle.load(f)
+        latlon_list = debris_prms.latlon_list
+#        if debris_prms.latlon_list == 'all':
+#            with open(debris_prms.latlon_unique_fp + debris_prms.latlon_unique_dict[roi], 'rb') as f:
+#                latlon_list = pickle.load(f)
                 
         
         for nlatlon, latlon_idx in enumerate(latlon_list):
