@@ -159,10 +159,11 @@ HMA (13,14,15):
 '13.43165' # No. 72*^  	       - good (Wang etal 2011, ablation rates and debris thickness; Wang et al. 2017)
 '13.43174' # No. 74^	       - good (Wang etal 2011, debris thickness)
 '13.43207' # Tuomuer	       - good (Wang etal 2011, debris thickness)
-'13.43232' # Koxkar*^	       - good (Juen etal 2014, no ablation stake only degree-day factors, so compare could be melt factors; 
+'13.43232' # Koxkar*^	       - good (Juen etal 2014, better map of When and Shiyin 2012, no ablation stake only degree-day factors, so compare could be melt factors; 
 				      (Han etal 2006, ablation rate beneath 3 stakes from heat conduction method)
 				      (Han etal 2006, debris thickness at 3 sites further up
-				      (Wu and Liu 2012, debris thickness at terminus - see Juen etal 2014 for better representation)
+				      (When and Shiyin 2012, debris thickness at terminus - see Juen etal 2014 for better representation)
+				      (Chengwei etal 2007, hd vs elev)
 
 '14.04477' # Hispar 	       - good
 '14.06794' # Baltoro*^ 	       - good (Mihalcea et al. 2006, melt rate [Fig 7, Table 1, July 4-14 2004])
@@ -181,6 +182,7 @@ HMA (13,14,15):
 '15.04045' # Lirung*^	       - good (McCarthy etal 2017 - thickness, Chand etal 2015 melt rates seasonally) 
 				      (Dahal 2015 Thesis  [April 6-16, 2004; Table 3.2 for heights Fig 4.11 - m w.e.d])
 				      (Gades et al. (2000) "0.5 m below the Rockwell to 3 m near the terminus")
+				      (Ragettli et al. 2015, debris thickness > 0.5 "too thick" to measure in 93% of the measurements)
 '15.04121' # Langtang	       - good
 '15.07886' # Hailuogou*^       - good (Zhang etal 2011, debris thickness data [fig 2] and melt data [fig 5c] underestimated)
 				      (Zhang et al. 2016 - Hailougou glacier and a couple others (Dagongba and Xiaogongba) measured in 1982) 
@@ -192,7 +194,8 @@ South America (17):
 '17.13720' # Piramide	    - (Ayala etal 2016): use QGIS and map to get the distances roughly, then center over the DCG
 
 New Zealand (18):
-'18.02397' # Franz Josef*   - (Brook etal 2013, debris thickness [Fig 4] and melt rates from February 7-16 2012 [Table 1])
+'18.02397' # Franz Josef*^  - (Brook etal 2013, debris thickness [Fig 4] and melt rates from February 7-16 2012 [Table 1])
+'18.02375' # Fox*	    - (Brook etal 2012, ablation from 11/23/2007 - 12/03/20017 from 11 stakes, Figure 4a)
 '18.02342' # Tasman	    - (Kirkbride 1989, 150 measurements of debris over lower 10 km [fig 2.18]; melt rate estimated from field data [Table 
 			       2.20, fig 2.17, fig 2.2 shows stake locations])
 			      (Kirkbride and Warren 1999, 15 debris thickness measurements (and estimated melt rate) from 1986)
@@ -250,8 +253,11 @@ Limitations/issues:
   - Errors with debris cover extent, e.g., Suldenferner prevent robust comparison with del Gobbo (2017)
       Suldenferner (RGI60-11.01604): clear case of poor glacier boundary
          --> good reason not to clip the debris thickness maps
+      Hailougou (RGI60-15.07886): clear case of rock outcrops in accumulation being debris
+         --> hence whey calibration is performed "without jumps"
   - Errors associated with different DEM sources
   - Errors associated with different time periods (elevation may have changed or the debris thickness too)
+  - Most debris thicknesses from center of glacier, while binned data includes entire width including moraine which are typically thicker
 
 
 Discussion:

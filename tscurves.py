@@ -191,8 +191,14 @@ def main(list_packed_vars):
         else:
             lat_str = 'N-'
         latlon_str = str(int(abs(lat_deg*100))) + lat_str + str(int(lon_deg*100)) + 'E-'
+        if debris_prms.experiment_no == 3:
+            mc_str = ''
+        else:
+            mc_str = str(int(debris_prms.mc_simulations)) + 'MC_'
+            
         # Raw meltmodel output filename
-        ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + debris_prms.date_start + '.nc'
+#        ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + debris_prms.date_start + '.nc'
+        ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + mc_str + debris_prms.date_start + '.nc'
         # Output processed surface temperature curve dataset
         ds_tscurve_fn = debris_prms.output_ts_fn_sample.replace('XXXX', latlon_str)
         

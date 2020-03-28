@@ -21,19 +21,19 @@ ostrem_fp = main_directory + '/../output/ostrem_curves/'
 ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
-#roi = '01'
+#roi = '01' 
 #roi = '02'
 #roi = '03'
 #roi = '04'
 #roi = '05'
-#roi = '06'
+roi = '06'
 #roi = '07'
-#roi = '08'
+#roi = '08' 
 #roi = '09'
 #roi = '10'
 #roi = '11'
 #roi = '12'
-roi = 'HMA'
+#roi = 'HMA'
 #roi = '16'
 #roi = '17'
 #roi = '18'
@@ -45,7 +45,7 @@ debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
 debris_thickness_all[1] = 0.02
 
 # Experiment number 3 is single run, 4 is Monte Carlo simulations 
-experiment_no = 3
+experiment_no = 4
 if experiment_no == 4:
     mc_simulations = 100
     mc_stat_cns = ['mean', 'std', 'med', 'mad']
@@ -66,7 +66,7 @@ eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
 #latlon_list = [(47.0, 10.75)]   # Vernagtferner (11.00719)
 #latlon_list = [(46.0, 7.5)]     # Arolla (11.02810)
 #latlon_list = [(46.0, 8.0)]     # Belvedere (11.02858)
-#latlon_list = [(46.25, 10.5)]   # Venerocolo (11.03005)
+#latlon_list = [(46.25, 10.5)]   # Venerocolo (11.02472)
 #latlon_list = [(46.5, 10.5)]    # Miage (11.03005)
 #latlon_list = [(43.0, 43.5)]    # Zopkhito (12.01012)
 #latlon_list = [(43.25, 42.75)]  # Djankuat (12.01132)
