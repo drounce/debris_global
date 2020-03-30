@@ -965,7 +965,7 @@ if option_hd_comparison:
 #    glaciers = ['13.43165', '13.43174', '13.43207']
 #    glaciers = ['2.14297']
 #    glaciers = ['15.04045']
-    glaciers = ['18.02397']
+#    glaciers = ['18.02397']
     
 
     process_files = False
@@ -1584,13 +1584,12 @@ if option_hd_comparison:
         hd_tick_major, hd_tick_minor = 0.5, 0.25
         fig_fullfn = hd_compare_fp + 'hd_compare-all.png'
         
-        marker_list = ['o', 'D', '^', 's', 'p', 'P', '*', 'h', 'X', 'd', 'v', '<', '>', 'H', '8']
+        marker_list = ['P', 'X', 'o', '<', 'v', '>', '^', 'd', 'h', 'p', 'D', '*',  'H', '8']
 
         fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
-        # Inset axis over main axis
-        ax_inset = plt.axes([1.01, 0.15, 0.3, 0.3])
+        ax_inset = plt.axes([1.01, 0.125, 0.38, 0.38])
         reg_str_list = []
-        count_reg = 0
+        count_reg = -1
         for ndata in hd_compare_all.index.values:
             reg_str = str(int(hd_compare_all.loc[ndata,'region'])).zfill(2)
             if reg_str not in reg_str_list:
@@ -1609,7 +1608,7 @@ if option_hd_comparison:
             lws_err = [x/2 for x in lws]
 #            lws_err = [0.1, 0.35, 0.7, 1]
             obs_count = hd_compare_all.loc[ndata,'obs_count']
-            if obs_count <= 5:
+            if obs_count < 5:
                 s_plot = s_sizes[0]
                 lw = lws[0]
                 lw_err = lws_err[0]
@@ -1670,10 +1669,14 @@ if option_hd_comparison:
         ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
         ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
         # Legend
-        leg = ax[0,0].legend(loc='upper left', ncol=2, fontsize=10, frameon=True, handlelength=1, 
+        obs_labels = ['< 5', '5 - 25', '25-100', '> 100']
+        for nlabel, obs_label in enumerate(obs_labels):
+            ax[0,0].scatter([10],[10], color='k', marker='s', linewidth=lws[nlabel], facecolor='none', 
+                         s=s_sizes[nlabel], zorder=3, label=obs_label)
+        leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=True, handlelength=1, 
                              handletextpad=0.15, columnspacing=0.5, borderpad=0.25, labelspacing=0.5, 
-                             bbox_to_anchor=(1.1, 1.02))
-        for nmarker in np.arange(0,count_reg):            
+                             bbox_to_anchor=(1.05, 1.05), title='Region      $n_{obs}$')
+        for nmarker in np.arange(0,count_reg+1):
             leg.legendHandles[nmarker]._sizes = [30]
             leg.legendHandles[nmarker]._linewidths = [0.5]
         fig.set_size_inches(3.45,3.45)
