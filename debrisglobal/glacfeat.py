@@ -331,7 +331,8 @@ class GlacFeat:
         #Get global glacier mask
         #Want this to be True over ALL glacier surfaces, not just the current polygon
 #        glac_shp_lyr_mask = geolib.lyr2mask(glac_shp_lyr, ds_dict['ice_thick'])
-        dc_shp_lyr_mask = geolib.lyr2mask(dc_shp_lyr, ds_dict['ice_thick'])
+        if dc_shp_lyr is not None:
+            dc_shp_lyr_mask = geolib.lyr2mask(dc_shp_lyr, ds_dict['ice_thick'])
 
         if 'z1' in ds_dict:
             #This is False over glacier polygon surface, True elsewhere - can be applied directly
@@ -341,8 +342,12 @@ class GlacFeat:
             self.res = geolib.get_res(ds_dict['z1'])
 
             # Debris cover
-            self.dc_mask = np.ma.mask_or(dc_shp_lyr_mask, glac_geom_mask)
-            self.dc_area = np.ma.array(iolib.ds_getma(ds_dict['z1']), mask=self.dc_mask)
+            if dc_shp_lyr is not None:
+                self.dc_mask = np.ma.mask_or(dc_shp_lyr_mask, glac_geom_mask)
+                self.dc_area = np.ma.array(iolib.ds_getma(ds_dict['z1']), mask=self.dc_mask)
+            else:
+                self.dc_mask = None
+                self.dc_area = None
 
             if verbose:
                 print('\n\n# z1 pixels:', self.z1.count(), '\n')
@@ -431,8 +436,11 @@ class GlacFeat:
             self.ts.mask = np.ma.mask_or(glac_geom_mask, 
                                          np.ma.getmask(np.ma.masked_array(self.ts.data, np.isnan(self.ts.data))))
             # Debris only
-            self.dc_ts = self.ts.copy()
-            self.dc_ts.mask = self.dc_mask
+            if dc_shp_lyr is not None:
+                self.dc_ts = self.ts.copy()
+                self.dc_ts.mask = self.dc_mask
+            else:
+                self.dc_ts = None
         else:
             self.ts = None
             self.dc_ts = None
@@ -444,9 +452,13 @@ class GlacFeat:
             self.mb = self.dhdt.copy() * debris_prms.density_ice / debris_prms.density_water
 
             # Debris only
-            self.dc_dhdt = np.ma.array(iolib.ds_getma(ds_dict['dhdt']), mask=glac_geom_mask_copy)
-            self.dc_dhdt.mask = self.dc_mask
-            self.dc_mb = self.dc_dhdt.copy() * debris_prms.density_ice / debris_prms.density_water
+            if dc_shp_lyr is not None:
+                self.dc_dhdt = np.ma.array(iolib.ds_getma(ds_dict['dhdt']), mask=glac_geom_mask_copy)
+                self.dc_dhdt.mask = self.dc_mask
+                self.dc_mb = self.dc_dhdt.copy() * debris_prms.density_ice / debris_prms.density_water
+            else:
+                self.dc_dhdt = None
+                self.dc_mb = None
 
         if 'debris_thick_ts' in ds_dict:
             # Load debris thickness map

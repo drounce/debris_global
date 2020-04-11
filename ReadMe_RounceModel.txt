@@ -176,7 +176,7 @@ HMA (13,14,15):
 '15.03733' # Khumbu* 	       - good (Gades etal 2000 referencing Nakawo et al 1986 "less than 0.1 m below the icefall to more than 2 m near the terminus")
 			 	      (Kayastha etal 2000, melt rates - Table 1, excellent fit)
 				      (Soncini etal 2016 up to 3.0 m with a mean value of 0.35 m (n = 64))
-				      (Soncini tal 2016 have ablation stake data as well)
+				      (Soncini etal 2016 have ablation stake data as well)
 				      (Buizza 2014 - ablation rates, but not really usable, very thin debris)
 '15.03734' # Changri Nup       - good
 '15.04045' # Lirung*^	       - good (McCarthy etal 2017 - thickness, Chand etal 2015 melt rates seasonally) 
@@ -279,6 +279,23 @@ Test extrapolation method by comparing Ngozumpa and some other well-known glacie
 
 
 
+
+
+
+# ===== COMMENTS FROM CO-AUTHORS =====
+
+Figure 3:
+
+- Maybe the globe is easier to see if the continents where shaded in very light grey (then the grey circles would need a different color.
+
+- Also ‘Debris cover  (%) is not precise enough. Debris cover area
+
+- Does it make sense to make the debris thickness brown ? signifying dirt?
+
+
+- I think that your blobs that represents the percentage of debris cover are not easy to read. I would recommend to use instead a pie chart with 2 parts (debris and non debris cover), the area or radius of the pie would be proportional to the total area of the glaciers. 
+
+- I would have the debris melt factor in warm color (red or salmon) - I feel that “melting" should be associated with warm colors. I also propose that the histograms (at least the 2 main ones on the map) could use a color ramp (ex: from white for 0 to red for 1) even if it provides the same information as theirs lengths. The idea behind is that the bar lengths are sometimes difficult to compare visually between regions and that color gradient helps. Thus, the reader would directly identify the most important regions at the first quick look.
 
 
 
