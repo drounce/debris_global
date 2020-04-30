@@ -17,10 +17,11 @@ import os
 #import rasterio
 #import gdal
 import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
-#from scipy.stats import linregress
+from scipy.stats import linregress
 from scipy.stats import median_absolute_deviation
 import xarray as xr
 
@@ -31,12 +32,14 @@ from meltcurves import melt_fromdebris_func
 #%%% ===== SCRIPT OPTIONS =====
 option_melt_comparison = False
 option_hd_comparison = True
+option_hd_centerline = False
 option_hd_spatial_compare = False
 
 hd_obs_fp = debris_prms.main_directory + '/../hd_obs/'
 
 melt_compare_fp = debris_prms.main_directory + '/../hd_obs/figures/hd_melt_compare/'
 hd_compare_fp = debris_prms.main_directory + '/../hd_obs/figures/hd_obs_compare/'
+hd_centerline_fp = debris_prms.main_directory + '/../hd_obs/centerline_hd/'
 
 if os.path.exists(melt_compare_fp) == False:
     os.makedirs(melt_compare_fp)
@@ -234,7 +237,7 @@ if option_melt_comparison:
 #    glaciers = ['10.01732']
 #    glaciers = ['13.43165']
 #    glaciers = ['11.02472']
-    glaciers = ['12.01132']
+    glaciers = ['11.03005']
     
     print('add comparison to Haidong etal 2006')
 
@@ -976,27 +979,36 @@ if option_melt_comparison:
 
 #%%
 if option_hd_comparison: 
-    print('\nNeed to add 10.01732 when North Asia has been run \n')
-    
     # All glaciers
     glaciers = ['1.15645', '2.14297', '7.01044', '7.01107', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
                 '12.01132', '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042', '15.03473', 
                 '15.03733', '15.03743', '15.04045', '15.07886', '15.11758', '17.13720', '18.02397']
     # Good glaciers for publication quality figure
+#    glaciers = ['1.15645', '2.14297', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
+#                '12.01132', '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042',
+#                '15.03733', '15.03473','15.04045', '15.07886', '15.11758', '17.13720', '18.02397']
     glaciers = ['1.15645', '2.14297', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
-                '12.01132', '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042', '15.03473', 
-                '15.03733', '15.03473','15.04045', '15.07886', '15.11758', '17.13720', '18.02397']
+                '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042',
+                '15.03733', '15.03473','15.04045', '15.03743', '15.07886', '15.11758', '17.13720', '18.02397']
     # roughly estimated from maps
 #    glaciers = ['13.43165', '13.43174', '13.43207']
-#    glaciers = ['2.14297']
-#    glaciers = ['15.04045']
-#    glaciers = ['15.03733']
+#    glaciers = ['13.43165']
 
     process_files = True
     regional_hd_comparison = True
     bin_width = 50
+    n_obs_min = 5
 
     if process_files:
+        
+#        #%%
+#        glaciers_subset = [
+#                           '18.02397']
+#        hd_compare_all_subset = hd_compare_all[hd_compare_all['glacno'] == 2397]
+#        print('\nn_obs:', int(np.round(hd_compare_all_subset.obs_count.sum())), 
+#              '\ndensity:', np.round(hd_compare_all_subset.obs_count.sum() / hd_compare_all_subset.dc_bin_area_km2.sum(),1))
+#        #%%
+        
         
         hd_datasets_fp = hd_obs_fp + 'datasets/'
         hd_ds_dict = {'1.15645': [(hd_datasets_fp + '1.15645_kennicott_anderson_2019-hd.csv', 'Anderson 2019')], 
@@ -1019,7 +1031,7 @@ if option_hd_comparison:
                                    (hd_datasets_fp + '14.06794_minora2015-hd.csv', 'Minora 2015')],
                       '14.16042': [(hd_datasets_fp + '14.16042_patel2016-hd.csv', 'Patel 2016')],
                       '15.03473': [(hd_datasets_fp + '15.03473_nicholson2012-hd.csv', 'Nicholson 2012'), 
-                                   (hd_datasets_fp + '15.03473_nicholson2017-hd.csv', 'Nicholson 2017'),
+#                                   (hd_datasets_fp + '15.03473_nicholson2017-hd.csv', 'Nicholson 2017'),
                                    (hd_datasets_fp + '15.03473_nicholson2018_gokyo-hd.csv', 'Nicholson 2018'),
                                    (hd_datasets_fp + '15.03473_nicholson2018_margin-hd.csv', 'Nicholson 2018')],
                       '15.03733': [(hd_datasets_fp + '15.03733_gibson-hd.csv', 'Gibson 2014')],
@@ -1124,12 +1136,16 @@ if option_hd_comparison:
                             
                             # Ensure the glacier has data as well
                             if not np.isnan(hdts_df_med):
-                                print(glac_str, zbincenter, 
-                                      '  ', np.round(hd_bin_med,2), '+/-', np.round(hd_bin_mad,2), 'vs',
-                                      '  ', np.round(hdts_df_med,2), '+/-', np.round(hdts_df_mad,2))
+                                
+                                bin_dcarea_km2 = hdts_df.loc[hdts_df_idxs,'dc_bin_area_valid_km2'].sum()
+                                
+                                if obs_count > n_obs_min:
+                                    print(glac_str, int(zbincenter), obs_count,
+                                          '  ', np.round(hd_bin_med,2), '+/-', np.round(hd_bin_mad,2), 'vs',
+                                          '  ', np.round(hdts_df_med,2), '+/-', np.round(hdts_df_mad,2))
                                 
                                 bin_data = np.array([reg, glacno, zbincenter, obs_count, hd_bin_med, hd_bin_mad, 
-                                                     hdts_df_med, hdts_df_mad]).reshape(1,8)
+                                                     hdts_df_med, hdts_df_mad, bin_dcarea_km2]).reshape(1,9)
                                 
                                 if hd_compare_all_array is None:
                                     hd_compare_all_array = bin_data
@@ -1138,7 +1154,6 @@ if option_hd_comparison:
                                     
                 # ===== PROCESS SPECIFIC SITE/BIN =====
                 elif not hd_obs['elev'].isnull().any() and 'hd_m_std' in hd_obs.columns:
-                    
                     zbincenter_min = hdts_df.loc[0,'bin_center_elev_m']
                     zbincenter_max = hdts_df.loc[hdts_df.shape[0]-1,'bin_center_elev_m']
                     
@@ -1158,6 +1173,7 @@ if option_hd_comparison:
                             hdts_df_elevs = hdts_df['bin_center_elev_m'].values
                             hdts_df_idxs = np.where((hdts_df_elevs >= zmin) &
                                                     (hdts_df_elevs < zmax))[0]
+
                             hdts_list = []
                             for hdts_df_idx in hdts_df_idxs:
                                 bin_hdts_center = hdts_df.loc[hdts_df_idx,'hd_ts_med_m']
@@ -1173,19 +1189,23 @@ if option_hd_comparison:
                                         hdts_list_single = np.random.normal(loc=bin_hdts_center, scale=bin_hdts_spread, 
                                                                             size=(bin_hdts_count))
                                     hdts_list.extend(hdts_list_single)
-                                
+                                    
                             # Ensure the glacier has data as well
                             if len(hdts_list) > 0:
                                 hdts_array = np.array(hdts_list)
                                 hdts_df_med = np.median(hdts_array)
                                 hdts_df_mad = median_absolute_deviation(hdts_array)
-
-                                print(glac_str, zbincenter, 
-                                      '  ', np.round(hd_bin_med,2), '+/-', np.round(hd_bin_mad,2), 'vs',
-                                      '  ', np.round(hdts_df_med,2), '+/-', np.round(hdts_df_mad,2))
+                                
+                                bin_dcarea_km2 = hdts_df.loc[hdts_df_idxs,'dc_bin_area_valid_km2'].sum()
+                                
+                                if obs_count > n_obs_min:
+                                    print(glac_str, int(zbincenter), obs_count,
+                                          '  ', np.round(hd_bin_med,2), '+/-', np.round(hd_bin_mad,2), 'vs',
+                                          '  ', np.round(hdts_df_med,2), '+/-', np.round(hdts_df_mad,2))
                                 
                                 bin_data = np.array([reg, glacno, zbincenter, obs_count, hd_bin_med, hd_bin_mad, 
-                                                     hdts_df_med, hdts_df_mad]).reshape(1,8)
+                                                     hdts_df_med, hdts_df_mad, bin_dcarea_km2]).reshape(1,9)
+            
                                 
                                 if hd_compare_all_array is None:
                                     hd_compare_all_array = bin_data
@@ -1219,6 +1239,8 @@ if option_hd_comparison:
                             hdts_list_single = np.random.normal(loc=bin_hd_center, scale=bin_hd_spread, 
                                                                 size=(bin_hd_count))
                         hdts_list.extend(hdts_list_single)
+                        
+                    bin_dcarea_km2 = hdts_df.loc[hdts_df_idxs,'dc_bin_area_valid_km2'].sum()
 
                     hdts_array = np.array(hdts_list)
                     hdts_df_med = np.median(hdts_array)
@@ -1229,17 +1251,20 @@ if option_hd_comparison:
                     
                     # Ensure the glacier has data as well
                     if not np.isnan(hdts_df_med):
-                        print(glac_str, np.round(zbincenter), 
-                              '  ', np.round(hd_bin_med,2), '+/-', np.round(hd_bin_mad,2), 'vs',
-                              '  ', np.round(hdts_df_med,2), '+/-', np.round(hdts_df_mad,2))
+                        if obs_count > n_obs_min:
+                            print(glac_str, int(zbincenter), obs_count,
+                                  '  ', np.round(hd_bin_med,2), '+/-', np.round(hd_bin_mad,2), 'vs',
+                                  '  ', np.round(hdts_df_med,2), '+/-', np.round(hdts_df_mad,2))
                         
                         bin_data = np.array([reg, glacno, zbincenter, obs_count, hd_bin_med, hd_bin_mad, 
-                                             hdts_df_med, hdts_df_mad]).reshape(1,8)
+                                             hdts_df_med, hdts_df_mad, bin_dcarea_km2]).reshape(1,9)
                         hd_compare_all_array = bin_data
             
                 # EXPORT DATASET
+#                hd_compare_all_cns = ['region', 'glacno', 'zbin', 'obs_count', 'hd_obs_med', 'hd_obs_mad', 
+#                                      'hd_ts_med_m', 'hd_ts_mad_m']
                 hd_compare_all_cns = ['region', 'glacno', 'zbin', 'obs_count', 'hd_obs_med', 'hd_obs_mad', 
-                                      'hd_ts_med_m', 'hd_ts_mad_m']
+                                      'hd_ts_med_m', 'hd_ts_mad_m', 'dc_bin_area_km2']
                 hd_compare_all = pd.DataFrame(hd_compare_all_array, columns=hd_compare_all_cns)
                 hd_compare_all['hd_ds_name'] = ds_name
                 hd_compare_all['glac_str'] = glac_str
@@ -1392,198 +1417,13 @@ if option_hd_comparison:
                 hd_fns.append(i)
         hd_fns = sorted(hd_fns)
 
-        # ------ NORTHERN GLACIERS ------
-        reg_prefix = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        hd_compare_all = None
-        hd_fns_reg = []
-        for i in hd_fns:
-            if int(i.split('.')[0]) in reg_prefix:
-                hd_fns_reg.append(i)
-                hd_compare = pd.read_csv(hd_processed_fp + i)
-                
-                if hd_compare_all is None:
-                    hd_compare_all = hd_compare
-                else:
-                    hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
-        hd_compare_all.reset_index(inplace=True, drop=True)
-        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
-                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
-                                      for x in hd_compare_all.index.values]
-          
-        hd_min, hd_max = 0, 2.2
-        hd_tick_major, hd_tick_minor = 0.5, 0.1
-        fig_fullfn = hd_compare_fp + 'hd_compare-north.png'
-        plot_regional_hd_obs_comparison(hd_compare_all, fig_fullfn, hd_min=hd_min, hd_max=hd_max, 
-                                        hd_tick_major=hd_tick_major, hd_tick_minor=0.05)
 
-        # ------ EUROPEAN GLACIERS ------
-        reg_prefix = [11]
-        hd_compare_all = None
-        hd_fns_reg = []
-        for i in hd_fns:
-            if int(i.split('.')[0]) in reg_prefix:
-                hd_fns_reg.append(i)
-                hd_compare = pd.read_csv(hd_processed_fp + i)
-                
-                if hd_compare_all is None:
-                    hd_compare_all = hd_compare
-                else:
-                    hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
-        hd_compare_all.reset_index(inplace=True, drop=True)
-          
-        hd_min, hd_max = 0, 1.15
-        hd_tick_major, hd_tick_minor = 0.25, 0.05
-        fig_fullfn = hd_compare_fp + 'hd_compare-europe.png'
-        plot_regional_hd_obs_comparison(hd_compare_all, fig_fullfn, hd_min=hd_min, hd_max=hd_max, 
-                                        hd_tick_major=hd_tick_major, hd_tick_minor=0.05)
-        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
-                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
-                                      for x in hd_compare_all.index.values]
-        
-        # ------ ASIAN GLACIERS -----
-        reg_prefix = [10,12,13,14,15]
-        hd_compare_all = None
-        hd_fns_reg = []
-        for i in hd_fns:
-            if int(i.split('.')[0]) in reg_prefix:
-                hd_fns_reg.append(i)
-                hd_compare = pd.read_csv(hd_processed_fp + i)
-                
-                if hd_compare_all is None:
-                    hd_compare_all = hd_compare
-                else:
-                    hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
-        hd_compare_all.reset_index(inplace=True, drop=True)
-        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
-                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
-                                      for x in hd_compare_all.index.values]
-          
-        hd_min, hd_max = 0, 4
-        hd_tick_major, hd_tick_minor = 0.5, 0.1
-        fig_fullfn = hd_compare_fp + 'hd_compare-asia.png'
-        plot_regional_hd_obs_comparison(hd_compare_all, fig_fullfn, hd_min=hd_min, hd_max=hd_max, 
-                                        hd_tick_major=hd_tick_major, hd_tick_minor=0.05)
-        
-        # ------ SOUTHERN GLACIERS -----
-        reg_prefix = [16, 17, 18]
-        hd_compare_all = None
-        hd_fns_reg = []
-        for i in hd_fns:
-            if int(i.split('.')[0]) in reg_prefix:
-                hd_fns_reg.append(i)
-                hd_compare = pd.read_csv(hd_processed_fp + i)
-                
-                if hd_compare_all is None:
-                    hd_compare_all = hd_compare
-                else:
-                    hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
-        hd_compare_all.reset_index(inplace=True, drop=True)
-        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
-                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
-                                      for x in hd_compare_all.index.values]
-          
-        hd_min, hd_max = 0, 0.75
-        hd_tick_major, hd_tick_minor = 0.25, 0.05
-        fig_fullfn = hd_compare_fp + 'hd_compare-south.png'
-        plot_regional_hd_obs_comparison(hd_compare_all, fig_fullfn, hd_min=hd_min, hd_max=hd_max, 
-                                        hd_tick_major=hd_tick_major, hd_tick_minor=0.05)
 
 #%%
-        # ------ WELL-MEASURED GLACIERS -----
-        glaciers_subset = ['1.15465', '11.01604', '11.02810', '12.01132', '14.06794', '15.03473', '15.04045', '15.07886']
-        hd_compare_all = None
-        hd_fns_subset = []
-        for i in hd_fns:
-            if i.split('_')[0] in glaciers_subset:
-                hd_fns_subset.append(i)
-                hd_compare = pd.read_csv(hd_processed_fp + i)
-                
-                if hd_compare_all is None:
-                    hd_compare_all = hd_compare
-                else:
-                    hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
-        hd_compare_all.reset_index(inplace=True, drop=True)
-        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
-                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
-                                      for x in hd_compare_all.index.values]
-          
-        hd_min, hd_max = 0, 4
-        hd_tick_major, hd_tick_minor = 0.5, 0.25
-        fig_fullfn = hd_compare_fp + 'hd_compare-wellmeasured.png'
-        
-        marker_list = ['o', 'D', '^', 's', 'p', 'P', '*', 'h', 'X', 'd', 'v', '<', '>', 'H', '8']
-
-        fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
-        # Inset axis over main axis
-        ax_inset = plt.axes([1.01, 0.15, 0.3, 0.3])
-        glac_str_list = []
-        count_glac = 0
-        for ndata in hd_compare_all.index.values:
-            glac_str = hd_compare_all.loc[ndata,'glac_str']
-            if glac_str not in glac_str_list:
-                label_str = glac_str
-                glac_str_list.append(glac_str)
-                count_glac += 1
-            else:
-                label_str = None
-
-            marker = marker_list[count_glac]
-            ax[0,0].scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
-                            hd_compare_all.loc[ndata,'hd_ts_med_m'], 
-                            color='k', marker=marker, linewidth=0.5, facecolor='none', s=30, zorder=3, label=label_str)
-            ax[0,0].errorbar(hd_compare_all.loc[ndata,'hd_obs_med'], 
-                             hd_compare_all.loc[ndata,'hd_ts_med_m'], 
-                             xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
-                             yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
-                             capsize=1, capthick=0.5, linewidth=0.5, color='darkgrey', zorder=2)
-            
-                
-            ax_inset.scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
-                             hd_compare_all.loc[ndata,'hd_ts_med_m'], 
-                             color='k', marker=marker, linewidth=0.5, facecolor='none', s=10, zorder=3)
-            ax_inset.errorbar(hd_compare_all.loc[ndata,'hd_obs_med'], 
-                              hd_compare_all.loc[ndata,'hd_ts_med_m'], 
-                              xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
-                              yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
-                              capsize=1, capthick=0.2, linewidth=0.1, color='darkgrey', zorder=2)
-                
-        # Inset plot
-        ax_inset.plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
-        ax_inset.set_xlim([0,0.5])
-        ax_inset.set_ylim([0,0.5])
-        ax_inset.xaxis.set_major_locator(plt.MultipleLocator(0.25))
-        ax_inset.yaxis.set_major_locator(plt.MultipleLocator(0.25))
-        ax_inset.xaxis.set_minor_locator(plt.MultipleLocator(0.05))
-        ax_inset.yaxis.set_minor_locator(plt.MultipleLocator(0.05))
-        ax_inset.set_xticklabels(['', '0.0','','0.5']) 
-        ax_inset.set_yticklabels(['', '0.0','','0.5']) 
-            
-        # Labels
-        ax[0,0].set_xlabel('Observed $h_d$ (m)', size=12)    
-        ax[0,0].set_ylabel('Modeled $h_d$ (m)', size=12)
-        ax[0,0].set_xlim(hd_min,hd_max)
-        ax[0,0].set_ylim(hd_min,hd_max)
-        ax[0,0].plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
-        ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
-        ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))  
-        ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
-        ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))
-#        # Tick parameters
-        ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
-        ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
-        # Legend
-        ax[0,0].legend(loc='upper left', ncol=1, fontsize=10, frameon=True, handlelength=1, 
-                       handletextpad=0.15, columnspacing=0.5, borderpad=0.25, labelspacing=0.5, 
-                       bbox_to_anchor=(1.1, 1.02))
-        fig.set_size_inches(3.45,3.45)
-        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
-        
-        
-        #%%
-        # ------ ALL GLACIERS -----
+        # ------ WELL-MEASURED ONLY (based on mininum number of observations) ----
         glaciers_subset = ['1.15645', '2.14297', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
                            '12.01132', '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042', 
-                           '15.03473', '15.03733', '15.03743' '15.04045', '15.07886', '15.11758', '17.13720', 
+                           '15.03473', '15.03733', '15.03743', '15.04045', '15.07886', '15.11758', '17.13720', 
                            '18.02397']
         hd_compare_all = None
         hd_fns_subset = []
@@ -1598,10 +1438,40 @@ if option_hd_comparison:
             else:
                 hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
         hd_compare_all.reset_index(inplace=True, drop=True)
+        # Only bins with minimum number of observations
+        hd_compare_all = hd_compare_all[hd_compare_all['obs_count'] >= n_obs_min]
+        hd_compare_all.reset_index(inplace=True, drop=True)
         hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
                                       str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
                                       for x in hd_compare_all.index.values]
-        hd_compare_all = hd_compare_all.sort_values('region')  
+        hd_compare_all = hd_compare_all.sort_values('region') 
+        hd_compare_all['n_density'] = hd_compare_all['obs_count'] / hd_compare_all['dc_bin_area_km2']
+        
+        # Correlation
+        slope, intercept, r_value, p_value, std_err = linregress(hd_compare_all['hd_obs_med'].values, 
+                                                                 hd_compare_all['hd_ts_med_m'].values)
+        print('hd compare: r = ' + str(np.round(r_value,2)), '(p = ' + str(np.round(p_value,3)) + 
+              ', slope = ' + str(np.round(slope,2)) + ', intercept = ' + str(np.round(intercept,2)) + ')')
+        
+        # Root mean square error
+        # All 
+        rmse = (np.sum((hd_compare_all['hd_ts_med_m'].values - hd_compare_all['hd_obs_med'])**2) / 
+                hd_compare_all.shape[0])**0.5
+        print('RMSE analysis:')
+        # subset
+        rmse_hd_list = [(0,0.1), (0.1,0.5), (0.5,10)]
+        for rmse_hd in rmse_hd_list:
+            hd_compare_all_subset = hd_compare_all[(hd_compare_all['hd_obs_med'] >= rmse_hd[0]) & 
+                                                   (hd_compare_all['hd_obs_med'] < rmse_hd[1])]
+            rmse = (np.sum((hd_compare_all_subset['hd_ts_med_m'].values - hd_compare_all_subset['hd_obs_med'])**2) / 
+                    hd_compare_all_subset.shape[0])**0.5
+            print('  hd:', rmse_hd, '(n=' + str(hd_compare_all_subset.shape[0]) + ')', 'RMSE:', np.round(rmse,2))
+            
+            # Correlation
+            slope, intercept, r_value, p_value, std_err = linregress(hd_compare_all_subset['hd_obs_med'].values, 
+                                                                     hd_compare_all_subset['hd_ts_med_m'].values)
+            print('     r = ' + str(np.round(r_value,2)), '(p = ' + str(np.round(p_value,3)) + 
+                  ', slope = ' + str(np.round(slope,2)) + ', intercept = ' + str(np.round(intercept,2)) + ')')
         
         hd_min, hd_max = 0, 4
         hd_tick_major, hd_tick_minor = 0.5, 0.25
@@ -1623,41 +1493,56 @@ if option_hd_comparison:
 
             marker = marker_list[count_reg]
             
-            
-            # Size thresholds
-            s_sizes = [10, 20, 40, 80]
-#            lws = [0.1, 0.35, 0.7, 1]
-            lws = [0.5, 0.5, 1, 1]
-            lws_err = [0.1, 0.1, 0.5, 0.5]
-#            lws_err = [x/2 for x in lws]
-#            lws_err = [0.1, 0.35, 0.7, 1]
-            colors = ['lightgrey', 'black', 'limegreen', 'blue']
-            zorders = [3,4,5,6]
+            # Size thresholds   
+            s_sizes = [20, 40, 80]
+            lws = [0.5, 1, 1]
+            lws_err = [0.1, 0.5, 0.5]
+            colors = ['grey', '#31a354', '#3182bd']
+            zorders = [3,4,5]
             obs_count = hd_compare_all.loc[ndata,'obs_count']
-            if obs_count < 5:
+            if obs_count >= n_obs_min and obs_count < 25:
                 s_plot = s_sizes[0]
                 lw = lws[0]
                 lw_err = lws_err[0]
                 color = colors[0]
                 zorder = zorders[0]
-            elif obs_count < 25:
+            elif obs_count >= 25 and obs_count < 100:
                 s_plot = s_sizes[1]
                 lw = lws[1]
                 lw_err = lws_err[1]
                 color = colors[1]
                 zorder = zorders[1]
-            elif obs_count < 100:
+            elif obs_count >= 100:
                 s_plot = s_sizes[2]
                 lw = lws[2]
                 lw_err = lws_err[2]
                 color = colors[2]
                 zorder = zorders[2]
             else:
-                s_plot = s_sizes[3]
-                lw = lws[3]
-                lw_err = lws_err[3]
-                color = colors[3]
-                zorder = zorders[3]
+                print('NO COLOR')
+            
+#            # BASED ON OBSERVATION DENSITY
+#            obs_count = hd_compare_all.loc[ndata,'n_density']
+#            if obs_count < 100:
+#                s_plot = s_sizes[0]
+#                lw = lws[0]
+#                lw_err = lws_err[0]
+#                color = colors[0]
+#                zorder = zorders[0]
+#            elif obs_count >= 100 and obs_count < 500:
+#                s_plot = s_sizes[1]
+#                lw = lws[1]
+#                lw_err = lws_err[1]
+#                color = colors[1]
+#                zorder = zorders[1]
+#            elif obs_count >= 500:
+#                s_plot = s_sizes[2]
+#                lw = lws[2]
+#                lw_err = lws_err[2]
+#                color = colors[2]
+#                zorder = zorders[2]
+#            else:
+#                print('NO COLOR')
             
             ax[0,0].scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
                             hd_compare_all.loc[ndata,'hd_ts_med_m'], 
@@ -1667,7 +1552,7 @@ if option_hd_comparison:
                              hd_compare_all.loc[ndata,'hd_ts_med_m'], 
                              xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
                              yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
-                             capsize=1, capthick=lw_err, linewidth=lw_err, color=color, alpha=0.5, zorder=2)
+                             capsize=1, capthick=lw_err, linewidth=lw_err, color=color, alpha=1, zorder=2)
                
             if hd_compare_all.loc[ndata,'hd_obs_med'] < 0.5 and hd_compare_all.loc[ndata,'hd_ts_med_m'] < 0.5:
                 ax_inset.scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
@@ -1678,7 +1563,7 @@ if option_hd_comparison:
                                   hd_compare_all.loc[ndata,'hd_ts_med_m'], 
                                   xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
                                   yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
-                                  capsize=1, capthick=lw_err, linewidth=lw_err, color=color, alpha=0.5, zorder=2)
+                                  capsize=1, capthick=lw_err, linewidth=lw_err, color=color, alpha=1, zorder=2)
                 
         # Inset plot
         ax_inset.plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
@@ -1705,23 +1590,368 @@ if option_hd_comparison:
         ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
         ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
         # Legend
-        obs_labels = ['< 5', '5 - 25', '25-100', '> 100']
-        for nlabel, obs_label in enumerate(obs_labels):
-            ax[0,0].scatter([10],[10], color=colors[nlabel], marker='s', linewidth=lws[nlabel], facecolor=colors[nlabel], 
-                             s=s_sizes[nlabel], zorder=3, label=obs_label)
-        leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=True, handlelength=1, 
-                             handletextpad=0.15, columnspacing=0.5, borderpad=0.25, labelspacing=0.5, 
-                             bbox_to_anchor=(1.05, 1.05), title='Region         $n_{obs}$   ')
+        nlabel = 0
+        none_count = 5
+        # Hack to get proper columns
+        obs_labels = [None, str(n_obs_min) + '-25', '25-100', '> 100', None]
+        for obs_label in obs_labels:
+            if obs_label is None:
+                none_count += 1
+                ax[0,0].scatter([10],[10], color='k', marker='s', linewidth=1, 
+                                edgecolor='white', facecolor='white', s=1, zorder=3, label=' '*none_count)
+            else:
+                ax[0,0].scatter([10],[10], color=colors[nlabel], marker='s', linewidth=lws[nlabel], 
+                                facecolor=colors[nlabel], s=s_sizes[nlabel], zorder=3, label=obs_label)
+                nlabel += 1
+        leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=False, handlelength=1, 
+                             handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
+                             bbox_to_anchor=(1.035, 1.0), title=' ')
         for nmarker in np.arange(0,count_reg+1):
             leg.legendHandles[nmarker]._sizes = [30]
             leg.legendHandles[nmarker]._linewidths = [0.5]
             leg.legendHandles[nmarker].set_edgecolor('k')
-        ax[0,0].axvline(x=5.52, ymin=0.55, ymax=1.02, clip_on=False, color='k', linewidth=1)
+        ax[0,0].text(1.21, 0.95, 'Region', size=10, horizontalalignment='center', verticalalignment='top', 
+                     transform=ax[0,0].transAxes)
+        ax[0,0].text(1.5, 0.95, '$n_{obs}$', size=10, horizontalalignment='center', verticalalignment='top', 
+                     transform=ax[0,0].transAxes)
+        # Create a Rectangle patch
+        rect = FancyBboxPatch((4.35,2.35),2.1,1.45,linewidth=1, edgecolor='lightgrey', facecolor='none', clip_on=False,
+                              boxstyle='round, pad=0.1')
+        ax[0,0].add_patch(rect)
+        ax[0,0].axvline(x=5.45, ymin=0.565, ymax=0.97, clip_on=False, color='lightgrey', linewidth=1)
         fig.set_size_inches(3.45,3.45)
-        fig_fullfn = hd_compare_fp + 'hd_compare-all.png'
-        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
+        fig_fullfn = hd_compare_fp + 'hd_compare-wellmeasured_lowres.png'
+        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=150)
+        
+        #%%
+        fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
+        hd_compare_all['hd_obs_minus_mod'] = hd_compare_all.hd_obs_med - hd_compare_all.hd_ts_med_m
+
+        hd_compare_all_subset = hd_compare_all[((hd_compare_all['n_density'] > 100) & 
+                                                 (hd_compare_all['n_density'] < 2000))]
+        ax[0,0].scatter(hd_compare_all_subset['n_density'].values, hd_compare_all_subset['hd_obs_minus_mod'].values)
+#        ax[0,0].scatter(hd_compare_all['n_density'].values, hd_compare_all['hd_obs_minus_mod'].values)
+        
+        # Correlation
+        slope, intercept, r_value, p_value, std_err = linregress(hd_compare_all_subset['n_density'].values, 
+                                                                 hd_compare_all_subset['hd_obs_minus_mod'].values)
+        print('hd compare: r = ' + str(np.round(r_value,2)), '(p = ' + str(np.round(p_value,3)) + 
+              ', slope = ' + str(np.round(slope,3)) + ', intercept = ' + str(np.round(intercept,2)) + ')')
+            
+        # Labels
+        ax[0,0].set_xlabel('Observed $h_d$ (m)', size=12)    
+        ax[0,0].set_ylabel('Modeled $h_d$ (m)', size=12)
+#        ax[0,0].set_xlim(0,1000)
+
+        fig.set_size_inches(3.45,3.45)
+        fig_fullfn = hd_compare_fp + 'hd_dif_ndensity.png'
+        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=150)
+        
+
+        #%%
+        # ------ ALL GLACIERS -----
+#        glaciers_subset = ['1.15645', '2.14297', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
+#                           '12.01132', '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042', 
+#                           '15.03473', '15.03733', '15.03743', '15.04045', '15.07886', '15.11758', '17.13720', 
+#                           '18.02397']
+#        hd_compare_all = None
+#        hd_fns_subset = []
+#        for i in hd_fns:
+#            if i.split('_')[0] in glaciers_subset:
+#                hd_fns_subset.append(i)
+#        hd_fns_subset = sorted(hd_fns_subset)
+#        for hd_fn in hd_fns_subset:
+#            hd_compare = pd.read_csv(hd_processed_fp + hd_fn)
+#            if hd_compare_all is None:
+#                hd_compare_all = hd_compare
+#            else:
+#                hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
+#        hd_compare_all.reset_index(inplace=True, drop=True)
+#        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
+#                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
+#                                      for x in hd_compare_all.index.values]
+#        hd_compare_all = hd_compare_all.sort_values('region')  
+#        
+#        hd_min, hd_max = 0, 4
+#        hd_tick_major, hd_tick_minor = 0.5, 0.25
+#        
+#        marker_list = ['P', 'X', 'o', '<', 'v', '>', '^', 'd', 'h', 'p', 'D', '*',  'H', '8']
+#
+#        fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
+#        ax_inset = plt.axes([1.01, 0.125, 0.38, 0.38])
+#        reg_str_list = []
+#        count_reg = -1
+#        for ndata in hd_compare_all.index.values:
+#            reg_str = str(int(hd_compare_all.loc[ndata,'region'])).zfill(2)
+#            if reg_str not in reg_str_list:
+#                label_str = reg_str
+#                reg_str_list.append(reg_str)
+#                count_reg += 1
+#            else:
+#                label_str = None
+#
+#            marker = marker_list[count_reg]
+#            
+#            
+#            # Size thresholds
+#            s_sizes = [10, 20, 40, 80]
+##            lws = [0.1, 0.35, 0.7, 1]
+#            lws = [0.5, 0.5, 1, 1]
+#            lws_err = [0.1, 0.1, 0.5, 0.5]
+##            lws_err = [x/2 for x in lws]
+##            lws_err = [0.1, 0.35, 0.7, 1]
+#            colors = ['lightgrey', 'k', 'limegreen', 'blue']
+#            zorders = [3,4,5,6]
+#            obs_count = hd_compare_all.loc[ndata,'obs_count']
+#            if obs_count < 5:
+#                s_plot = s_sizes[0]
+#                lw = lws[0]
+#                lw_err = lws_err[0]
+#                color = colors[0]
+#                zorder = zorders[0]
+#            elif obs_count < 25:
+#                s_plot = s_sizes[1]
+#                lw = lws[1]
+#                lw_err = lws_err[1]
+#                color = colors[1]
+#                zorder = zorders[1]
+#            elif obs_count < 100:
+#                s_plot = s_sizes[2]
+#                lw = lws[2]
+#                lw_err = lws_err[2]
+#                color = colors[2]
+#                zorder = zorders[2]
+#            else:
+#                s_plot = s_sizes[3]
+#                lw = lws[3]
+#                lw_err = lws_err[3]
+#                color = colors[3]
+#                zorder = zorders[3]
+#            
+#            ax[0,0].scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
+#                            hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+#                            color=color, marker=marker, linewidth=lw, facecolor='none', s=s_plot, zorder=zorder, 
+#                            label=label_str, clip_on=True)
+#            ax[0,0].errorbar(hd_compare_all.loc[ndata,'hd_obs_med'], 
+#                             hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+#                             xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
+#                             yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
+#                             capsize=1, capthick=lw_err, linewidth=lw_err, color=color, alpha=1, zorder=2)
+#               
+#            if hd_compare_all.loc[ndata,'hd_obs_med'] < 0.5 and hd_compare_all.loc[ndata,'hd_ts_med_m'] < 0.5:
+#                ax_inset.scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
+#                                 hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+#                                 color=color, marker=marker, linewidth=lw/2, facecolor='none', s=s_plot, zorder=zorder, 
+#                                 clip_on=True)
+#                ax_inset.errorbar(hd_compare_all.loc[ndata,'hd_obs_med'], 
+#                                  hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+#                                  xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
+#                                  yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
+#                                  capsize=1, capthick=lw_err, linewidth=lw_err, color=color, alpha=1, zorder=2)
+#                
+#        # Inset plot
+#        ax_inset.plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
+#        ax_inset.set_xlim([0,0.5])
+#        ax_inset.set_ylim([0,0.5])
+#        ax_inset.xaxis.set_major_locator(plt.MultipleLocator(0.25))
+#        ax_inset.yaxis.set_major_locator(plt.MultipleLocator(0.25))
+#        ax_inset.xaxis.set_minor_locator(plt.MultipleLocator(0.05))
+#        ax_inset.yaxis.set_minor_locator(plt.MultipleLocator(0.05))
+#        ax_inset.set_xticklabels(['', '0.0','','0.5']) 
+#        ax_inset.set_yticklabels(['', '0.0','','0.5']) 
+#            
+#        # Labels
+#        ax[0,0].set_xlabel('Observed $h_d$ (m)', size=12)    
+#        ax[0,0].set_ylabel('Modeled $h_d$ (m)', size=12)
+#        ax[0,0].set_xlim(hd_min,hd_max)
+#        ax[0,0].set_ylim(hd_min,hd_max)
+#        ax[0,0].plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
+#        ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
+#        ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))  
+#        ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
+#        ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))
+##        # Tick parameters
+#        ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+#        ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+#        # Legend
+#        obs_labels = ['< 5', '5 - 25', '25-100', '> 100']
+#        for nlabel, obs_label in enumerate(obs_labels):
+#            ax[0,0].scatter([10],[10], color=colors[nlabel], marker='s', linewidth=lws[nlabel], facecolor=colors[nlabel], 
+#                             s=s_sizes[nlabel], zorder=3, label=obs_label)
+#        leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=True, handlelength=1, 
+#                             handletextpad=0.15, columnspacing=0.5, borderpad=0.25, labelspacing=0.5, 
+#                             bbox_to_anchor=(1.05, 1.05), title='Region         $n_{obs}$   ')
+#        for nmarker in np.arange(0,count_reg+1):
+#            leg.legendHandles[nmarker]._sizes = [30]
+#            leg.legendHandles[nmarker]._linewidths = [0.5]
+#            leg.legendHandles[nmarker].set_edgecolor('k')
+#        ax[0,0].axvline(x=5.52, ymin=0.55, ymax=1.02, clip_on=False, color='k', linewidth=1)
+#        fig.set_size_inches(3.45,3.45)
+#        fig_fullfn = hd_compare_fp + 'hd_compare-all.png'
+#        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
+        
+#        # ------ NORTHERN GLACIERS ------
+#        reg_prefix = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+#        hd_compare_all = None
+#        hd_fns_reg = []
+#        for i in hd_fns:
+#            if int(i.split('.')[0]) in reg_prefix:
+#                hd_fns_reg.append(i)
+#                hd_compare = pd.read_csv(hd_processed_fp + i)
+#                
+#                if hd_compare_all is None:
+#                    hd_compare_all = hd_compare
+#                else:
+#                    hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
+#        hd_compare_all.reset_index(inplace=True, drop=True)
+#        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
+#                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
+#                                      for x in hd_compare_all.index.values]
+#          
+#        hd_min, hd_max = 0, 2.2
+#        hd_tick_major, hd_tick_minor = 0.5, 0.1
+#        fig_fullfn = hd_compare_fp + 'hd_compare-north.png'
+#        plot_regional_hd_obs_comparison(hd_compare_all, fig_fullfn, hd_min=hd_min, hd_max=hd_max, 
+#                                        hd_tick_major=hd_tick_major, hd_tick_minor=0.05)
+#
+#        # ------ EUROPEAN GLACIERS ------
+#        reg_prefix = [11]
+#        hd_compare_all = None
+#        hd_fns_reg = []
+#        for i in hd_fns:
+#            if int(i.split('.')[0]) in reg_prefix:
+#                hd_fns_reg.append(i)
+#                hd_compare = pd.read_csv(hd_processed_fp + i)
+#                
+#                if hd_compare_all is None:
+#                    hd_compare_all = hd_compare
+#                else:
+#                    hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
+#        hd_compare_all.reset_index(inplace=True, drop=True)
+#          
+#        hd_min, hd_max = 0, 1.15
+#        hd_tick_major, hd_tick_minor = 0.25, 0.05
+#        fig_fullfn = hd_compare_fp + 'hd_compare-europe.png'
+#        plot_regional_hd_obs_comparison(hd_compare_all, fig_fullfn, hd_min=hd_min, hd_max=hd_max, 
+#                                        hd_tick_major=hd_tick_major, hd_tick_minor=0.05)
+#        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
+#                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
+#                                      for x in hd_compare_all.index.values]
+#        
+#        # ------ ASIAN GLACIERS -----
+#        reg_prefix = [10,12,13,14,15]
+#        hd_compare_all = None
+#        hd_fns_reg = []
+#        for i in hd_fns:
+#            if int(i.split('.')[0]) in reg_prefix:
+#                hd_fns_reg.append(i)
+#                hd_compare = pd.read_csv(hd_processed_fp + i)
+#                
+#                if hd_compare_all is None:
+#                    hd_compare_all = hd_compare
+#                else:
+#                    hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
+#        hd_compare_all.reset_index(inplace=True, drop=True)
+#        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
+#                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
+#                                      for x in hd_compare_all.index.values]
+#          
+#        hd_min, hd_max = 0, 4
+#        hd_tick_major, hd_tick_minor = 0.5, 0.1
+#        fig_fullfn = hd_compare_fp + 'hd_compare-asia.png'
+#        plot_regional_hd_obs_comparison(hd_compare_all, fig_fullfn, hd_min=hd_min, hd_max=hd_max, 
+#                                        hd_tick_major=hd_tick_major, hd_tick_minor=0.05)
+#        
+#        # ------ SOUTHERN GLACIERS -----
+#        reg_prefix = [16, 17, 18]
+#        hd_compare_all = None
+#        hd_fns_reg = []
+#        for i in hd_fns:
+#            if int(i.split('.')[0]) in reg_prefix:
+#                hd_fns_reg.append(i)
+#                hd_compare = pd.read_csv(hd_processed_fp + i)
+#                
+#                if hd_compare_all is None:
+#                    hd_compare_all = hd_compare
+#                else:
+#                    hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
+#        hd_compare_all.reset_index(inplace=True, drop=True)
+#        hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
+#                                      str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
+#                                      for x in hd_compare_all.index.values]
+#          
+#        hd_min, hd_max = 0, 0.75
+#        hd_tick_major, hd_tick_minor = 0.25, 0.05
+#        fig_fullfn = hd_compare_fp + 'hd_compare-south.png'
+#        plot_regional_hd_obs_comparison(hd_compare_all, fig_fullfn, hd_min=hd_min, hd_max=hd_max, 
+#                                        hd_tick_major=hd_tick_major, hd_tick_minor=0.05)
         
     #%%
+if option_hd_centerline:
+    
+    n_obs_min = 10
+    
+    centerline_fns = []
+    glaciers = []
+    for i in os.listdir(hd_centerline_fp):
+        if i.endswith('.csv'):
+            centerline_fns.append(i)
+            glaciers.append(i.split('_')[0])
+    centerline_fns = sorted(centerline_fns)
+
+    hd_bin_fp = debris_prms.output_fp + '/mb_bins/csv/_wdebris_hdts/'
+    hd_bin_fp_extrap = debris_prms.output_fp + '/mb_bins/csv/_wdebris_hdts/'
+    
+    hd_fns = []
+    hd_processed_fp = hd_obs_fp + 'hd_processed/'
+    for i in os.listdir(hd_processed_fp):
+        if i.endswith('-processed.csv') and i.split('_')[0] in glaciers:
+            hd_fns.append(i)
+    hd_fns = sorted(hd_fns)
+    
+    
+    for centerline_fn in centerline_fns:
+#    for centerline_fn in [centerline_fns[1]]:
+        glac_str = centerline_fn.split('_')[0]
+        centerline_df = pd.read_csv(hd_centerline_fp + centerline_fn)
+        centerline_df = centerline_df.dropna(subset=['deb_thick'])
+        centerline_df.reset_index(inplace=True, drop=True)
+        
+        hd_fn = None
+        for i in hd_fns:
+            if i.startswith(glac_str):
+                hd_fn = i
+                
+        if hd_fn is not None:
+            hd_compare = pd.read_csv(hd_processed_fp + hd_fn)
+            hd_compare = hd_compare[hd_compare['obs_count'] >= n_obs_min]
+            hd_compare.reset_index(inplace=True, drop=True)
+        else:
+            print('no data')
+            
+        if hd_compare.shape[0] > 0:
+            print('\n' + glac_str)
+            hd_compare['cen_hd_mean'] = np.nan
+            hd_compare['cen_hd_med'] = np.nan
+            
+            for nbin, zbin in enumerate(hd_compare.zbin.values):
+                zbin_low = zbin - 25
+                zbin_high = zbin + 25
+                centerline_df_subset = centerline_df[((centerline_df['hgt'] >= zbin_low) & 
+                                                      (centerline_df['hgt'] < zbin_high))]
+                centerline_df_subset.reset_index(inplace=True, drop=True)
+                hd_compare.loc[nbin, 'cen_hd_mean'] = centerline_df_subset.deb_thick.mean()
+                hd_compare.loc[nbin, 'cen_hd_med'] = np.median(centerline_df_subset.deb_thick)
+            hd_compare['hd_obs_dif'] = hd_compare['hd_ts_med_m'] - hd_compare['hd_obs_med']
+            hd_compare['cen_obs_dif'] = hd_compare['cen_hd_med'] - hd_compare['hd_obs_med']
+            hd_compare['hd_cen_dif'] = hd_compare['hd_ts_med_m'] - hd_compare['cen_hd_med']
+        
+            print(np.round(hd_compare.loc[:,['zbin', 'hd_obs_med', 'hd_ts_med_m', 'cen_hd_med', 'hd_obs_dif',
+                                             'cen_obs_dif', 'hd_cen_dif']],2),'\n')
+        
+    
+    
+#%%
 #    # ===== INDIVIDUAL ELEVATION BIN COMPARISONS =====
 #    def plot_hd_obs_comparison(hd_compare_all_subset, glac_str, fig_fn, 
 #                               hd_min=0, hd_max=2, hd_tick_major=0.2, hd_tick_minor=0.05):

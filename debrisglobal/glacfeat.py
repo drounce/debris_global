@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Feb 26 08:41:09 2020
-
-@author: davidrounce
+ - original code came from David Shean (Shean et al. 2020)
+     code: https://github.com/dshean/hma_mb_paper, mb_paralel.py
+     paper: https://www.frontiersin.org/articles/10.3389/feart.2019.00363/
+- David Rounce modified the code to add options for incorporating debris cover, surface temperature, and thickness data
 """
 import os
 import re
@@ -91,7 +93,7 @@ class GlacFeat:
         self.perc_clean = np.nan
         self.perc_debris = np.nan
         self.perc_pond = np.nan
-
+        
     def geom_srs_update(self, srs=None):
         if self.glac_geom.GetSpatialReference() is None:
             if srs is None:
@@ -429,6 +431,19 @@ class GlacFeat:
                                             1.0/debris_prms.emvel_filter_pixsize**2))
             # Add to glacier feature
             self.emvel = np.ma.masked_array(emvel, mask=np.ma.getmask(self.z1))
+            
+            # Emergence velocity from Shean et al. (2020)
+#            if self.H is not None:
+#                #Compute flux
+#                self.Q = self.H * debris_prms.v_col_f * np.array([self.vx, self.vy])
+#                #Note: np.gradient returns derivatives relative to axis number, so (y, x) in this case
+#                #Want x-derivative of x component
+#                self.divQ = np.gradient(self.Q[0])[1] + np.gradient(self.Q[1])[0]
+#
+##                 gf.divQ = gf.H*(np.gradient(v_col_f*gf.vx)[1] + np.gradient(v_col_f*gf.vy)[0]) \
+##                         + v_col_f*gf.vx*(np.gradient(gf.H)[1]) + v_col_f*gf.vy*(np.gradient(gf.H)[0])
+#
+#                #Should smooth divQ, better handling of data gaps
 
         if 'ts' in ds_dict:
             #Load surface temperature maps
@@ -478,6 +493,7 @@ class GlacFeat:
     #%%
     def hist_plot(self, bin_width=50.0, dz_clim=(-2.0, 2.0), exportcsv=False, csv_ending='', mb_df=None, 
                   outdir_csv=None):
+        
         #print("Generating histograms")
         #Create bins for full range of input data and specified bin width
     

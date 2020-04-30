@@ -25,7 +25,7 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '02'
 #roi = '03'
 #roi = '04'
-#roi = '05'
+roi = '05'
 #roi = '06'
 #roi = '07'
 #roi = '08' 
@@ -33,7 +33,7 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '10'
 #roi = '11'
 #roi = '12'
-roi = 'HMA'
+#roi = 'HMA'
 #roi = '16'
 #roi = '17'
 #roi = '18'
@@ -45,7 +45,7 @@ debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
 debris_thickness_all[1] = 0.02
 
 # Experiment number 3 is single run, 4 is Monte Carlo simulations 
-experiment_no = 4
+experiment_no = 3
 if experiment_no == 4:
     mc_simulations = 100
     mc_stat_cns = ['mean', 'std', 'med', 'mad']
@@ -144,7 +144,7 @@ roi_dict_extrap = {'01': ['01'],
                    '05': ['05'],
                    '06': ['06'],
                    '07': ['07'],
-                   '08': ['08'],
+                   '08': ['05','06','07','08','09','11'],
                    '09': ['09'],
                    '10': ['10'],
                    '11': ['11'],
@@ -189,29 +189,38 @@ mb_fp_list_roi = {'01': [mcnabb_fp + '01/'],
                   '16': [braun_fp + 'SouthAmerica/'],
                   '17': [braun_fp + 'SouthAmerica/'],
                   '18': [braun_fp + '18/']}
-mb_yrfrac_dict = {'01': [2000.6, 2018.6],
+#mb_yrfrac_dict = {'01': [2000.6, 2018.6],
+#                  '02': [2000.128, 2012],
+#                  '03': [2000.6, 2018.6],
+#                  '04': [2000.6, 2018.6],
+#                  '05': [2000.6, 2018.6],
+#                  '06': [2000.6, 2018.6],
+#                  '07': [2000.6, 2018.6],
+#                  '08': [2000.6, 2018.6],
+#                  '09': [2000.6, 2018.6],
+#                  '10': [2000.128, 2012],
+#                  '11': [2000.128, 2013],
+#                  '12': [2000.128, 2012],
+#                  'HMA': [2000.6, 2018.6],
+#                  '16': [2000.128, 2013.128],
+#                  '17': [2000.128, 2013.128],
+#                  '18': [2000.128, 2013]}
+mb_yrfrac_dict = {'01': [2000.419, 2018.419],
                   '02': [2000.128, 2012],
-                  '03': [2000.6, 2018.6],
-                  '04': [2000.6, 2018.6],
-                  '05': [2000.6, 2018.6],
-                  '06': [2000.6, 2018.6],
-                  '07': [2000.6, 2018.6],
-                  '08': [2000.6, 2018.6],
-                  '09': [2000.6, 2018.6],
+                  '03': [2000.419, 2018.419],
+                  '04': [2000.419, 2018.419],
+                  '05': [2000.419, 2018.419],
+                  '06': [2000.419, 2018.419],
+                  '07': [2000.419, 2018.419],
+                  '08': [2000.419, 2018.419],
+                  '09': [2000.419, 2018.419],
                   '10': [2000.128, 2012],
                   '11': [2000.128, 2013],
                   '12': [2000.128, 2012],
-                  'HMA': [2000.6, 2018.6],
+                  'HMA': [2000.419, 2018.419],
                   '16': [2000.128, 2013.128],
                   '17': [2000.128, 2013.128],
                   '18': [2000.128, 2013]}
-#dhdt_fn_dict = {'01': main_directory + '/../mb_data/McNabb/01_rgi60_Alaska_ls_dh.tif',
-#                '02': None,
-#                '03': main_directory + '/../mb_data/McNabb/03_rgi60_ArcticCanadaNorth_ls_dh.tif',
-#                '11': main_directory + '/../mb_data/Braun/region_11_Europe_dh_dt_on_ice.tif',
-#                'HMA': main_directory + '/../mb_data/Shean/' + 
-#                       'dem_align_ASTER_WV_index_2000-2018_aea_trend_3px_filt_mos_retile.tif',
-#                '18': main_directory + '/../mb_data/Braun/region_18_NZ_dh_dt_on_ice.tif'}
 
 oggm_fp = main_directory + '/../oggm_project/debris_project/'
 width_min_dict = {'01': 240,
@@ -244,6 +253,18 @@ mb_binned_fp_wdebris = main_directory + '/../output/mb_bins/csv/_wdebris/'
 mb_binned_fp_wdebris_hdts = main_directory + '/../output/mb_bins/csv/_wdebris_hdts/'
 era5_hrly_fp = '/Volumes/LaCie_Raid/ERA5_hrly/'
 
+# Monthhly climate data
+era5_fp = '/Users/davidrounce/Documents/Dave_Rounce/HiMAT/Climate_data/ERA5/'
+era5_temp_fn = 'ERA5_temp_monthly.nc'
+era5_tempstd_fn = 'ERA5_tempstd_monthly.nc'
+era5_prec_fn = 'ERA5_totalprecip_monthly.nc'
+era5_elev_fn = 'ERA5_geopotential_monthly.nc'
+era5_lr_fn = 'ERA5_lapserates_monthly.nc'
+timestep = 'monthly'        # time step ('monthly' only option at present)
+rgi_lat_colname = 'CenLat'
+rgi_lon_colname = 'CenLon_360'
+
+# OGGM data
 oggm_ts_fp = oggm_fp + 'ts_dc/'
 oggm_ts_info_fp = oggm_fp + 'ts_info_dc/'
 
@@ -366,11 +387,11 @@ debrisperc_threshold = 50
 debriscover_fp = main_directory + '/../scherler_debris/LS8_2013-2017_RATIO/fixed_v2/'
 debriscover_fn_dict = {'01':'01_rgi60_L8ratio_fixed_v2.shp',
                        '02':'02_rgi60_L8ratio_fixed_v2.shp',
-                       '03':'03_rgi60_L8ratio_fixed_v2.shp',
+                       '03':'03_rgi60_L8ratio_fixed_v3.shp',
                        '04':'04_rgi60_L8ratio_fixed_v2.shp',
-                       '05':'05_rgi60_L8ratio_fixed_v2.shp',
+                       '05':'05_rgi60_L8ratio_fixed_v3.shp',
                        '06':'06_rgi60_L8ratio_fixed_v2.shp',
-                       '07':'07_rgi60_L8ratio_fixed_v2.shp',
+                       '07':'07_rgi60_L8ratio_fixed_v3.shp',
                        '08':'08_rgi60_L8ratio_fixed_v2.shp',
                        '09':'09_rgi60_L8ratio_fixed_v2.shp',
                        '10':'10_rgi60_L8ratio_fixed_v2.shp',

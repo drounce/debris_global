@@ -82,8 +82,6 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
     ---> identifies lat/lon of all glaciers with data (THIS SHOULD BE RUN FIRST SO CAN SELECT INDIVIDUAL LAT/LON)
     ---> adds debris cover elevation statistics for each lat/lon to the ERA5 dataset
 
-      --> (now in debris_stats) HMA_emergence_velocity.ipynb: estimate binned emergence velocities
-
 2. meltmodel_global.py: 
     ---> run model to get melt/Ts/snow at every timestep
 
@@ -107,10 +105,11 @@ Model details: the meltmodel.py script runs the code from Rounce et al. (2015) w
   - ERA5_preprocess_looplatlon.py
   - process_mb_bin.ipynb
   - globaldebris_input.py
-  - meltcuves.py
+  - meltcurves.py
   - meltmodel_global.py
   - spc_run_meltmodel.sh
   - spc_split_lists.py
+  - tscurves.py
 
 
 # ===== Validation =========================================================================================================================
@@ -279,23 +278,46 @@ Test extrapolation method by comparing Ngozumpa and some other well-known glacie
 
 
 
+DEM citations
+-  the correct citations for each source is there: https://github.com/OGGM/oggm/blob/master/oggm/data/dem_sources.txt
+-  What we used for you is:
+     - SRTM everywhere where available
+     - ARCTICDEM and REMA for high latitudes
+     - As a fallback for ARCTICDEM and REMA (when more that 5% of DEM data is missing on glacier) we use RAMP and GIMP
+     - If everything above fails we fallback on DEM3
+     - For ALASKA we use the product you gave me (the one from Christian Kienholz)
+
+
+===== FOR NEXT ROUND ======
+- use gaussian filter instead of mean filter (idea from David Shean)
+- use ITS-Live grids to mask bins that have highly uncertain velocities!  This might avoid the terminus criteria.
+- Thorsten has data for Peru and Bolivia from 2000-2016 that may be better than Braun et al. (2019) from 2000-2013.
 
 
 
-# ===== COMMENTS FROM CO-AUTHORS =====
-
-Figure 3:
-
-- Maybe the globe is easier to see if the continents where shaded in very light grey (then the grey circles would need a different color.
-
-- Also ‘Debris cover  (%) is not precise enough. Debris cover area
-
-- Does it make sense to make the debris thickness brown ? signifying dirt?
+===== Debris cover extent difference =====
+- Fix geometries
+- difference (input: RGI, overlay: new outlines)
+- difference (input: scherler, overlay: difference of RGI new outlines)
+    --> this is the debris cover extent that is similar for both
 
 
-- I think that your blobs that represents the percentage of debris cover are not easy to read. I would recommend to use instead a pie chart with 2 parts (debris and non debris cover), the area or radius of the pie would be proportional to the total area of the glaciers. 
+# ===== FIGURE 3 =====
+- the region boundaries still pop out better on the SROCC figure. They don’t merge to something coherent without thinking hard.
+7) Perhaps give the following at least a try: put a horizontal bar (perhaps only covering half the horizontal distance) in the red bar at value 0.56. This make help a lot to extract visually a bit more quantitative information.
 
-- I would have the debris melt factor in warm color (red or salmon) - I feel that “melting" should be associated with warm colors. I also propose that the histograms (at least the 2 main ones on the map) could use a color ramp (ex: from white for 0 to red for 1) even if it provides the same information as theirs lengths. The idea behind is that the bar lengths are sometimes difficult to compare visually between regions and that color gradient helps. Thus, the reader would directly identify the most important regions at the first quick look.
+
+# ===== JUSTIFICATON FOR OGGM RES =====
+There are so many datasets I don't think we can list all native resolutions here. The Farinotti ice thickness product has its own arbitrary resolution based on glacier size (10, 20, 50, 100) in the idea very similar to what OGGM does (small glacier -> hig resolution) but not exact same of course.
 
 
+# ===== 
+Debris cover extent:
+Similarly, we can use the binned dh/dt to identify areas where sub-debris melt is less than that associated with 3m (which we discard for this very reason!) as a way to estimate the uncertainty due to glacier retreat.  However, this could only be done for glaciers with data.
+
+Additional analyses:
+Regional debris thickness as a function of elevation (interquartile range can be shown in grey)
+Maps of the spatial distribution of the calibrated parameters (a,b,c): are they similar across regions??
+issue: it’ll be difficult to plot all three at the same time, so likely need 3 subplots
+could assess spatial variability by performing autocorrelation analysis (semivariogram)
 

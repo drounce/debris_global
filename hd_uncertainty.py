@@ -30,8 +30,8 @@ from meltcurves import melt_fromdebris_func
 from meltcurves import debris_frommelt_func
 
 #%%% ===== SCRIPT OPTIONS =====
-option_hd_melt_uncertainty = False
-option_melt_diagram_template = True
+option_hd_melt_uncertainty = True
+option_melt_diagram_template = False
 
 #hd_obs_fp = debris_prms.main_directory + '/../hd_obs/'
 
@@ -161,7 +161,8 @@ if option_hd_melt_uncertainty:
     
     print('add comparison to Haidong etal 2006')
 
-    z_value = 1.645 # 5-95%
+#    z_value = 1.645 # 5-95%
+    z_value = 1     # 16-84%
 #    z_value = 0.675 # 25-75%
     
     elevchg_mwea_std = 0.72
@@ -386,7 +387,8 @@ if option_hd_melt_uncertainty:
         mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/12.01012_lambrecht2011-melt2008.csv')
         mb_df2 = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/12.01012_lambrecht2011-melt2009.csv')
         measured_hd_list = [mb_df.hd_m.values, mb_df2.hd_m.values]
-        measured_melt_list = [mb_df['melt_mf'].values, mb_df2['melt_mf'].values]
+        measured_melt_list = [mb_df.melt_mmwed.values, mb_df2.melt_mmwed.values]
+#        measured_melt_list = [mb_df['melt_mf'].values, mb_df2['melt_mf'].values]
         melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
         melt_fn = '4300N-4350E-debris_melt_curve.nc'
         yearfracs_list = [[2008 + 172/366, 2008 + 179/366], [2009 + 182/365, 2009 + 189/365]]
