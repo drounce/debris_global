@@ -827,8 +827,83 @@ if (os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-IQR.csv') and
     
     # Save plot
     fig.set_size_inches(8, 3)
+    fig_fn = 'hd_uncertainty_bnds-diagonal.png'
+    fig.savefig(debris_prms.output_fp + fig_fn, bbox_inches='tight', dpi=300, transparent=True)
+    
+    #%%
+    # ===== Plot the relationship ======
+    fontsize = 12
+    lw_both = 1
+    lw_component = 0.5
+    fig, ax = plt.subplots(1, 2, squeeze=False, sharex=False, sharey=False, gridspec_kw = {'wspace':0.25, 'hspace':0})
+#    ax[0,2].axis('off')
+    for n in [0,1]:
+        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_debris'] - hd_wbnds_df['hd_m'], zorder=3, 
+                     color='b', linewidth=lw_component, linestyle=':', label='$IQR_{prop}$')
+        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_debris'] - hd_wbnds_df['hd_m'], zorder=3, 
+                     color='b', linewidth=lw_component, linestyle=':', label='')
+        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_elevchg'] - hd_wbnds_df['hd_m'], zorder=3, 
+                     color='r', linewidth=lw_component, linestyle=':', label='$IQR_{melt}$')
+        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_elevchg'] - hd_wbnds_df['hd_m'], zorder=3, 
+                     color='r', linewidth=lw_component, linestyle=':', label='')
+        ax[0,n].fill_between(hd_wbnds_df['hd_m'], 
+                             hd_wbnds_df['hd_bndlow_both'] - hd_wbnds_df['hd_m'], 
+                             hd_wbnds_df['hd_bndhigh_both'] - hd_wbnds_df['hd_m'],
+                             color='k', linewidth=0, zorder=3, alpha=0.2, label='$IQR_{total}$')
+        ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndlow_both'] - hd_wbnds_df['hd_m'], 
+                     zorder=1, color='k', linestyle='--', linewidth=lw_both, label='$90\%_{total}$')
+        ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndhigh_both'] - hd_wbnds_df['hd_m'], 
+                     zorder=1, color='k', linestyle='--', linewidth=lw_both, label='')
+        ax[0,n].plot([0,5],[0,0], zorder=1, color='k', linewidth=0.5)
+    
+        # X-label
+        ax[0,n].set_xlabel('$h_{d}$ (m)', size=fontsize)
+        ax[0,n].set_xlim(0,5)
+        ax[0,n].xaxis.set_major_locator(plt.MultipleLocator(1))
+        ax[0,n].xaxis.set_minor_locator(plt.MultipleLocator(0.2))  
+        # Y-label
+#        ax[0,n].set_ylabel('$h_{d}$ uncertainty (m)', size=fontsize)
+        ax[0,n].set_ylim(-5,5)
+        ax[0,n].yaxis.set_major_locator(plt.MultipleLocator(2))
+        ax[0,n].yaxis.set_minor_locator(plt.MultipleLocator(0.4))
+        # Tick parameters
+        ax[0,n].yaxis.set_ticks_position('left')
+        ax[0,n].tick_params(axis='both', which='major', labelsize=fontsize-2, direction='inout')
+        ax[0,n].tick_params(axis='both', which='minor', labelsize=fontsize-4, direction='in') 
+        
+        if n == 0:
+            # Y label
+            ax[0,n].set_ylabel('$h_{d}$ uncertainty (m)', size=fontsize)
+            # Legend (ordered)
+            handles, labels = ax[0,n].get_legend_handles_labels()
+            order = [2,3,1,0]
+            lgd = fig.legend([handles[idx] for idx in order],[labels[idx] for idx in order], 
+                             bbox_to_anchor=(0.45, 0.94), ncol=1, fontsize=9, frameon=True, handlelength=1, 
+                             handletextpad=0.15, columnspacing=1, borderpad=0.25, labelspacing=1)
+#            order = [0,1,3,2]
+#            lgd = fig.legend([handles[idx] for idx in order],[labels[idx] for idx in order], 
+#                             bbox_to_anchor=(0.452, 0.57), ncol=1, fontsize=9, frameon=True, handlelength=1, 
+#                             handletextpad=0.15, columnspacing=1, borderpad=0.25, labelspacing=1)
+
+    # Second figure
+    ax[0,1].set_xlim(0,0.5)
+    ax[0,1].xaxis.set_major_locator(plt.MultipleLocator(0.1))
+    ax[0,1].xaxis.set_minor_locator(plt.MultipleLocator(0.05))  
+    ax[0,1].set_ylim(-0.5,0.5)
+    ax[0,1].yaxis.set_major_locator(plt.MultipleLocator(0.2))
+    ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.05))
+    
+    # Labels
+    ax[0,0].text(0.1, 0.98, 'a', size=12, fontweight='bold',
+                horizontalalignment='right', verticalalignment='top', transform=ax[0,0].transAxes)
+    ax[0,1].text(0.1, 0.98, 'b', size=12, fontweight='bold',
+                horizontalalignment='right', verticalalignment='top', transform=ax[0,1].transAxes)
+    
+    # Save plot
+    fig.set_size_inches(6, 3)
     fig_fn = 'hd_uncertainty_bnds.png'
     fig.savefig(debris_prms.output_fp + fig_fn, bbox_inches='tight', dpi=300, transparent=True)
+    
     
 
 #%%
