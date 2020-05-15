@@ -302,13 +302,21 @@ DEM citations
     --> this is the debris cover extent that is similar for both
 
 
-# ===== FIGURE 3 =====
+# ===== FIGURES =====
 - the region boundaries still pop out better on the SROCC figure. They don’t merge to something coherent without thinking hard.
 7) Perhaps give the following at least a try: put a horizontal bar (perhaps only covering half the horizontal distance) in the red bar at value 0.56. This make help a lot to extract visually a bit more quantitative information.
+
+Figure 1: I wonder if you could squeeze in a small, simple location map for context here (maybe with global country outlines and labeled points with a, b, c). If so, Could avoid listing 5 regions.
 
 
 # ===== JUSTIFICATON FOR OGGM RES =====
 There are so many datasets I don't think we can list all native resolutions here. The Farinotti ice thickness product has its own arbitrary resolution based on glacier size (10, 20, 50, 100) in the idea very similar to what OGGM does (small glacier -> hig resolution) but not exact same of course.
+
+Suggested text for stating the final debris thickness:
+  - "The final product has a resolution of 10-100m depending on glacier size; the effective resolution (i.e. the scales at which we can truly estimate the debris thickness), however, is tied to the resolution of the temperature data (100m)"
+
+DShean: OK, good point about the binning. If using 100 m pixels and 50 m elevation bins, might have limited samples in each bin. But, if actual signal is driven by native 100 m grid of TIR seems like the optimum strategy is to resample all products to this grid, and maybe use a larger bin interval if necessary. Some additional info about calibrated and on-orbit spatial resolution of LS8 TIR: https://www.mdpi.com/2072-4292/7/2/1962/htm. Bottom line, the pre-launch spatial resolution "edge extent" metric is closer to 200 m, which did not meet the design spec of <150 m :(. But at least on-orbit roughly matches pre-launch metrics.
+
 
 
 # ===== 
@@ -320,4 +328,23 @@ Regional debris thickness as a function of elevation (interquartile range can be
 Maps of the spatial distribution of the calibrated parameters (a,b,c): are they similar across regions??
 issue: it’ll be difficult to plot all three at the same time, so likely need 3 subplots
 could assess spatial variability by performing autocorrelation analysis (semivariogram)
+
+
+Notes for sharing:
+be clear in the readme from data + code that this is still under review and should not be used
+i,e. you can even put a retrictive "all rights reserved" license and announce that it will be open source after publication
+the reviewers will have link to code + data, see the README
+
+
+
+Notes on Khumbu:
+Dshean:
+OK - would be nice if you could highlight validation of this nonstandard spatial pattern with in situ obs, arguing that you are capturing true spatial variability in debris thickness. Perhaps with LS8 RGB image showing distirbution of features you mention and the corresponding dh/dt grid. But it's not necessary for big-picture at this point.
+
+Roger on the ngozumpa terminus "artifact". The side-by-side debris thickness map and LS8 RGB for these examples might actually be valuable so people know what you're talking about with ponds/cliffs. Trouble is timestamps, though if velocity is near 0, shouldn't matter too much at 15 m pansharpened res. Could consider adding as supplemental figure, but understand it's not a priority.
+
+Tough to tease apart paleo signals in observed debris cover, as convolving so many time-variable signals - debris input rate, englacial transport rate, melt rate, debris redistribution rate, etc. I think Adam Barker (UW PhD with Bernard Hallet) was working on this for Khumbu, but not sure he ever published. His thesis is here: https://digital.lib.washington.edu/researchworks/handle/1773/38518. Potentially some relevant information about ice melt rate and debris thickness based on field data - they spent several seasons doing gpr and sampling.
+
+
+"doesn't account for variable surface slope" rather than "assumption that the surface slope is flat"
 

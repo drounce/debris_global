@@ -93,6 +93,12 @@ class GlacFeat:
         self.perc_clean = np.nan
         self.perc_debris = np.nan
         self.perc_pond = np.nan
+        self.debris_thick_ts = None
+        self.debris_thick_ts_bndlow = None
+        self.debris_thick_ts_bndhigh = None
+        self.meltfactor_ts = None
+        self.meltfactor_ts_bndlow = None
+        self.meltfactor_ts_bndhigh = None
         
     def geom_srs_update(self, srs=None):
         if self.glac_geom.GetSpatialReference() is None:
@@ -607,6 +613,28 @@ class GlacFeat:
             meltfactor_ts_std = np.ma.masked_all_like(z1_bin_areas)
             meltfactor_ts_med = np.ma.masked_all_like(z1_bin_areas)
             meltfactor_ts_mad = np.ma.masked_all_like(z1_bin_areas)
+            
+        if self.debris_thick_ts_bndlow is not None:
+            debris_thick_ts_bndlow_mean = np.ma.masked_all_like(z1_bin_areas)
+            debris_thick_ts_bndlow_std = np.ma.masked_all_like(z1_bin_areas)
+            debris_thick_ts_bndlow_med = np.ma.masked_all_like(z1_bin_areas)
+            debris_thick_ts_bndlow_mad = np.ma.masked_all_like(z1_bin_areas)
+        if self.debris_thick_ts_bndhigh is not None:
+            debris_thick_ts_bndhigh_mean = np.ma.masked_all_like(z1_bin_areas)
+            debris_thick_ts_bndhigh_std = np.ma.masked_all_like(z1_bin_areas)
+            debris_thick_ts_bndhigh_med = np.ma.masked_all_like(z1_bin_areas)
+            debris_thick_ts_bndhigh_mad = np.ma.masked_all_like(z1_bin_areas)
+            
+        if self.meltfactor_ts_bndlow is not None:
+            meltfactor_ts_bndlow_mean = np.ma.masked_all_like(z1_bin_areas)
+            meltfactor_ts_bndlow_std = np.ma.masked_all_like(z1_bin_areas)
+            meltfactor_ts_bndlow_med = np.ma.masked_all_like(z1_bin_areas)
+            meltfactor_ts_bndlow_mad = np.ma.masked_all_like(z1_bin_areas)   
+        if self.meltfactor_ts_bndhigh is not None:
+            meltfactor_ts_bndhigh_mean = np.ma.masked_all_like(z1_bin_areas)
+            meltfactor_ts_bndhigh_std = np.ma.masked_all_like(z1_bin_areas)
+            meltfactor_ts_bndhigh_med = np.ma.masked_all_like(z1_bin_areas)
+            meltfactor_ts_bndhigh_mad = np.ma.masked_all_like(z1_bin_areas)
     
         #Bin sample count must be greater than this value
         min_bin_samp_count = debris_prms.min_bin_samp_count
@@ -678,6 +706,36 @@ class GlacFeat:
                     meltfactor_ts_std[bin_n] = meltfactor_ts_bin_samp.std()
                     meltfactor_ts_med[bin_n] = malib.fast_median(meltfactor_ts_bin_samp)
                     meltfactor_ts_mad[bin_n] = malib.mad(meltfactor_ts_bin_samp)
+                    
+            if self.debris_thick_ts_bndlow is not None:
+                debris_thick_ts_bndlow_bin_samp = self.debris_thick_ts_bndlow[(idx == bin_n+1)]
+                if debris_thick_ts_bndlow_bin_samp.size > min_bin_samp_count:
+                    debris_thick_ts_bndlow_mean[bin_n] = debris_thick_ts_bndlow_bin_samp.mean()
+                    debris_thick_ts_bndlow_std[bin_n] = debris_thick_ts_bndlow_bin_samp.std()
+                    debris_thick_ts_bndlow_med[bin_n] = malib.fast_median(debris_thick_ts_bndlow_bin_samp)
+                    debris_thick_ts_bndlow_mad[bin_n] = malib.mad(debris_thick_ts_bndlow_bin_samp)
+            if self.debris_thick_ts_bndhigh is not None:
+                debris_thick_ts_bndhigh_bin_samp = self.debris_thick_ts_bndhigh[(idx == bin_n+1)]
+                if debris_thick_ts_bndhigh_bin_samp.size > min_bin_samp_count:
+                    debris_thick_ts_bndhigh_mean[bin_n] = debris_thick_ts_bndhigh_bin_samp.mean()
+                    debris_thick_ts_bndhigh_std[bin_n] = debris_thick_ts_bndhigh_bin_samp.std()
+                    debris_thick_ts_bndhigh_med[bin_n] = malib.fast_median(debris_thick_ts_bndhigh_bin_samp)
+                    debris_thick_ts_bndhigh_mad[bin_n] = malib.mad(debris_thick_ts_bndhigh_bin_samp)
+                    
+            if self.meltfactor_ts_bndlow is not None:
+                meltfactor_ts_bndlow_bin_samp = self.meltfactor_ts_bndlow[(idx == bin_n+1)]
+                if meltfactor_ts_bndlow_bin_samp.size > min_bin_samp_count:
+                    meltfactor_ts_bndlow_mean[bin_n] = meltfactor_ts_bndlow_bin_samp.mean()
+                    meltfactor_ts_bndlow_std[bin_n] = meltfactor_ts_bndlow_bin_samp.std()
+                    meltfactor_ts_bndlow_med[bin_n] = malib.fast_median(meltfactor_ts_bndlow_bin_samp)
+                    meltfactor_ts_bndlow_mad[bin_n] = malib.mad(meltfactor_ts_bndlow_bin_samp)         
+            if self.meltfactor_ts_bndhigh is not None:
+                meltfactor_ts_bndhigh_bin_samp = self.meltfactor_ts_bndhigh[(idx == bin_n+1)]
+                if meltfactor_ts_bndhigh_bin_samp.size > min_bin_samp_count:
+                    meltfactor_ts_bndhigh_mean[bin_n] = meltfactor_ts_bndhigh_bin_samp.mean()
+                    meltfactor_ts_bndhigh_std[bin_n] = meltfactor_ts_bndhigh_bin_samp.std()
+                    meltfactor_ts_bndhigh_med[bin_n] = malib.fast_median(meltfactor_ts_bndhigh_bin_samp)
+                    meltfactor_ts_bndhigh_mad[bin_n] = malib.mad(meltfactor_ts_bndhigh_bin_samp)
 
     #         if self.debris_class is not None:
     #             debris_class_bin_samp = self.debris_class[(idx == bin_n+1)]
@@ -776,6 +834,24 @@ class GlacFeat:
             debris_thick_ts_med[debris_thick_ts_med == -(np.inf)] = 0.00
             debris_thick_ts_mad[debris_thick_ts_mad == -(np.inf)] = 0.00
             outbins.extend([debris_thick_ts_mean, debris_thick_ts_std, debris_thick_ts_med, debris_thick_ts_mad])
+        if self.debris_thick_ts_bndlow is not None:
+            outbins_header += ',hd_ts_mean_m_bndlow,hd_ts_std_m_bndlow,hd_ts_med_m_bndlow,hd_ts_mad_m_bndlow'
+            fmt += ',%0.2f,%0.2f,%0.2f,%0.2f'
+            debris_thick_ts_bndlow_mean[debris_thick_ts_bndlow_mean == -(np.inf)] = 0.00
+            debris_thick_ts_bndlow_std[debris_thick_ts_bndlow_std == -(np.inf)] = 0.00
+            debris_thick_ts_bndlow_med[debris_thick_ts_bndlow_med == -(np.inf)] = 0.00
+            debris_thick_ts_bndlow_mad[debris_thick_ts_bndlow_mad == -(np.inf)] = 0.00
+            outbins.extend([debris_thick_ts_bndlow_mean, debris_thick_ts_bndlow_std, debris_thick_ts_bndlow_med, 
+                            debris_thick_ts_bndlow_mad])
+        if self.debris_thick_ts_bndhigh is not None:
+            outbins_header += ',hd_ts_mean_m_bndhigh,hd_ts_std_m_bndhigh,hd_ts_med_m_bndhigh,hd_ts_mad_m_bndhigh'
+            fmt += ',%0.2f,%0.2f,%0.2f,%0.2f'
+            debris_thick_ts_bndhigh_mean[debris_thick_ts_bndhigh_mean == -(np.inf)] = 0.00
+            debris_thick_ts_bndhigh_std[debris_thick_ts_bndhigh_std == -(np.inf)] = 0.00
+            debris_thick_ts_bndhigh_med[debris_thick_ts_bndhigh_med == -(np.inf)] = 0.00
+            debris_thick_ts_bndhigh_mad[debris_thick_ts_bndhigh_mad == -(np.inf)] = 0.00
+            outbins.extend([debris_thick_ts_bndhigh_mean, debris_thick_ts_bndhigh_std, debris_thick_ts_bndhigh_med, 
+                            debris_thick_ts_bndhigh_mad])
         if self.meltfactor_ts is not None:
             outbins_header += ',mf_ts_mean,mf_ts_std,mf_ts_med,mf_ts_mad'
             fmt += ',%0.2f,%0.2f,%0.2f,%0.2f'
@@ -792,6 +868,40 @@ class GlacFeat:
             meltfactor_ts_mad[meltfactor_ts_mad == -(np.inf)] = 0
             meltfactor_ts_mad[meltfactor_ts_mad <= 0] = 0
             outbins.extend([meltfactor_ts_mean, meltfactor_ts_std, meltfactor_ts_med, meltfactor_ts_mad])
+        if self.meltfactor_ts_bndlow is not None:
+            outbins_header += ',mf_ts_mean_bndlow,mf_ts_std_bndlow,mf_ts_med_bndlow,mf_ts_mad_bndlow'
+            fmt += ',%0.2f,%0.2f,%0.2f,%0.2f'
+            meltfactor_ts_bndlow_mean = np.ma.filled(meltfactor_ts_bndlow_mean,1)
+            meltfactor_ts_bndlow_std = np.ma.filled(meltfactor_ts_bndlow_std,0)
+            meltfactor_ts_bndlow_med = np.ma.filled(meltfactor_ts_bndlow_med,1)
+            meltfactor_ts_bndlow_mad = np.ma.filled(meltfactor_ts_bndlow_mad,0)
+            meltfactor_ts_bndlow_mean[meltfactor_ts_bndlow_mean == -(np.inf)] = 1
+            meltfactor_ts_bndlow_mean[meltfactor_ts_bndlow_mean <= 0] = 1
+            meltfactor_ts_bndlow_std[meltfactor_ts_bndlow_std == -(np.inf)] = 0
+            meltfactor_ts_bndlow_std[meltfactor_ts_bndlow_std <= 0] = 0
+            meltfactor_ts_bndlow_med[meltfactor_ts_bndlow_med == -(np.inf)] = 1
+            meltfactor_ts_bndlow_med[meltfactor_ts_bndlow_med <= 0] = 1
+            meltfactor_ts_bndlow_mad[meltfactor_ts_bndlow_mad == -(np.inf)] = 0
+            meltfactor_ts_bndlow_mad[meltfactor_ts_bndlow_mad <= 0] = 0
+            outbins.extend([meltfactor_ts_bndlow_mean, meltfactor_ts_bndlow_std, meltfactor_ts_bndlow_med, 
+                            meltfactor_ts_bndlow_mad])
+        if self.meltfactor_ts_bndhigh is not None:
+            outbins_header += ',mf_ts_mean_bndhigh,mf_ts_std_bndhigh,mf_ts_med_bndhigh,mf_ts_mad_bndhigh'
+            fmt += ',%0.2f,%0.2f,%0.2f,%0.2f'
+            meltfactor_ts_bndhigh_mean = np.ma.filled(meltfactor_ts_bndhigh_mean,1)
+            meltfactor_ts_bndhigh_std = np.ma.filled(meltfactor_ts_bndhigh_std,0)
+            meltfactor_ts_bndhigh_med = np.ma.filled(meltfactor_ts_bndhigh_med,1)
+            meltfactor_ts_bndhigh_mad = np.ma.filled(meltfactor_ts_bndhigh_mad,0)
+            meltfactor_ts_bndhigh_mean[meltfactor_ts_bndhigh_mean == -(np.inf)] = 1
+            meltfactor_ts_bndhigh_mean[meltfactor_ts_bndhigh_mean <= 0] = 1
+            meltfactor_ts_bndhigh_std[meltfactor_ts_bndhigh_std == -(np.inf)] = 0
+            meltfactor_ts_bndhigh_std[meltfactor_ts_bndhigh_std <= 0] = 0
+            meltfactor_ts_bndhigh_med[meltfactor_ts_bndhigh_med == -(np.inf)] = 1
+            meltfactor_ts_bndhigh_med[meltfactor_ts_bndhigh_med <= 0] = 1
+            meltfactor_ts_bndhigh_mad[meltfactor_ts_bndhigh_mad == -(np.inf)] = 0
+            meltfactor_ts_bndhigh_mad[meltfactor_ts_bndhigh_mad <= 0] = 0
+            outbins.extend([meltfactor_ts_bndhigh_mean, meltfactor_ts_bndhigh_std, meltfactor_ts_bndhigh_med, 
+                            meltfactor_ts_bndhigh_mad])
         
         if self.vm is not None:
             outbins_header += ',vm_med,vm_mad'

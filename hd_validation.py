@@ -177,14 +177,16 @@ def plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_l
         
         # Plot curve
         ax[0,0].plot(measured_hd, measured_melt, symbol_dict[n], color=color_dict[n], 
-                     markersize=3, markerfacecolor="None", markeredgewidth=0.5, zorder=1, label=ds_name, clip_on=False)
+                     markersize=3, markerfacecolor="None", markeredgewidth=0.5, zorder=5, label=ds_name, clip_on=False)
         ax[0,0].plot(debris_4curve, melt_4curve, 
-                     color=color_dict[n], linewidth=1, linestyle='--', zorder=2)
+                     color=color_dict[n], linewidth=1, linestyle='--', zorder=5-n)
         ax[0,0].fill_between(debris_4curve, melt_4curve_bndlow, melt_4curve_bndhigh,
-                             color=color_dict[n], linewidth=0, zorder=2, alpha=0.2)
+                             color=color_dict[n], linewidth=0, zorder=5-n, alpha=0.2)
         
     # text
-    ax[0,0].text(0.5, 1.09, glac_name, size=fontsize-2, horizontalalignment='center', verticalalignment='top', 
+#    ax[0,0].text(0.5, 1.09, glac_name, size=fontsize-2, horizontalalignment='center', verticalalignment='top', 
+#                 transform=ax[0,0].transAxes)
+    ax[0,0].text(0.5, 1.11, glac_name, size=fontsize-2, horizontalalignment='center', verticalalignment='top', 
                  transform=ax[0,0].transAxes)
 #    eqn_text = r'$b = \frac{b_{0}}{1 + kb_{0}h}$'
 #    coeff1_text = r'$b_{0} = ' + str(np.round(func_coeff[0],2)) + '$' 
@@ -199,16 +201,16 @@ def plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_l
 #    ax[0,0].text(0.66, 0.7, coeff2_text, size=10, horizontalalignment='left', verticalalignment='top', 
 #                 transform=ax[0,0].transAxes)
     # X-label
-    ax[0,0].set_xlabel('Debris thickness (m)', size=fontsize)
+#    ax[0,0].set_xlabel('Debris thickness (m)', size=fontsize)
     ax[0,0].set_xlim(hd_min, hd_max)
     ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
     ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))  
     # Y-label
-    if plot_meltfactor:
-        ylabel_str = 'Melt (-)'
-    else:
-        ylabel_str = 'Melt (mm w.e. d$^{-1}$)'
-    ax[0,0].set_ylabel(ylabel_str, size=fontsize)
+#    if plot_meltfactor:
+#        ylabel_str = 'Melt (-)'
+#    else:
+#        ylabel_str = 'Melt (mm w.e. d$^{-1}$)'
+#    ax[0,0].set_ylabel(ylabel_str, size=fontsize)
     ax[0,0].set_ylim(melt_min, melt_max)
     ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(melt_tick_major))
     ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(melt_tick_minor))
@@ -220,7 +222,7 @@ def plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_l
     ax[0,0].legend(ncol=1, fontsize=fontsize-3, frameon=True, handlelength=1, 
                    handletextpad=0.15, columnspacing=0.5, borderpad=0.25, labelspacing=0.5, framealpha=0.5)
     # Save plot
-    fig.set_size_inches(2, 2)
+    fig.set_size_inches(2, 1.5)
     fig.savefig(melt_compare_fp + fig_fn, bbox_inches='tight', dpi=300, transparent=True)
     plt.close()
     
@@ -233,19 +235,18 @@ if option_melt_comparison:
 #                '12.01012', '12.01132', '13.05000', '13.43232', '14.06794', '14.16042', '15.03733', '15.03743', 
 #                '15.04045', '15.07886', '15.11758', '18.02397']
     glaciers = ['1.15645', '2.14297', '7.01044', '11.00719', '11.02472', '11.02810', '11.02858', '11.03005', 
-                '12.01012', '12.01132', '13.05000', '13.43232', '14.06794', '14.16042', '15.03733', '15.03743', 
-                '15.04045', '15.07886', '15.11758', '18.02397']
+                '12.01012', '12.01132', '13.05000', '13.43165', '13.43232', '14.06794', '14.16042', '15.03733', 
+                '15.03743', '15.04045', '15.07122', '15.07886', '15.11758', '18.02375', '18.02397']
 #    glaciers = ['10.01732']
 #    glaciers = ['13.43165']
-#    glaciers = ['11.02472']
-#    glaciers = ['1.15645', '2.14297']
-    
-    print('add comparison to Haidong etal 2006')
+#    glaciers = ['13.43232']
+#    glaciers = ['11.02858']
 
     z_value = 1.645
     
     
     hd_obs_all, melt_obs_all, melt_mod_all, melt_mod_bndlow_all, melt_mod_bndhigh_all, reg_all = [], [], [], [], [], []
+    rgiid_all = [] 
     # ===== KENNICOTT (1.15645) ====
     if '1.15645' in glaciers:
         print('\nmelt comparison with Anderson et al. 2019')
@@ -262,9 +263,9 @@ if option_melt_comparison:
         yearfracs_list = [[2011 + 169/365, 2011 + 228/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -282,6 +283,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['01'])
+        rgiid_all.append(['1.15645'])     
 
     # ===== Emmons (2.14297) ====
     if '2.14297' in glaciers:
@@ -299,9 +301,9 @@ if option_melt_comparison:
         yearfracs_list = [[2014 + 212/365, 2014 + 222/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -319,6 +321,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['02'])
+        rgiid_all.append(['2.14297'])     
     
     # ===== Svinafellsjokull (06.00474) ====
     if '6.00474' in glaciers:
@@ -336,7 +339,7 @@ if option_melt_comparison:
         yearfracs_list = [[2013 + 137/365, 2013 + 150/365]]
         
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.1, 0.05
 #        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
 #        melt_tick_major, melt_tick_minor = 10, 5
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 0.1) * 0.1,1) + 0.1
@@ -366,6 +369,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['06'])
+        rgiid_all.append(['6.00474'])     
         
     # ===== Larsbreen (7.01044) ====
     if '7.01044' in glaciers:
@@ -383,9 +387,9 @@ if option_melt_comparison:
         yearfracs_list = [[2002 + 191/366, 2002 + 202/366]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -403,44 +407,45 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['07'])
+        rgiid_all.append(['7.01044'])     
         
     # ===== Maliy Aktru (10.01732) ====
     if '10.01732' in glaciers:
 #        print('\nmelt comparison with Mayer et al (2011)')
         assert True == False, '10.01732 NEEDS TO DO THE MODELING FIRST!'
-        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
-        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/10.01732_mayer2011-melt.csv')
-        measured_hd_list = [mb_df.hd_m.values]
-        measured_melt_list = [mb_df['melt_mf'].values]
-        glac_name = "Maliy Aktru (10.01732)"
-        fig_fn = '10.01732_hd_melt_Mayer2011.png'
-#        ds_names = ['Mayer 2011\n(7/11/07$\u2009$-$\u2009$7/30/07)']
-        ds_names = ['7/11/07$\u2009$-$\u2009$7/30/07']
-        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
-        melt_fn = '5000N-8775E-debris_melt_curve.nc'
-        yearfracs_list = [[2007 + 192/365, 2007 + 211/365]]
-
-        hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
-        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
-    
-        for n in np.arange(0,len(measured_hd_list)):
-            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
-        
-        hd_obs, melt_obs, melt_mod, melt_mod_bndlow, melt_mod_bndhigh = (
-                plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
-                                   melt_fp, melt_fn,
-                                   ds_names=ds_names, hd_min=hd_min, hd_max=hd_max, 
-                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
-                                   melt_min=melt_min, melt_max=melt_max, 
-                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor))
-        hd_obs_all.append(hd_obs)
-        melt_obs_all.append(melt_obs)
-        melt_mod_all.append(melt_mod)
-        melt_mod_bndlow_all.append(melt_mod_bndlow)
-        melt_mod_bndhigh_all.append(melt_mod_bndhigh)
-        reg_all.append(['10'])
+#        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+#        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/10.01732_mayer2011-melt.csv')
+#        measured_hd_list = [mb_df.hd_m.values]
+#        measured_melt_list = [mb_df['melt_mf'].values]
+#        glac_name = "Maliy Aktru (10.01732)"
+#        fig_fn = '10.01732_hd_melt_Mayer2011.png'
+##        ds_names = ['Mayer 2011\n(7/11/07$\u2009$-$\u2009$7/30/07)']
+#        ds_names = ['7/11/07$\u2009$-$\u2009$7/30/07']
+#        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+#        melt_fn = '5000N-8775E-debris_melt_curve.nc'
+#        yearfracs_list = [[2007 + 192/365, 2007 + 211/365]]
+#
+#        hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
+#        hd_tick_major, hd_tick_minor = 0.1, 0.02
+#        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
+#        melt_tick_major, melt_tick_minor = 10, 5
+#    
+#        for n in np.arange(0,len(measured_hd_list)):
+#            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+#        
+#        hd_obs, melt_obs, melt_mod, melt_mod_bndlow, melt_mod_bndhigh = (
+#                plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
+#                                   melt_fp, melt_fn,
+#                                   ds_names=ds_names, hd_min=hd_min, hd_max=hd_max, 
+#                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
+#                                   melt_min=melt_min, melt_max=melt_max, 
+#                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor))
+#        hd_obs_all.append(hd_obs)
+#        melt_obs_all.append(melt_obs)
+#        melt_mod_all.append(melt_mod)
+#        melt_mod_bndlow_all.append(melt_mod_bndlow)
+#        melt_mod_bndhigh_all.append(melt_mod_bndhigh)
+#        reg_all.append(['10'])
     
     # ===== Vernagtferner (11.00719) ====
     if '11.00719' in glaciers:
@@ -458,9 +463,9 @@ if option_melt_comparison:
         yearfracs_list = [[2010 + 176/365, 2010 + 191/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.1, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -478,6 +483,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['11'])
+        rgiid_all.append(['11.00719'])     
         
     # ===== Vernocolo (11.02472) =====
     if '11.02472' in glaciers:
@@ -494,7 +500,7 @@ if option_melt_comparison:
         yearfracs_list = [[2007 + 222/365, 2007 + 256/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.1, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
         melt_tick_major, melt_tick_minor = 10, 5
     
@@ -514,6 +520,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['11'])
+        rgiid_all.append(['11.02472'])     
         
     # ===== Arolla (11.02810) ====
     if '11.02810' in glaciers:
@@ -531,7 +538,7 @@ if option_melt_comparison:
         yearfracs_list = [[2010 + 209/365, 2010 + 252/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.1, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
         melt_tick_major, melt_tick_minor = 10, 5
     
@@ -551,6 +558,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['11'])
+        rgiid_all.append(['11.02810'])     
         
     # ===== Belvedere (11.02858) ====
     if '11.02858' in glaciers:
@@ -568,9 +576,9 @@ if option_melt_comparison:
         yearfracs_list = [[2003 + 218/365, 2003 + 222/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.1, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 40, 10
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -588,7 +596,8 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['11'])
-        
+        rgiid_all.append(['11.02858'])     
+
     # ===== MIAGE (11.03005) ====
     if '11.03005' in glaciers:
         print('\nmelt comparison with Reid and Brock (2010)')
@@ -601,13 +610,13 @@ if option_melt_comparison:
 #        ds_names = ['Reid 2010\n(6/21/05$\u2009$-$\u2009$9/04/05)']
         ds_names = ['6/21/05$\u2009$-$\u2009$9/04/05']
         melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
-        melt_fn = '4650N-1050E-debris_melt_curve.nc'
+        melt_fn = '4575N-675E-debris_melt_curve.nc'
         yearfracs_list = [[2005 + 172/365, 2005 + 247/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -625,6 +634,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['11'])
+        rgiid_all.append(['11.03005']) 
         
     # ===== Zopkhito (12.01012) ====
     if '12.01012' in glaciers:
@@ -645,9 +655,9 @@ if option_melt_comparison:
         yearfracs_list = [[2008 + 178/366, 2008 + 183/366], [2009 + 194/365, 2009 + 198/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.1, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 40, 10
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -665,6 +675,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['12'])
+        rgiid_all.append(['12.01012'])     
         
     # ===== Djankuat (12.01132) ====
     if '12.01132' in glaciers:
@@ -684,7 +695,7 @@ if option_melt_comparison:
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
         hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -702,6 +713,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['12'])
+        rgiid_all.append(['12.01132'])
         
     # ===== S Inylchek (13.05000) ====
     if '13.05000' in glaciers:
@@ -719,7 +731,86 @@ if option_melt_comparison:
         yearfracs_list = [[2005 + 211/365, 2005 + 222/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
+        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
+        melt_tick_major, melt_tick_minor = 20, 5
+    
+        for n in np.arange(0,len(measured_hd_list)):
+            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+        
+        hd_obs, melt_obs, melt_mod, melt_mod_bndlow, melt_mod_bndhigh = (
+                plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
+                                   melt_fp, melt_fn,
+                                   ds_names=ds_names, hd_min=hd_min, hd_max=hd_max, 
+                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
+                                   melt_min=melt_min, melt_max=melt_max, 
+                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor))
+        hd_obs_all.append(hd_obs)
+        melt_obs_all.append(melt_obs)
+        melt_mod_all.append(melt_mod)
+        melt_mod_bndlow_all.append(melt_mod_bndlow)
+        melt_mod_bndhigh_all.append(melt_mod_bndhigh)
+        reg_all.append(['13'])
+        rgiid_all.append(['13.05000'])
+        
+        
+    # ===== No 72 =====
+    if '13.43165' in glaciers:
+        print('\nmelt comparison with Wang et al (2017)')
+        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/13.43165_wang2017-melt.csv')
+        measured_hd_list = [mb_df.hd_m.values]
+        measured_melt_list = [mb_df.melt_mmwed.values]
+        glac_name = "Qingbingtan (13.43165)"
+        fig_fn = '13.43165_hd_melt_wang2017.png'
+        ds_names = ['8/01/08$\u2009$-$\u2009$8/01/09']
+        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+        melt_fn = '4175N-8000E-debris_melt_curve.nc'
+        yearfracs_list = [[2008 + 214/366, 2009 + 213/365]]
+
+        hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
+        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
+        melt_tick_major, melt_tick_minor = 20, 5
+    
+        for n in np.arange(0,len(measured_hd_list)):
+            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+        
+        hd_obs, melt_obs, melt_mod, melt_mod_bndlow, melt_mod_bndhigh = (
+                plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
+                                   melt_fp, melt_fn,
+                                   ds_names=ds_names, hd_min=hd_min, hd_max=hd_max, 
+                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
+                                   melt_min=melt_min, melt_max=melt_max, 
+                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor))
+        hd_obs_all.append(hd_obs)
+        melt_obs_all.append(melt_obs)
+        melt_mod_all.append(melt_mod)
+        melt_mod_bndlow_all.append(melt_mod_bndlow)
+        melt_mod_bndhigh_all.append(melt_mod_bndhigh)
+        reg_all.append(['13'])
+        rgiid_all.append(['13.43165'])
+
+    # ===== Koxkar (13.43232) ====
+    if '13.43232' in glaciers:
+        print('\nmelt comparison with Han et al 2006 (measured via conduction place, not ablation stake)')
+        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/13.43232_Han2006-melt_site1.csv')
+        mb_df2 = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/13.43232_Han2006-melt_site2.csv')
+        mb_df3 = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/13.43232_Han2006-melt_site3.csv')
+        measured_hd_list = [mb_df.hd_m.values, mb_df2.hd_m.values, mb_df3.hd_m.values,]
+        measured_melt_list = [mb_df.melt_mmwed.values, mb_df2.melt_mmwed.values, mb_df3.melt_mmwed.values]
+        glac_name = "Koxkar (13.43232)"
+        fig_fn = '13.43232_hd_melt_han2006.png'
+        ds_names = ['09/15/04$\u2009$-$\u2009$09/19/04', '09/24/04$\u2009$-$\u2009$09/28/04',
+                    '10/02/04$\u2009$-$\u2009$10/06/04']
+        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+        melt_fn = '4175N-8000E-debris_melt_curve.nc'
+        yearfracs_list = [[2004 + 259/366, 2004 + 263/366], [2004 + 268/366, 2004 + 272/366], 
+                          [2004 + 276/366, 2004 + 280/366]]
+
+        hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
+        hd_tick_major, hd_tick_minor = 0.5, 0.1
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
         melt_tick_major, melt_tick_minor = 10, 5
     
@@ -739,72 +830,43 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['13'])
+        rgiid_all.append(['13.43232'])   
         
-#    # ===== No 72 =====
-#    if '13.43165' in glaciers:
-#        print('\nmelt comparison with Wang et al (2011)')
-#        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
-#        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/13.43165_wang2011-melt.csv')
-#        measured_hd_list = [mb_df.hd_m.values]
-#        measured_melt_list = [mb_df['melt_mmwed'].values]
-#        glac_name = "No 72 (13.43165)"
-#        fig_fn = '13.43165_hd_melt_wang2011.png'
-#        ds_names = ['8/10/10$\u2009$-$\u2009$8/29/10']
-#        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
-#        melt_fn = '4175N-8000E-debris_melt_curve.nc'
-#        yearfracs_list = [[2010 + 222/365, 2010 + 241/365]]
-#
-#        hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-#        hd_tick_major, hd_tick_minor = 0.1, 0.02
-##        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-##        melt_tick_major, melt_tick_minor = 10, 5
-#        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 0.1) * 0.1,1) + 0.1
-#        melt_tick_major, melt_tick_minor = 0.5, 0.1
-#    
-#        print('NEED THE DATES!')
-#        for n in np.arange(0,len(measured_hd_list)):
-#            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
-#        
-#        plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
-#                                   melt_fp, melt_fn,
-#                                   ds_names=ds_names, hd_min=hd_min, hd_max=hd_max, 
-#                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
-#                                   melt_min=melt_min, melt_max=melt_max, 
-#                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor)
-        
-    # ===== Koxkar (13.43232) ====
-    if '13.43232' in glaciers:
-        print('\nmelt comparison with Juen et al (2014) - NEED TO REMOVE MELT FACTORS')
-#        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
-#        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/13.43232_juen2014-melt.csv')
-#        measured_hd_list = [mb_df.hd_m.values]
-#        measured_melt_list = [mb_df['melt_mf'].values]
-#        glac_name = "Koxkar (13.43232)"
-#        fig_fn = '13.43232_hd_melt_juen2014.png'
-##        ds_names = ['Juen 2014\n(8/10/10$\u2009$-$\u2009$8/29/10)']
-#        ds_names = ['8/10/10$\u2009$-$\u2009$8/29/10']
-#        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
-#        melt_fn = '4175N-8000E-debris_melt_curve.nc'
-#        yearfracs_list = [[2010 + 222/365, 2010 + 241/365]]
-#
-#        hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-#        hd_tick_major, hd_tick_minor = 0.1, 0.02
-##        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-##        melt_tick_major, melt_tick_minor = 10, 5
-#        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 0.1) * 0.1,1) + 0.1
-#        melt_tick_major, melt_tick_minor = 0.5, 0.1
-#    
-#        for n in np.arange(0,len(measured_hd_list)):
-#            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
-#        
-#        plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
-#                                   melt_fp, melt_fn,
-#                                   ds_names=ds_names, hd_min=hd_min, hd_max=hd_max, 
-#                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
-#                                   melt_min=melt_min, melt_max=melt_max, 
-#                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor,
-#                                   plot_meltfactor=True)
+        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/13.43232_juen2014-melt.csv')
+        measured_hd_list = [mb_df.hd_m.values]
+        measured_melt_list = [mb_df.melt_mmwed.values]
+        glac_name = "Koxkar (13.43232)"
+        fig_fn = '13.43232_hd_melt_juen2014.png'
+#        ds_names = ['Juen 2014\n(8/10/10$\u2009$-$\u2009$8/29/10)']
+        ds_names = ['8/10/10$\u2009$-$\u2009$8/29/10']
+        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+        melt_fn = '4175N-8000E-debris_melt_curve.nc'
+        yearfracs_list = [[2010 + 222/365, 2010 + 241/365]]
+
+        hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
+        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
+        for n in np.arange(0,len(measured_hd_list)):
+            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+        
+        hd_obs, melt_obs, melt_mod, melt_mod_bndlow, melt_mod_bndhigh = (
+                plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
+                                   melt_fp, melt_fn,
+                                   ds_names=ds_names, hd_min=hd_min, hd_max=hd_max, 
+                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
+                                   melt_min=melt_min, melt_max=melt_max, 
+                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor))
+        hd_obs_all.append(hd_obs)
+        melt_obs_all.append(melt_obs)
+        melt_mod_all.append(melt_mod)
+        melt_mod_bndlow_all.append(melt_mod_bndlow)
+        melt_mod_bndhigh_all.append(melt_mod_bndhigh)
+        reg_all.append(['13'])
+        rgiid_all.append(['13.43232']) 
+        
     # ===== Baltoro (14.06794) ====
     if '14.06794' in glaciers:
         print('\nmelt comparison with Mihalcea et al 2006 and Groos et al 2017')
@@ -823,9 +885,9 @@ if option_melt_comparison:
                           [2011 + 203/365, 2011 + 222/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -843,6 +905,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['14'])
+        rgiid_all.append(['14.06794'])
         
     # ===== Batal (14.16042) ====
     if '14.16042' in glaciers:
@@ -860,7 +923,7 @@ if option_melt_comparison:
         yearfracs_list = [[2014 + 213/365, 2014 + 288/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
         melt_tick_major, melt_tick_minor = 10, 5
     
@@ -879,6 +942,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['14'])
+        rgiid_all.append(['14.16042'])   
         
     # ===== Khumbu (15.03733) ====
     if '15.03733' in glaciers:
@@ -896,9 +960,9 @@ if option_melt_comparison:
         yearfracs_list = [[2000 + 143/366, 2000 + 153/366]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -915,6 +979,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['15'])
+        rgiid_all.append(['13.03733'])   
 
     # ===== Imja-Lhotse Shar (15.03743) ====
     if '15.03743' in glaciers:
@@ -931,7 +996,7 @@ if option_melt_comparison:
         yearfracs_list = [[2014 + 138/365, 2014 + 315/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
         melt_tick_major, melt_tick_minor = 10, 5
     
@@ -950,6 +1015,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['15'])
+        rgiid_all.append(['15.03743'])   
         
     # ===== Lirung (15.04045) ====
     if '15.04045' in glaciers:
@@ -972,9 +1038,9 @@ if option_melt_comparison:
                           [2014 + 97/365, 2014 + 109/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -991,7 +1057,208 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['15'])
+        rgiid_all.append(['15.04045']) 
         
+    # ===== Satopanth (15.07122) ====
+    if '15.07122' in glaciers:
+        print('\nmelt comparison with Shah et al (2019) - MUST BE DONE FOR INDIVIDUAL STAKES, NO MELT CURVE')
+#        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+#        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/15.07122_shah2019-melt.csv')
+#        measured_hd_list = [mb_df.hd_m.values]
+#        measured_melt_list = [mb_df.melt_mmwed.values]
+#        glac_name = 'Satopanth (15.07122)'
+#        fig_fn = '15.07122_hd_melt_shah2019.png'
+#        ds_names = ['5/21/16$\u2009$-$\u2009$10/24/16']
+        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+        melt_fn = '3075N-7925E-debris_melt_curve.nc'
+#        yearfracs_list = [[2016 + 142/366, 2016 + 298/366]]
+#
+#        hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
+#        hd_tick_major, hd_tick_minor = 0.1, 0.02
+#        melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
+#        melt_tick_major, melt_tick_minor = 10, 5
+#    
+#        for n in np.arange(0,len(measured_hd_list)):
+#            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+#        hd_obs, melt_obs, melt_mod, melt_mod_bndlow, melt_mod_bndhigh = (
+#                plot_hd_vs_melt_comparison(measured_hd_list, measured_melt_list, yearfracs_list, glac_name, fig_fn, 
+#                                   melt_fp, melt_fn,
+#                                   ds_names=ds_names, hd_min=hd_min, hd_max=hd_max, 
+#                                   hd_tick_major=hd_tick_major, hd_tick_minor=hd_tick_minor,
+#                                   melt_min=melt_min, melt_max=melt_max, 
+#                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor))
+#        hd_obs_all.append(hd_obs)
+#        melt_obs_all.append(melt_obs)
+#        melt_mod_all.append(melt_mod)
+#        melt_mod_bndlow_all.append(melt_mod_bndlow)
+#        melt_mod_bndhigh_all.append(melt_mod_bndhigh)
+#        reg_all.append(['15'])
+#        rgiid_all.append(['15.07122'])   
+
+        obs_df_fullfn = (debris_prms.main_directory + 
+                          '/../hd_obs/datasets/Shah2019_satopanth/satopanth2019-melt-processed.csv')
+        
+        if os.path.exists(obs_df_fullfn):
+            obs_df = pd.read_csv(obs_df_fullfn)
+        else:
+            # Special processing since dates vary drastically
+            obs_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/Shah2019_satopanth/satopanth2019-melt.csv')
+            obs_df['hd_m'] = obs_df.hd_cm / 100
+            obs_df['doy_start'] = obs_df['doy'] - obs_df['obs_period_d']
+            obs_df['doy_end'] = obs_df['doy']
+            obs_df['mb_obs_mmwed'] = obs_df.melt_cm * 0.9 * 10 / obs_df.obs_period_d
+            obs_df['mb_mod_mmwed'] = np.nan
+            obs_df['mb_mod_mmwed_low'] = np.nan
+            obs_df['mb_mod_mmwed_high'] = np.nan
+            
+            ds_ostrem = xr.open_dataset(melt_fp + melt_fn)
+            ds_ostrem = ds_ostrem.sortby('hd_cm')
+            debris_thicknesses = ds_ostrem.hd_cm.values
+            time_year = pd.to_datetime(ds_ostrem.time.values).year
+            time_daysperyear = np.array([366 if x%4 == 0 else 365 for x in time_year])
+            time_yearfrac = time_year + (pd.to_datetime(ds_ostrem.time.values).dayofyear-1) / time_daysperyear
+            
+            # Loop through each point individually because they all differ
+            for ndata in obs_df.index.values:
+                
+                measured_hd = obs_df.loc[ndata,'hd_m']
+        
+                # Start and end indices
+                if obs_df.loc[ndata,'year']%4 == 0:
+                    daysperyear = 366
+                else:
+                    daysperyear = 365
+                start_yearfrac = obs_df.loc[ndata,'year'] + obs_df.loc[ndata,'doy_start'] / daysperyear
+                end_yearfrac = obs_df.loc[ndata,'year'] + obs_df.loc[ndata,'doy_end'] / daysperyear
+                
+                start_idx = np.where(abs(time_yearfrac - start_yearfrac) == abs(time_yearfrac - start_yearfrac).min())[0][0]
+                end_idx = np.where(abs(time_yearfrac - end_yearfrac) == abs(time_yearfrac - end_yearfrac).min())[0][0]
+                
+                # Ostrem Curve
+                debris_melt_df = pd.DataFrame(np.zeros((len(debris_thicknesses),3)), 
+                                              columns=['debris_thickness', 'melt_mmwed', 'melt_std_mmwed'])  
+                nelev = 0
+                for ndebris, debris_thickness in enumerate(debris_thicknesses):
+                    # Units: mm w.e. per day                
+                    melt_mmwed = (ds_ostrem['melt'][ndebris,start_idx:end_idx,nelev].values.sum() 
+                                  * 1000 / len(time_yearfrac[start_idx:end_idx]))
+                    melt_std_mmwed = (ds_ostrem['melt_std'][ndebris,start_idx:end_idx,nelev].values.sum() 
+                                      * 1000 / len(time_yearfrac[start_idx:end_idx]))
+                    debris_melt_df.loc[ndebris] = debris_thickness / 100, melt_mmwed, melt_std_mmwed
+                debris_melt_df['melt_bndlow_mmwed'] = debris_melt_df['melt_mmwed'] - z_value * debris_melt_df['melt_std_mmwed']
+                debris_melt_df['melt_bndhigh_mmwed'] = debris_melt_df['melt_mmwed'] + z_value * debris_melt_df['melt_std_mmwed']
+        
+                # MEAN CURVE
+                fit_idx = list(np.where(debris_thicknesses >= 5)[0])            
+                func_coeff, pcov = curve_fit(melt_fromdebris_func, 
+                                             debris_melt_df.debris_thickness.values[fit_idx], 
+                                             debris_melt_df.melt_mmwed.values[fit_idx])
+                melt_cleanice = debris_melt_df.loc[0,'melt_mmwed']
+                # Fitted curve
+                debris_4curve = np.arange(0.02,5.01,0.01)
+                melt_4curve = melt_fromdebris_func(debris_4curve, func_coeff[0], func_coeff[1])
+                # add clean ice
+                debris_4curve = np.concatenate([[0.0], debris_4curve])
+                melt_4curve = np.concatenate([[melt_cleanice], melt_4curve])
+                
+                # Linearly interpolate between 0 cm and 2 cm for the melt rate
+                def melt_0to2cm_adjustment_value(melt, melt_clean, melt_2cm, hd):
+                    """ Linearly interpolate melt factors between 0 and 2 cm 
+                        based on clean ice and 2 cm sub-debris melt """
+                    # ADJUST SINGLE VALUE TO LIST
+                    melt = np.array([melt])
+                    hd = np.array([hd])
+                    melt[(hd >= 0) & (hd < 0.02)] = (
+                        melt_clean + hd[(hd >= 0) & (hd < 0.02)] / 0.02 * (melt_2cm - melt_clean))
+                    return melt
+                
+                melt_mod = melt_fromdebris_func(measured_hd, func_coeff[0], func_coeff[1])
+                melt_2cm = melt_fromdebris_func(0.02, func_coeff[0], func_coeff[1])
+                melt_mod = melt_0to2cm_adjustment_value(melt_mod, melt_cleanice, melt_2cm, measured_hd)
+        
+                # LOWER BOUND CURVE
+                func_coeff_bndlow, pcov = curve_fit(melt_fromdebris_func, 
+                                                    debris_melt_df.debris_thickness.values[fit_idx], 
+                                                    debris_melt_df.melt_bndlow_mmwed.values[fit_idx])
+                melt_cleanice_bndlow = debris_melt_df.loc[0,'melt_bndlow_mmwed']
+                # Fitted curve
+                debris_4curve = np.arange(0.02,5.01,0.01)
+                melt_4curve_bndlow = melt_fromdebris_func(debris_4curve, func_coeff_bndlow[0], func_coeff_bndlow[1])
+                # add clean ice
+                debris_4curve = np.concatenate([[0.0], debris_4curve])
+                melt_4curve_bndlow = np.concatenate([[melt_cleanice_bndlow], melt_4curve_bndlow])
+                
+                melt_mod_bndlow = melt_fromdebris_func(measured_hd, func_coeff_bndlow[0], func_coeff_bndlow[1])
+                melt_2cm_bndlow = melt_fromdebris_func(0.02, func_coeff_bndlow[0], func_coeff_bndlow[1])
+                melt_mod_bndlow = melt_0to2cm_adjustment_value(melt_mod_bndlow, melt_cleanice_bndlow, melt_2cm_bndlow, 
+                                                               measured_hd)
+                
+                
+                # UPPER BOUND CURVE
+                func_coeff_bndhigh, pcov = curve_fit(melt_fromdebris_func, 
+                                                    debris_melt_df.debris_thickness.values[fit_idx], 
+                                                    debris_melt_df.melt_bndhigh_mmwed.values[fit_idx])
+                melt_cleanice_bndhigh = debris_melt_df.loc[0,'melt_bndhigh_mmwed']
+                # Fitted curve
+                debris_4curve = np.arange(0.02,5.01,0.01)
+                melt_4curve_bndhigh = melt_fromdebris_func(debris_4curve, func_coeff_bndhigh[0], func_coeff_bndhigh[1])
+                # add clean ice
+                debris_4curve = np.concatenate([[0.0], debris_4curve])
+                melt_4curve_bndhigh = np.concatenate([[melt_cleanice_bndhigh], melt_4curve_bndhigh])
+                
+                melt_mod_bndhigh = melt_fromdebris_func(measured_hd, func_coeff_bndhigh[0], func_coeff_bndhigh[1])
+                melt_2cm_bndhigh = melt_fromdebris_func(0.02, func_coeff_bndhigh[0], func_coeff_bndhigh[1])
+                melt_mod_bndhigh = melt_0to2cm_adjustment_value(melt_mod_bndhigh, melt_cleanice_bndhigh,melt_2cm_bndhigh, 
+                                                                measured_hd)
+                
+                # RECORD THE DATA
+                obs_df.loc[ndata,'mb_mod_mmwed'] = melt_mod[0]
+                obs_df.loc[ndata,'mb_mod_mmwed_low'] = melt_mod_bndlow[0]
+                obs_df.loc[ndata,'mb_mod_mmwed_high'] = melt_mod_bndhigh[0]
+                
+            # Compare all time steps (all intervals over the entire melt season included)
+            fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
+            ax[0,0].scatter(obs_df.mb_obs_mmwed.values, obs_df.mb_mod_mmwed.values, 
+                            color='k', marker='o', linewidth=0.5, facecolor='none', s=30, zorder=1, clip_on=True)
+            ax[0,0].plot([0,200],[0,200], color='k', linewidth=0.5)
+            ax[0,0].set_xlim(0,75)
+            ax[0,0].set_ylim(0,75)
+                
+            fig.set_size_inches(3.45,3.45)
+            fig_fullfn = melt_compare_fp + 'melt_compare-Satopanth_all_timesteps.png'
+            fig.savefig(fig_fullfn, bbox_inches='tight', dpi=150)
+            
+            obs_df.to_csv(obs_df_fullfn)
+        
+    #    obs_df_stakes = pd.DataFrame(np.zeros((0, len(obs_df.columns))), columns=list(obs_df.columns))
+    #    unique_years = list(obs_df.year.unique())
+    #    for nyear, year in enumerate(unique_years[0:1]):
+    #        obs_df_year = obs_df[obs_df['year'] == year]
+    #        obs_df_year.reset_index(inplace=True, drop=True)
+    #        
+    #        stake_ids = list(obs_df_year.stake_id.unique())
+    #        for nstake, stake_id in enumerate(stake_ids[0:10]):
+    #            obs_df_stakes_subset = obs_df_year[obs_df_year['stake_id'] == stake_id]
+    #            obs_df_stakes_subset.reset_index(inplace=True, drop=True)
+    #            
+    #            # Melt average over the duration of period
+    #            obs_melt_cm_total = obs_df_stakes_subset.melt_cm.sum()
+    #            obs_period_d_total = obs_df_stakes_subset.obs_period_d.sum()
+    #            obs_mmwed = obs_melt_cm_total * 0.9 * 10 / obs_period_d_total
+                
+    #            # Start and end date of the entire duration
+    #            start_doy = obs_df_stakes_subset.doy_start.min()
+    #            end_doy = obs_df_stakes_subset.doy_end.max() 
+        
+        hd_obs_all.append(list(obs_df.hd_m.values))
+        melt_obs_all.append(list(obs_df.mb_obs_mmwed.values))
+        melt_mod_all.append(list(obs_df.mb_mod_mmwed.values))
+        melt_mod_bndlow_all.append(list(obs_df.mb_mod_mmwed_low))
+        melt_mod_bndhigh_all.append(list(obs_df.mb_mod_mmwed_high))
+        reg_all.append(['15'])
+        rgiid_all.append(['15.07122'])   
+    
+    
     # ===== Hailuogou (15.07886) ====
     if '15.07886' in glaciers:
         print('\nmelt comparison with Zhang et al (2011)')
@@ -1008,9 +1275,9 @@ if option_melt_comparison:
         yearfracs_list = [[2008 + 184/366, 2008 + 274/366]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.1, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -1027,6 +1294,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['15'])
+        rgiid_all.append(['15.07886'])   
         
     # ===== 24K (15.11758) ====
     if '15.11758' in glaciers:
@@ -1045,9 +1313,9 @@ if option_melt_comparison:
         yearfracs_list = [[2016 + 153/366, 2016 + 274/366], [2008 + 201/366, 2008 + 248/366]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -1064,10 +1332,11 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['15'])
+        rgiid_all.append(['15.11758'])   
         
     # ===== Fox (18.02375) ====
     if '18.02375' in glaciers:
-        print('\nmelt comparison with Brook et al. (2012)')
+        print('\nmelt comparison with Brook and Paine (2012)')
         # Data: debris thickness (m) and melt rate (mm w.e. d-1)
         mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/18.02375_brook2012-melt.csv')
         measured_hd_list = [mb_df.hd_m.values]
@@ -1080,9 +1349,9 @@ if option_melt_comparison:
         yearfracs_list = [[2007 + 327/365, 2007 + 337/365]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 20, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -1099,6 +1368,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['18'])
+        rgiid_all.append(['18.02375'])   
         
     # ===== Franz Josef (18.02397) ====
     if '18.02397' in glaciers:
@@ -1116,9 +1386,9 @@ if option_melt_comparison:
         yearfracs_list = [[2012 + 38/366, 2012 + 47/366]]
 
         hd_min, hd_max = 0, np.ceil(np.max([x.max() for x in measured_hd_list])/0.1)*0.1 + 0.05
-        hd_tick_major, hd_tick_minor = 0.1, 0.02
+        hd_tick_major, hd_tick_minor = 0.2, 0.05
         melt_min, melt_max = 0, np.round(np.ceil(np.max([x.max() for x in measured_melt_list]) / 10) * 10,0) + 5
-        melt_tick_major, melt_tick_minor = 10, 5
+        melt_tick_major, melt_tick_minor = 40, 5
     
         for n in np.arange(0,len(measured_hd_list)):
             assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
@@ -1135,6 +1405,7 @@ if option_melt_comparison:
         melt_mod_bndlow_all.append(melt_mod_bndlow)
         melt_mod_bndhigh_all.append(melt_mod_bndhigh)
         reg_all.append(['18'])
+        rgiid_all.append(['18.02397'])   
         
         
         
@@ -1195,27 +1466,27 @@ if option_melt_comparison:
     ax[0,0].set_ylim(0,125)
         
     fig.set_size_inches(3.45,3.45)
-    fig_fullfn = hd_compare_fp + 'melt_compare-wellmeasured_lowres.png'
+    fig_fullfn = melt_compare_fp + 'melt_compare-wellmeasured_lowres.png'
     fig.savefig(fig_fullfn, bbox_inches='tight', dpi=150)
     
     print('\n\nThe outliers where we underestimate is likely due to aspect and slope\n\n')
     
     print('To-do list:')
-    print('  - add regions')
-    print('  - add error bars?')
+    print('  - color by debris thickness')
+    print('  - consider removing error bars')
+    print('  - add individual glacier names to facilitate main plot of curve comparisons')
         
     
-    
-    #%%
-    print(melt_df_all.region.unique())
     #%%
     
     marker_list = ['P', 'X', 'o', '<', 'v', '>', '^', 'd', 'h', 'p', 'D', '*',  'H', '8']
+    marker_dict = {'01':'P', '02':'X', '07':'h', '11':'o', '12':'^', '13':'<', '14':'v', '15':'>', '18':'*'}
 
     fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
     reg_str_list = []
     count_reg = -1
     for nroi, reg_str in enumerate(melt_df_all.reg.unique()):
+#    for nroi, reg_str in enumerate(['01']):
         if reg_str not in reg_str_list:
             label_str = reg_str
             reg_str_list.append(reg_str)
@@ -1227,24 +1498,40 @@ if option_melt_comparison:
         melt_df_subset['err'] = (np.abs(melt_df_subset.melt_mod_bndhigh.values - melt_df_subset.melt_mod.values) + 
                                  np.abs(melt_df_subset.melt_mod_bndlow - melt_df_subset.melt_mod) / 2) 
 
-        marker = marker_list[count_reg]
+        marker = marker_dict[reg_str]
         
         # Size thresholds   
         s_plot = 20
-        lw =  1
-        lw_err = 0.5
+        lw =  0.3
+        lw_err = 0.1
         colors = 'k'
         zorders = [3,4,5]
         
-        ax[0,0].scatter(melt_df_subset['melt_obs'], melt_df_subset['melt_mod'], color='k', marker=marker, 
-                        linewidth=1, facecolor='none', s=20, zorder=3, label=label_str, clip_on=True)
-        ax[0,0].errorbar(melt_df_subset['melt_obs'], melt_df_subset['melt_mod'], 
-                         xerr=melt_df_subset['err'], 
-                         capsize=1, capthick=0.5, linewidth=0.5, color='grey', alpha=1, zorder=2)
+        # Color symbols by debris thickness
+        hd_values = melt_df_subset.hd.values
+        hd_colors = list(melt_df_subset.hd.values)
+        for nd, hd in enumerate(hd_colors):
+            if hd <= 0.05:
+                hd_colors[nd] = '#2c7bb6'
+            elif hd <= 0.1:
+                hd_colors[nd] = '#abd9e9'
+            elif hd <= 0.2:
+                hd_colors[nd] = '#ffffbf'
+            elif hd <= 0.4:
+                hd_colors[nd] = '#fdae61'
+            else:
+                hd_colors[nd] = '#d7191c'
+        
+        ax[0,0].scatter(melt_df_subset['melt_obs'], melt_df_subset['melt_mod'], marker=marker, edgecolor=hd_colors,
+                        linewidth=lw, facecolor='none', s=30, zorder=3, label=label_str, clip_on=True)
+#        ax[0,0].errorbar(melt_df_subset['melt_obs'].values, melt_df_subset['melt_mod'].values, 
+#                         xerr=melt_df_subset['err'].values, yerr=None,
+#                         capsize=1, capthick=0.15, elinewidth=lw_err, linewidth=0, color='grey', alpha=1, zorder=2,
+#                         label=None)
         
     # Labels
-    ax[0,0].set_xlabel('Observed Melt (m w.e. a-1)', size=12)    
-    ax[0,0].set_ylabel('Modeled Melt (m w.e. a-1)', size=12)
+    ax[0,0].set_xlabel('Observed Melt (mm w.e. d$^{-1}$)', size=12)    
+    ax[0,0].set_ylabel('Modeled Melt (mm w.e. d$^{-1}$)', size=12)
     ax[0,0].set_xlim(0,125)
     ax[0,0].set_ylim(0,125)
     ax[0,0].plot([0,200],[0,200], color='k', linewidth=0.5, zorder=1)
@@ -1256,28 +1543,34 @@ if option_melt_comparison:
     ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
     ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
     # Legend
+#    leg = ax[0,0].legend(loc='upper left', ncol=1, fontsize=10, frameon=False, handlelength=1, 
+#                         handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
+#                         bbox_to_anchor=(1.035, 1.0), title=' ')
     nlabel = 0
     none_count = 5
     # Hack to get proper columns
-#    obs_labels = [None, str(n_obs_min) + '-25', '25-100', '> 100', None]
-#    for obs_label in obs_labels:
-#        if obs_label is None:
-#            none_count += 1
-#            ax[0,0].scatter([10],[10], color='k', marker='s', linewidth=1, 
-#                            edgecolor='white', facecolor='white', s=1, zorder=3, label=' '*none_count)
-#        else:
-#            ax[0,0].scatter([10],[10], color=colors[nlabel], marker='s', linewidth=lws[nlabel], 
-#                            facecolor=colors[nlabel], s=s_sizes[nlabel], zorder=3, label=obs_label)
-#            nlabel += 1
-#    leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=False, handlelength=1, 
-#                         handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
-#                         bbox_to_anchor=(1.035, 1.0), title=' ')
-#    for nmarker in np.arange(0,count_reg+1):
-#        leg.legendHandles[nmarker]._sizes = [30]
-#        leg.legendHandles[nmarker]._linewidths = [0.5]
-#        leg.legendHandles[nmarker].set_edgecolor('k')
-#    ax[0,0].text(1.21, 0.95, 'Region', size=10, horizontalalignment='center', verticalalignment='top', 
-#                 transform=ax[0,0].transAxes)
+    obs_labels = [None, '< 0.05', '0.05-0.10', '0.10-0.20', '0.20-0.40', '>0.40']
+    colors = ['#2c7bb6', '#abd9e9', '#ffffbf', '#fdae61', '#d7191c']
+    for obs_label in obs_labels:
+        if obs_label is None:
+            none_count += 1
+            ax[0,0].scatter([-5],[-5], color='k', marker='s', linewidth=1, 
+                            edgecolor='white', facecolor='white', s=1, zorder=3, label=' '*none_count)
+        else:
+            ax[0,0].scatter([-5],[-5], color=colors[nlabel], marker='s', linewidth=lw, 
+                            facecolor=colors[nlabel], s=30, zorder=3, label=obs_label)
+            nlabel += 1
+    leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=True, handlelength=1, 
+                         handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
+#                         bbox_to_anchor=(1.035, 1.0), 
+                         bbox_to_anchor=(0.0,1.02),
+                         title='Region            $h_{d}$      ', framealpha=1)
+    for nmarker in np.arange(0,count_reg+1):
+        leg.legendHandles[nmarker]._sizes = [30]
+        leg.legendHandles[nmarker]._linewidths = [0.5]
+        leg.legendHandles[nmarker].set_edgecolor('k')
+#    ax[0,0].text(0.17, 0.98, 'Region', size=10, horizontalalignment='center', verticalalignment='top', 
+#                 transform=ax[0,0].transAxes, zorder=4)
 #    ax[0,0].text(1.5, 0.95, '$n_{obs}$', size=10, horizontalalignment='center', verticalalignment='top', 
 #                 transform=ax[0,0].transAxes)
 #    # Create a Rectangle patch
@@ -1285,9 +1578,10 @@ if option_melt_comparison:
 #                          boxstyle='round, pad=0.1')
 #    ax[0,0].add_patch(rect)
 #    ax[0,0].axvline(x=5.45, ymin=0.565, ymax=0.97, clip_on=False, color='lightgrey', linewidth=1)
+    
     fig.set_size_inches(3.45,3.45)
-    fig_fullfn = melt_fp + 'melt_compare_lowres.png'
-    fig.savefig(fig_fullfn, bbox_inches='tight', dpi=150)
+    fig_fullfn = melt_compare_fp + 'melt_compare.png'
+    fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
     
     #%%
         
@@ -1298,19 +1592,17 @@ if option_melt_comparison:
 #%%
 if option_hd_comparison: 
     # All glaciers
-    glaciers = ['1.15645', '2.14297', '7.01044', '7.01107', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
-                '12.01132', '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042', '15.03473', 
-                '15.03733', '15.03743', '15.04045', '15.07886', '15.11758', '17.13720', '18.02397']
+#    glaciers = ['1.15645', '2.14297', '7.01044', '7.01107', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
+#                '12.01132', '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042', '15.03473', 
+#                '15.03733', '15.03743', '15.04045', '15.07122', '15.07886', '15.11758', '17.13720', '18.02397']
     # Good glaciers for publication quality figure
-#    glaciers = ['1.15645', '2.14297', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
-#                '12.01132', '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042',
-#                '15.03733', '15.03473','15.04045', '15.07886', '15.11758', '17.13720', '18.02397']
     glaciers = ['1.15645', '2.14297', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
-                '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042',
-                '15.03733', '15.03473','15.04045', '15.03743', '15.07886', '15.11758', '17.13720', '18.02397']
+                '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.15536', '14.16042',
+                '15.03733', '15.03473','15.04045', '15.03743', '15.07122', '15.07886', '15.11758', '17.13720', 
+                '18.02397']
     # roughly estimated from maps
 #    glaciers = ['13.43165', '13.43174', '13.43207']
-#    glaciers = ['13.43165']
+#    glaciers = ['14.15536']
 
     process_files = True
     regional_hd_comparison = True
@@ -1347,6 +1639,7 @@ if option_hd_comparison:
                                    (hd_datasets_fp + '13.43232_haidong2006-hd.csv', 'Haidong 2006')],
                       '14.06794': [(hd_datasets_fp + '14.06794_mihalcea2006-melt.csv', 'Mihalcea 2006'), 
                                    (hd_datasets_fp + '14.06794_minora2015-hd.csv', 'Minora 2015')],
+                      '14.15536': [(hd_datasets_fp + '14.15536_banerjee2018-hd.csv', 'Banerjee 2018')],
                       '14.16042': [(hd_datasets_fp + '14.16042_patel2016-hd.csv', 'Patel 2016')],
                       '15.03473': [(hd_datasets_fp + '15.03473_nicholson2012-hd.csv', 'Nicholson 2012'), 
 #                                   (hd_datasets_fp + '15.03473_nicholson2017-hd.csv', 'Nicholson 2017'),
@@ -1355,6 +1648,7 @@ if option_hd_comparison:
                       '15.03733': [(hd_datasets_fp + '15.03733_gibson-hd.csv', 'Gibson 2014')],
                       '15.03743': [(hd_datasets_fp + '15.03743_rounce2014-hd.csv', 'Rounce 2014')],
                       '15.04045': [(hd_datasets_fp + '15.04045_mccarthy2017-hd.csv', 'McCarthy 2017')],
+                      '15.07122': [(hd_datasets_fp + '15.07122_shah2019-hd.csv', 'Shah 2019')],
                       '15.07886': [(hd_datasets_fp + '15.07886_zhang2011-hd.csv', 'Zhang 2011')],
                       '15.11758': [(hd_datasets_fp + '15.11758_yang2010-hd.csv', 'Yang 2010')],
                       '17.13720': [(hd_datasets_fp + '17.13720_ayala2016-hd.csv', 'Ayala 2016')],
@@ -1739,14 +2033,10 @@ if option_hd_comparison:
 
 #%%
         # ------ WELL-MEASURED ONLY (based on mininum number of observations) ----
-        glaciers_subset = ['1.15645', '2.14297', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
-                           '12.01132', '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.16042', 
-                           '15.03473', '15.03733', '15.03743', '15.04045', '15.07886', '15.11758', '17.13720', 
-                           '18.02397']
         hd_compare_all = None
         hd_fns_subset = []
         for i in hd_fns:
-            if i.split('_')[0] in glaciers_subset:
+            if i.split('_')[0] in glaciers:
                 hd_fns_subset.append(i)
         hd_fns_subset = sorted(hd_fns_subset)
         for hd_fn in hd_fns_subset:
@@ -1757,7 +2047,7 @@ if option_hd_comparison:
                 hd_compare_all = pd.concat([hd_compare_all, hd_compare], axis=0)
         hd_compare_all.reset_index(inplace=True, drop=True)
         # Only bins with minimum number of observations
-        hd_compare_all = hd_compare_all[hd_compare_all['obs_count'] >= n_obs_min]
+        hd_compare_all = hd_compare_all[hd_compare_all['obs_count'] >= n_obs_min].copy()
         hd_compare_all.reset_index(inplace=True, drop=True)
         hd_compare_all['glac_str'] = [str(int(hd_compare_all.loc[x,'region'])) + '.' + 
                                       str(int(hd_compare_all.loc[x,'glacno'])).zfill(5) 
@@ -1795,6 +2085,7 @@ if option_hd_comparison:
         hd_tick_major, hd_tick_minor = 0.5, 0.25
         
         marker_list = ['P', 'X', 'o', '<', 'v', '>', '^', 'd', 'h', 'p', 'D', '*',  'H', '8']
+        marker_dict = {'01':'P', '02':'X', '07':'h', '11':'o', '12':'^', '13':'<', '14':'v', '15':'>', '18':'*'}
 
         fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
         ax_inset = plt.axes([1.01, 0.125, 0.38, 0.38])
@@ -1809,7 +2100,8 @@ if option_hd_comparison:
             else:
                 label_str = None
 
-            marker = marker_list[count_reg]
+#            marker = marker_list[count_reg]
+            marker = marker_dict[reg_str]
             
             # Size thresholds   
             s_sizes = [20, 40, 80]
@@ -1847,7 +2139,7 @@ if option_hd_comparison:
                              hd_compare_all.loc[ndata,'hd_ts_med_m'], 
                              xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
                              yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
-                             capsize=1, capthick=lw_err, linewidth=lw_err, color=color, alpha=1, zorder=2)
+                             capsize=1, capthick=lw_err, elinewidth=lw_err, linewidth=0, color=color, alpha=1, zorder=2)
                
             if hd_compare_all.loc[ndata,'hd_obs_med'] < 0.5 and hd_compare_all.loc[ndata,'hd_ts_med_m'] < 0.5:
                 ax_inset.scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
@@ -1858,7 +2150,8 @@ if option_hd_comparison:
                                   hd_compare_all.loc[ndata,'hd_ts_med_m'], 
                                   xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
                                   yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
-                                  capsize=1, capthick=lw_err, linewidth=lw_err, color=color, alpha=1, zorder=2)
+                                  capsize=1, capthick=lw_err, elinewidth=lw_err, linewidth=0, 
+                                  color=color, alpha=1, zorder=2)
                 
         # Inset plot
         ax_inset.plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
@@ -1872,8 +2165,8 @@ if option_hd_comparison:
         ax_inset.set_yticklabels(['', '0.0','','0.5']) 
             
         # Labels
-        ax[0,0].set_xlabel('Observed $h_d$ (m)', size=12)    
-        ax[0,0].set_ylabel('Modeled $h_d$ (m)', size=12)
+        ax[0,0].set_xlabel('$h_{d,obs}$ (m)', size=12)    
+        ax[0,0].set_ylabel('$h_{d,mod}$ (m)', size=12)
         ax[0,0].set_xlim(hd_min,hd_max)
         ax[0,0].set_ylim(hd_min,hd_max)
         ax[0,0].plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
@@ -1915,8 +2208,8 @@ if option_hd_comparison:
         ax[0,0].add_patch(rect)
         ax[0,0].axvline(x=5.45, ymin=0.565, ymax=0.97, clip_on=False, color='lightgrey', linewidth=1)
         fig.set_size_inches(3.45,3.45)
-        fig_fullfn = hd_compare_fp + 'hd_compare-wellmeasured_lowres.png'
-        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=150)
+        fig_fullfn = hd_compare_fp + 'hd_compare-wellmeasured.png'
+        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
         
         #%%
         # Comparison of observation density and difference with observation --> no relationship

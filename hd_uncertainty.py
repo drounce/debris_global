@@ -30,8 +30,10 @@ from meltcurves import melt_fromdebris_func
 from meltcurves import debris_frommelt_func
 
 #%%% ===== SCRIPT OPTIONS =====
-option_hd_melt_uncertainty = True
+option_hd_melt_uncertainty = False
+hd_uncertainty_schematic_fig = False
 option_melt_diagram_template = False
+hd_methods_diagram_ngoz = True
 
 #hd_obs_fp = debris_prms.main_directory + '/../hd_obs/'
 
@@ -757,152 +759,153 @@ if option_hd_melt_uncertainty:
     fig.savefig(debris_prms.output_fp + fig_fn, bbox_inches='tight', dpi=300, transparent=True)
     
 #%%
-if (os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-IQR.csv') and 
-    os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-90.csv')):
-    
-    # Export regional statistics
-    hd_wbnds_df = pd.read_csv(debris_prms.output_fp + 'hd_uncertainty_bnds-IQR.csv')
-    hd_wbnds_df_90 = pd.read_csv(debris_prms.output_fp + 'hd_uncertainty_bnds-90.csv')
-    
-    # ===== Plot the relationship ======
-    fontsize = 12
-    hd_major = 1
-    hd_minor = 0.1
-    lw_both = 1
-    lw_component = 0.5
-    fig, ax = plt.subplots(1, 3, squeeze=False, sharex=False, sharey=False, gridspec_kw = {'wspace':0.4, 'hspace':0})
-    ax[0,2].axis('off')
-    for n in [0,1]:
-#        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_both'], zorder=3, color='k', linewidth=lw_both)
-#        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_both'], zorder=3, color='k', linewidth=lw_both)
-        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_debris'], zorder=3, 
-                     color='b', linewidth=lw_component, linestyle=':', label='IQR\ndebris\nproperties')
-        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_debris'], zorder=3, 
-                     color='b', linewidth=lw_component, linestyle=':', label='')
-        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_elevchg'], zorder=3, 
-                     color='r', linewidth=lw_component, linestyle=':', label='IQR\nobserved\nmelt')
-        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_elevchg'], zorder=3, 
-                     color='r', linewidth=lw_component, linestyle=':', label='')
-        ax[0,n].fill_between(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_both'], hd_wbnds_df['hd_bndhigh_both'],
-                             color='k', linewidth=0, zorder=3, alpha=0.2, label='IQR')
-        ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndlow_both'], zorder=1, color='k', linestyle='--', 
-                      linewidth=lw_both, label='90%')
-        ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndhigh_both'], zorder=1, color='k', linestyle='--',
-                      linewidth=lw_both, label='')
-        ax[0,n].plot([0,5],[0,5], zorder=1, color='k', linewidth=1)
-    
-        # X-label
-        ax[0,n].set_xlabel('$h_{d}$ (m)', size=fontsize)
-        ax[0,n].set_xlim(0,5)
-        ax[0,n].xaxis.set_major_locator(plt.MultipleLocator(hd_major))
-        ax[0,n].xaxis.set_minor_locator(plt.MultipleLocator(hd_minor))  
-        # Y-label
-        ax[0,n].set_ylabel('$h_{d}$ bounds (m)', size=fontsize)
-        ax[0,n].set_ylim(0,5)
-        ax[0,n].yaxis.set_major_locator(plt.MultipleLocator(hd_major))
-        ax[0,n].yaxis.set_minor_locator(plt.MultipleLocator(hd_minor))
-        # Tick parameters
-        ax[0,n].yaxis.set_ticks_position('both')
-        ax[0,n].tick_params(axis='both', which='major', labelsize=fontsize-2, direction='inout')
-        ax[0,n].tick_params(axis='both', which='minor', labelsize=fontsize-4, direction='in') 
+if hd_uncertainty_schematic_fig:
+    if (os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-IQR.csv') and 
+        os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-90.csv')):
         
-        if n == 0:
-            # Legend
-            lgd = fig.legend(bbox_to_anchor=(0.69, 0.9), ncol=1, fontsize=10, frameon=False, handlelength=1, 
-                             handletextpad=0.15, columnspacing=0.5, borderpad=0.25, labelspacing=1)
-
-    # Second figure
-    ax[0,1].set_xlim(0,0.5)
-    ax[0,1].xaxis.set_major_locator(plt.MultipleLocator(0.1))
-    ax[0,1].xaxis.set_minor_locator(plt.MultipleLocator(0.02))  
-    ax[0,1].set_ylim(0,0.5)
-    ax[0,1].yaxis.set_major_locator(plt.MultipleLocator(0.1))
-    ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.02))  
-    
-    # Labels
-    ax[0,0].text(0.1, 0.98, 'a', size=12, fontweight='bold',
-                horizontalalignment='right', verticalalignment='top', transform=ax[0,0].transAxes)
-    ax[0,1].text(0.1, 0.98, 'b', size=12, fontweight='bold',
-                horizontalalignment='right', verticalalignment='top', transform=ax[0,1].transAxes)
-    
-    # Save plot
-    fig.set_size_inches(8, 3)
-    fig_fn = 'hd_uncertainty_bnds-diagonal.png'
-    fig.savefig(debris_prms.output_fp + fig_fn, bbox_inches='tight', dpi=300, transparent=True)
-    
-    #%%
-    # ===== Plot the relationship ======
-    fontsize = 12
-    lw_both = 1
-    lw_component = 0.5
-    fig, ax = plt.subplots(1, 2, squeeze=False, sharex=False, sharey=False, gridspec_kw = {'wspace':0.25, 'hspace':0})
-#    ax[0,2].axis('off')
-    for n in [0,1]:
-        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_debris'] - hd_wbnds_df['hd_m'], zorder=3, 
-                     color='b', linewidth=lw_component, linestyle=':', label='$IQR_{prop}$')
-        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_debris'] - hd_wbnds_df['hd_m'], zorder=3, 
-                     color='b', linewidth=lw_component, linestyle=':', label='')
-        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_elevchg'] - hd_wbnds_df['hd_m'], zorder=3, 
-                     color='r', linewidth=lw_component, linestyle=':', label='$IQR_{melt}$')
-        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_elevchg'] - hd_wbnds_df['hd_m'], zorder=3, 
-                     color='r', linewidth=lw_component, linestyle=':', label='')
-        ax[0,n].fill_between(hd_wbnds_df['hd_m'], 
-                             hd_wbnds_df['hd_bndlow_both'] - hd_wbnds_df['hd_m'], 
-                             hd_wbnds_df['hd_bndhigh_both'] - hd_wbnds_df['hd_m'],
-                             color='k', linewidth=0, zorder=3, alpha=0.2, label='$IQR_{total}$')
-        ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndlow_both'] - hd_wbnds_df['hd_m'], 
-                     zorder=1, color='k', linestyle='--', linewidth=lw_both, label='$90\%_{total}$')
-        ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndhigh_both'] - hd_wbnds_df['hd_m'], 
-                     zorder=1, color='k', linestyle='--', linewidth=lw_both, label='')
-        ax[0,n].plot([0,5],[0,0], zorder=1, color='k', linewidth=0.5)
-    
-        # X-label
-        ax[0,n].set_xlabel('$h_{d}$ (m)', size=fontsize)
-        ax[0,n].set_xlim(0,5)
-        ax[0,n].xaxis.set_major_locator(plt.MultipleLocator(1))
-        ax[0,n].xaxis.set_minor_locator(plt.MultipleLocator(0.2))  
-        # Y-label
-#        ax[0,n].set_ylabel('$h_{d}$ uncertainty (m)', size=fontsize)
-        ax[0,n].set_ylim(-5,5)
-        ax[0,n].yaxis.set_major_locator(plt.MultipleLocator(2))
-        ax[0,n].yaxis.set_minor_locator(plt.MultipleLocator(0.4))
-        # Tick parameters
-        ax[0,n].yaxis.set_ticks_position('left')
-        ax[0,n].tick_params(axis='both', which='major', labelsize=fontsize-2, direction='inout')
-        ax[0,n].tick_params(axis='both', which='minor', labelsize=fontsize-4, direction='in') 
+        # Export regional statistics
+        hd_wbnds_df = pd.read_csv(debris_prms.output_fp + 'hd_uncertainty_bnds-IQR.csv')
+        hd_wbnds_df_90 = pd.read_csv(debris_prms.output_fp + 'hd_uncertainty_bnds-90.csv')
         
-        if n == 0:
-            # Y label
-            ax[0,n].set_ylabel('$h_{d}$ uncertainty (m)', size=fontsize)
-            # Legend (ordered)
-            handles, labels = ax[0,n].get_legend_handles_labels()
-            order = [2,3,1,0]
-            lgd = fig.legend([handles[idx] for idx in order],[labels[idx] for idx in order], 
-                             bbox_to_anchor=(0.45, 0.94), ncol=1, fontsize=9, frameon=True, handlelength=1, 
-                             handletextpad=0.15, columnspacing=1, borderpad=0.25, labelspacing=1)
-#            order = [0,1,3,2]
-#            lgd = fig.legend([handles[idx] for idx in order],[labels[idx] for idx in order], 
-#                             bbox_to_anchor=(0.452, 0.57), ncol=1, fontsize=9, frameon=True, handlelength=1, 
-#                             handletextpad=0.15, columnspacing=1, borderpad=0.25, labelspacing=1)
-
-    # Second figure
-    ax[0,1].set_xlim(0,0.5)
-    ax[0,1].xaxis.set_major_locator(plt.MultipleLocator(0.1))
-    ax[0,1].xaxis.set_minor_locator(plt.MultipleLocator(0.05))  
-    ax[0,1].set_ylim(-0.5,0.5)
-    ax[0,1].yaxis.set_major_locator(plt.MultipleLocator(0.2))
-    ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.05))
+        # ===== Plot the relationship ======
+        fontsize = 12
+        hd_major = 1
+        hd_minor = 0.1
+        lw_both = 1
+        lw_component = 0.5
+        fig, ax = plt.subplots(1, 3, squeeze=False, sharex=False, sharey=False, gridspec_kw = {'wspace':0.4, 'hspace':0})
+        ax[0,2].axis('off')
+        for n in [0,1]:
+    #        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_both'], zorder=3, color='k', linewidth=lw_both)
+    #        ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_both'], zorder=3, color='k', linewidth=lw_both)
+            ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_debris'], zorder=3, 
+                         color='b', linewidth=lw_component, linestyle=':', label='IQR\ndebris\nproperties')
+            ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_debris'], zorder=3, 
+                         color='b', linewidth=lw_component, linestyle=':', label='')
+            ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_elevchg'], zorder=3, 
+                         color='r', linewidth=lw_component, linestyle=':', label='IQR\nobserved\nmelt')
+            ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_elevchg'], zorder=3, 
+                         color='r', linewidth=lw_component, linestyle=':', label='')
+            ax[0,n].fill_between(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_both'], hd_wbnds_df['hd_bndhigh_both'],
+                                 color='k', linewidth=0, zorder=3, alpha=0.2, label='IQR')
+            ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndlow_both'], zorder=1, color='k', linestyle='--', 
+                          linewidth=lw_both, label='90%')
+            ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndhigh_both'], zorder=1, color='k', linestyle='--',
+                          linewidth=lw_both, label='')
+            ax[0,n].plot([0,5],[0,5], zorder=1, color='k', linewidth=1)
+        
+            # X-label
+            ax[0,n].set_xlabel('$h_{d}$ (m)', size=fontsize)
+            ax[0,n].set_xlim(0,5)
+            ax[0,n].xaxis.set_major_locator(plt.MultipleLocator(hd_major))
+            ax[0,n].xaxis.set_minor_locator(plt.MultipleLocator(hd_minor))  
+            # Y-label
+            ax[0,n].set_ylabel('$h_{d}$ bounds (m)', size=fontsize)
+            ax[0,n].set_ylim(0,5)
+            ax[0,n].yaxis.set_major_locator(plt.MultipleLocator(hd_major))
+            ax[0,n].yaxis.set_minor_locator(plt.MultipleLocator(hd_minor))
+            # Tick parameters
+            ax[0,n].yaxis.set_ticks_position('both')
+            ax[0,n].tick_params(axis='both', which='major', labelsize=fontsize-2, direction='inout')
+            ax[0,n].tick_params(axis='both', which='minor', labelsize=fontsize-4, direction='in') 
+            
+            if n == 0:
+                # Legend
+                lgd = fig.legend(bbox_to_anchor=(0.69, 0.9), ncol=1, fontsize=10, frameon=False, handlelength=1, 
+                                 handletextpad=0.15, columnspacing=0.5, borderpad=0.25, labelspacing=1)
     
-    # Labels
-    ax[0,0].text(0.1, 0.98, 'a', size=12, fontweight='bold',
-                horizontalalignment='right', verticalalignment='top', transform=ax[0,0].transAxes)
-    ax[0,1].text(0.1, 0.98, 'b', size=12, fontweight='bold',
-                horizontalalignment='right', verticalalignment='top', transform=ax[0,1].transAxes)
+        # Second figure
+        ax[0,1].set_xlim(0,0.5)
+        ax[0,1].xaxis.set_major_locator(plt.MultipleLocator(0.1))
+        ax[0,1].xaxis.set_minor_locator(plt.MultipleLocator(0.02))  
+        ax[0,1].set_ylim(0,0.5)
+        ax[0,1].yaxis.set_major_locator(plt.MultipleLocator(0.1))
+        ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.02))  
+        
+        # Labels
+        ax[0,0].text(0.1, 0.98, 'a', size=12, fontweight='bold',
+                    horizontalalignment='right', verticalalignment='top', transform=ax[0,0].transAxes)
+        ax[0,1].text(0.1, 0.98, 'b', size=12, fontweight='bold',
+                    horizontalalignment='right', verticalalignment='top', transform=ax[0,1].transAxes)
+        
+        # Save plot
+        fig.set_size_inches(8, 3)
+        fig_fn = 'hd_uncertainty_bnds-diagonal.png'
+        fig.savefig(debris_prms.output_fp + fig_fn, bbox_inches='tight', dpi=300, transparent=True)
+        
+        #%%
+        # ===== Plot the relationship ======
+        fontsize = 12
+        lw_both = 1
+        lw_component = 1
+        fig, ax = plt.subplots(1, 2, squeeze=False, sharex=False, sharey=False, gridspec_kw = {'wspace':0.25, 'hspace':0})
+    #    ax[0,2].axis('off')
+        for n in [0,1]:
+            ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_debris'] - hd_wbnds_df['hd_m'], zorder=3, 
+                         color='b', linewidth=lw_component, linestyle=':', label='$IQR_{prop}$')
+            ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_debris'] - hd_wbnds_df['hd_m'], zorder=3, 
+                         color='b', linewidth=lw_component, linestyle=':', label='')
+            ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_elevchg'] - hd_wbnds_df['hd_m'], zorder=3, 
+                         color='r', linewidth=lw_component, linestyle=':', label='$IQR_{melt}$')
+            ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_elevchg'] - hd_wbnds_df['hd_m'], zorder=3, 
+                         color='r', linewidth=lw_component, linestyle=':', label='')
+            ax[0,n].fill_between(hd_wbnds_df['hd_m'], 
+                                 hd_wbnds_df['hd_bndlow_both'] - hd_wbnds_df['hd_m'], 
+                                 hd_wbnds_df['hd_bndhigh_both'] - hd_wbnds_df['hd_m'],
+                                 color='k', linewidth=0, zorder=3, alpha=0.2, label='$IQR_{total}$')
+            ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndlow_both'] - hd_wbnds_df['hd_m'], 
+                         zorder=1, color='k', linestyle='--', linewidth=lw_both, label='$90\%_{total}$')
+            ax[0,n].plot(hd_wbnds_df_90['hd_m'], hd_wbnds_df_90['hd_bndhigh_both'] - hd_wbnds_df['hd_m'], 
+                         zorder=1, color='k', linestyle='--', linewidth=lw_both, label='')
+            ax[0,n].plot([0,5],[0,0], zorder=1, color='k', linewidth=0.5)
+        
+            # X-label
+            ax[0,n].set_xlabel('$h_{d}$ (m)', size=fontsize)
+            ax[0,n].set_xlim(0,5)
+            ax[0,n].xaxis.set_major_locator(plt.MultipleLocator(1))
+            ax[0,n].xaxis.set_minor_locator(plt.MultipleLocator(0.2))  
+            # Y-label
+    #        ax[0,n].set_ylabel('$h_{d}$ uncertainty (m)', size=fontsize)
+            ax[0,n].set_ylim(-5,5)
+            ax[0,n].yaxis.set_major_locator(plt.MultipleLocator(2))
+            ax[0,n].yaxis.set_minor_locator(plt.MultipleLocator(0.4))
+            # Tick parameters
+            ax[0,n].yaxis.set_ticks_position('left')
+            ax[0,n].tick_params(axis='both', which='major', labelsize=fontsize-2, direction='inout')
+            ax[0,n].tick_params(axis='both', which='minor', labelsize=fontsize-4, direction='in') 
+            
+            if n == 0:
+                # Y label
+                ax[0,n].set_ylabel('$h_{d}$ uncertainty (m)', size=fontsize)
+                # Legend (ordered)
+                handles, labels = ax[0,n].get_legend_handles_labels()
+                order = [2,3,1,0]
+                lgd = fig.legend([handles[idx] for idx in order],[labels[idx] for idx in order], 
+                                 bbox_to_anchor=(0.45, 0.94), ncol=1, fontsize=9, frameon=True, handlelength=1, 
+                                 handletextpad=0.15, columnspacing=1, borderpad=0.25, labelspacing=1)
+    #            order = [0,1,3,2]
+    #            lgd = fig.legend([handles[idx] for idx in order],[labels[idx] for idx in order], 
+    #                             bbox_to_anchor=(0.452, 0.57), ncol=1, fontsize=9, frameon=True, handlelength=1, 
+    #                             handletextpad=0.15, columnspacing=1, borderpad=0.25, labelspacing=1)
     
-    # Save plot
-    fig.set_size_inches(6, 3)
-    fig_fn = 'hd_uncertainty_bnds.png'
-    fig.savefig(debris_prms.output_fp + fig_fn, bbox_inches='tight', dpi=300, transparent=True)
+        # Second figure
+        ax[0,1].set_xlim(0,0.5)
+        ax[0,1].xaxis.set_major_locator(plt.MultipleLocator(0.1))
+        ax[0,1].xaxis.set_minor_locator(plt.MultipleLocator(0.05))  
+        ax[0,1].set_ylim(-0.5,0.5)
+        ax[0,1].yaxis.set_major_locator(plt.MultipleLocator(0.2))
+        ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.05))
+        
+        # Labels
+        ax[0,0].text(0.1, 0.98, 'a', size=12, fontweight='bold',
+                    horizontalalignment='right', verticalalignment='top', transform=ax[0,0].transAxes)
+        ax[0,1].text(0.1, 0.98, 'b', size=12, fontweight='bold',
+                    horizontalalignment='right', verticalalignment='top', transform=ax[0,1].transAxes)
+        
+        # Save plot
+        fig.set_size_inches(6, 3)
+        fig_fn = 'hd_uncertainty_bnds.png'
+        fig.savefig(debris_prms.output_fp + fig_fn, bbox_inches='tight', dpi=300, transparent=True)
     
     
 
@@ -971,3 +974,184 @@ if option_melt_diagram_template:
     fig.set_size_inches(3, 3)
     fig_fn = 'hd_melt_uncertainty_template.png'
     fig.savefig(debris_prms.output_fp + fig_fn, bbox_inches='tight', dpi=300, transparent=True)
+    
+
+#%% Supplementary Figure showing melt curves and surface temperature curves for calibration
+if hd_methods_diagram_ngoz:
+
+    def ts_fromdebris_func(h, a, b, c):
+        """ estimate surface temperature from debris thickness (h is debris thickness, a and k are coefficients) 
+            Hill Equation"""
+        return a * h**c / (b**c + h**c)
+    
+    def debris_fromts_func(ts, a, b, c, hd_max=debris_prms.hd_max):
+        """ estimate debris thickness from surface temperature (ts is surface temperature, a and k are coefficients) 
+            Hill Equation"""
+        # If temperature exceeds maximum of function cause NaN value
+        max_value = ts_fromdebris_func(50, a, b, c)
+        if ts.size == 1:
+            if ts > max_value:
+                ts = max_value
+            if ts < 0:
+                ts = 0
+        else:
+            ts[ts > a] = max_value
+            ts[ts < 0] = 0
+        # Debris thickness
+        hd = (ts * b**c / (a - ts))**(1/c)
+        if ts.size == 1:
+            if hd > hd_max:
+                hd = hd_max
+        else:
+            hd[hd > hd_max] = hd_max    
+        return hd
+    
+    df_hdopt_prms_fullfn = debris_prms.output_fp + 'hd_opt_prms/HMA/15.03473_hdopt_prms.csv'
+    df_hdopt_prms = pd.read_csv(df_hdopt_prms_fullfn)
+    func_coeff = [df_hdopt_prms.loc[0,'b0'], df_hdopt_prms.loc[0,'k']]
+    melt_2cm = df_hdopt_prms.loc[0,'melt_mwea_2cm']
+    melt_cleanice = df_hdopt_prms.loc[0,'melt_mwea_clean']
+    
+    #%%
+    # Debris thickness
+    ostrem_fn = '2800N-8675E-debris_melt_curve.nc'
+    ds_ostrem = xr.open_dataset(debris_prms.ostrem_fp + ostrem_fn)
+    
+    debris_thicknesses = ds_ostrem.hd_cm.values / 100
+    debris_melt_df = pd.DataFrame(np.zeros((len(debris_thicknesses),2)), 
+                                  columns=['debris_thickness', 'melt_mwea'])  
+    # ===== Ostrem Curve =====
+    start_yearfrac = debris_prms.mb_yrfrac_dict[debris_prms.roi][0] 
+    end_yearfrac = debris_prms.mb_yrfrac_dict[debris_prms.roi][1] 
+    time_year = pd.to_datetime(ds_ostrem.time.values).year
+    time_daysperyear = np.array([366 if x%4 == 0 else 365 for x in time_year])
+    time_yearfrac = time_year + (pd.to_datetime(ds_ostrem.time.values).dayofyear-1) / time_daysperyear
+
+    start_idx = np.where(abs(time_yearfrac - start_yearfrac) == abs(time_yearfrac - start_yearfrac).min())[0][0]
+    end_idx = np.where(abs(time_yearfrac - end_yearfrac) == abs(time_yearfrac - end_yearfrac).min())[0][0]
+
+    for nelev, elev_cn in enumerate(debris_prms.elev_cns):
+
+        for ndebris, debris_thickness in enumerate(debris_thicknesses):                    
+            melt_mwea = (ds_ostrem['melt'][ndebris,start_idx:end_idx,nelev].values.sum() / 
+                        (len(time_yearfrac[start_idx:end_idx])/365.25))
+            debris_melt_df.loc[ndebris] = debris_thickness, melt_mwea
+    
+    #%%
+    # ===== Plot the curve =====
+    
+    fig, ax = plt.subplots(2, 2, squeeze=False, sharex=False, sharey=False, gridspec_kw = {'wspace':0.4, 'hspace':0.3})
+    # Fitted curves
+    debris_4curve = np.arange(0.02,2.11,0.01)
+    melt_4curve = melt_fromdebris_func(debris_4curve, func_coeff[0], func_coeff[1])
+    melt_4curve[melt_4curve > melt_2cm] = melt_2cm
+    melt_4curve_norm = melt_4curve / melt_cleanice
+    
+    debris_melt_df = debris_melt_df[debris_melt_df['debris_thickness'] <= 2.1]
+    
+    # ===== MELT =====
+    ax[0,0].plot(debris_melt_df['debris_thickness'], debris_melt_df['melt_mwea'], 'o', 
+                 color='k', markersize=3, markerfacecolor="None", markeredgewidth=0.75, zorder=3, clip_on = False)
+    ax[0,0].plot(debris_4curve, melt_4curve, color='k', linewidth=1, linestyle='-', zorder=4, clip_on = False)
+    ax[0,0].plot([0,0.02], [melt_cleanice, melt_2cm], color='k', linewidth=1, linestyle='-', zorder=4, clip_on = False)
+    # X-label
+    ax[0,0].set_xlabel('Debris thickness (m)', size=12)
+    ax[0,0].set_xlim(0, 2.1)
+    ax[0,0].xaxis.set_tick_params(labelsize=12)
+    ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(0.5))
+    ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(0.1))  
+    # Y-label
+    ax[0,0].set_ylabel('Melt (m w.e. a$\mathregular{^{-1}}$)', size=12)
+    ax[0,0].set_ylim(0,13)
+    ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(5))
+    ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    # Tick parameters
+    ax[0,0].yaxis.set_ticks_position('both')
+    ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+    ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+    
+    # ===== MELT FACTOR =====
+    ax[0,1].plot(debris_melt_df['debris_thickness'], debris_melt_df['melt_mwea'] / melt_cleanice, 'o', 
+                 color='k', markersize=3, markerfacecolor="None", markeredgewidth=0.75, zorder=3, clip_on = False)
+    ax[0,1].plot(debris_4curve, melt_4curve_norm, color='k', linewidth=1, linestyle='-', zorder=4, clip_on = False)
+    ax[0,1].plot(np.array([0,0.02]), np.array([1, melt_2cm/melt_cleanice]), 
+                 color='k', linewidth=1, linestyle='-', zorder=4, clip_on = False)
+    # X-label
+    ax[0,1].set_xlabel('Debris thickness (m)', size=12)
+    ax[0,1].set_xlim(0, 2.1)
+    ax[0,1].xaxis.set_tick_params(labelsize=12)
+    ax[0,1].xaxis.set_major_locator(plt.MultipleLocator(0.5))
+    ax[0,1].xaxis.set_minor_locator(plt.MultipleLocator(0.1)) 
+    # Y-label
+    ax[0,1].set_ylabel('$E_d$ (-)', size=12)
+    ax[0,1].set_ylim(0,(int(melt_4curve_norm.max()/0.1)+3)*0.1)
+    ax[0,1].yaxis.set_major_locator(plt.MultipleLocator(0.2))
+    ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.05))
+    # Tick parameters
+    ax[0,1].yaxis.set_ticks_position('both')
+    ax[0,1].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+    ax[0,1].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+    
+    func_coeff_ts = [df_hdopt_prms.loc[0,'a'], df_hdopt_prms.loc[0,'b'], df_hdopt_prms.loc[0,'c']]
+    
+    debris_4curve = np.arange(0.,debris_prms.hd_max+0.01,0.01)
+    ts_day_mod = ts_fromdebris_func(debris_4curve, func_coeff_ts[0], func_coeff_ts[1], 
+                                    func_coeff_ts[2])
+    ax[1,0].plot(debris_4curve, ts_day_mod, color='k', linewidth=1, linestyle='-', zorder=4)
+    
+    # X-label
+    ax[1,0].set_xlabel('Debris thickness (m)', size=12)
+    ax[1,0].set_xlim(0, 2.1)
+    ax[1,0].xaxis.set_tick_params(labelsize=12)
+    ax[1,0].xaxis.set_major_locator(plt.MultipleLocator(0.5))
+    ax[1,0].xaxis.set_minor_locator(plt.MultipleLocator(0.1))  
+    # Y-label
+    ax[1,0].set_ylabel('Surface temperature ($^\circ$C)', size=12)
+    # Tick parameters
+    ax[1,0].yaxis.set_ticks_position('both')
+    ax[1,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+    ax[1,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+    
+    # ===== Ts vs. Melt =====
+    ts_max = ts_fromdebris_func(2., func_coeff_ts[0], func_coeff_ts[1], func_coeff_ts[2])
+    ts_4curve = np.arange(0, np.round(np.ceil(ts_max/5)*5)+0.1, 0.1)
+    
+    def melt_fromts_func(ts, a, b, c, b0, k, hd_max=debris_prms.hd_max, melt_2cm=melt_2cm):
+        """ estimate melt from surface temperature 
+        Parameters
+        ----------
+        ts : surface temperature
+        a, b, c : coefficients with debris-ts curve (Hill equation)
+        b0, k: coefficients with debris-melt curve (2nd order reaction rate)
+        """
+        ts_copy = ts.copy()
+        ts_max = ts_fromdebris_func(hd_max, a, b, c)
+        ts_copy[ts_copy > ts_max] = ts_max
+        hd = debris_fromts_func(ts_copy, a, b, c)
+        hd[hd < 0] = 0.02
+        hd[hd > hd_max] = hd_max
+        melt = melt_fromdebris_func(hd, b0, k)
+        melt[melt > melt_2cm] = melt_2cm
+        return melt
+    
+    melt_4curve = melt_fromts_func(ts_4curve,
+                                   func_coeff_ts[0], func_coeff_ts[1], func_coeff_ts[2], 
+                                   func_coeff[0], func_coeff[1])
+    ax[1,1].plot(ts_4curve, melt_4curve, color='k', linewidth=1, linestyle='-', zorder=4)
+
+    # X-label
+    ax[1,1].set_xlabel('Surface temperature ($^\circ$C)', size=12)
+    ax[1,1].set_xlim(0,np.round(np.ceil(ts_max/5)*5))
+    # Y-label
+    ax[1,1].set_ylabel('Melt (m w.e. a$\mathregular{^{-1}}$)', size=12)
+    # Tick parameters
+    ax[1,1].yaxis.set_ticks_position('both')
+    ax[1,1].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+    ax[1,1].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+
+    fig.set_size_inches(6, 6)
+    figure_fn = 'ngozumpa_melt_ts_relationships.png'
+    ostrem_fig_fp = debris_prms.output_fp
+    if not os.path.exists(ostrem_fig_fp):
+        os.makedirs(ostrem_fig_fp)
+    fig.savefig(ostrem_fig_fp + figure_fn, bbox_inches='tight', dpi=300)

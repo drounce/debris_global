@@ -25,7 +25,7 @@ ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 #roi = '02'
 #roi = '03'
 #roi = '04'
-roi = '05'
+#roi = '05'
 #roi = '06'
 #roi = '07'
 #roi = '08' 
@@ -33,7 +33,7 @@ roi = '05'
 #roi = '10'
 #roi = '11'
 #roi = '12'
-#roi = 'HMA'
+roi = 'HMA'
 #roi = '16'
 #roi = '17'
 #roi = '18'
@@ -45,7 +45,7 @@ debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
 debris_thickness_all[1] = 0.02
 
 # Experiment number 3 is single run, 4 is Monte Carlo simulations 
-experiment_no = 3
+experiment_no = 4
 if experiment_no == 4:
     mc_simulations = 100
     mc_stat_cns = ['mean', 'std', 'med', 'mad']
@@ -53,7 +53,8 @@ else:
     mc_simulations = 1
     mc_stat_cns = ['mean']
 
-eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
+#eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
+eb_fp = output_fp + 'exp' + str(experiment_no) + '/spc/' + roi + '/'
 #eb_fp = '/Volumes/LaCie/debris_output/exp3-20200313/' + roi + '/'
 
 # Latitude and longitude index to run the model
@@ -67,19 +68,20 @@ eb_fp = output_fp + 'exp' + str(experiment_no) + '/' + roi + '/'
 #latlon_list = [(46.0, 7.5)]     # Arolla (11.02810)
 #latlon_list = [(46.0, 8.0)]     # Belvedere (11.02858)
 #latlon_list = [(46.25, 10.5)]   # Venerocolo (11.02472)
-#latlon_list = [(46.5, 10.5)]    # Miage (11.03005)
+#latlon_list = [(45.75, 6.75)]    # Miage (11.03005)
 #latlon_list = [(43.0, 43.5)]    # Zopkhito (12.01012)
 #latlon_list = [(43.25, 42.75)]  # Djankuat (12.01132)
 #latlon_list = [(42.0, 80.25)]   # S Inylchek (13.05000)
-#latlon_list = [(41.75, 80.0)]   # Koxkar (13.43232)
+#latlon_list = [(41.75, 80.0)]   # Koxkar (13.43232) and Qingbingtan (13.43165)
 #latlon_list = [(35.75, 76.5)]   # Baltoro (14.06794)
 #latlon_list = [(32.25, 77.5)]   # Batal (14.16042)
-#latlon_list = [(28.0, 87.0)]    # Khumbu (13.03733)
+#latlon_list = [(28.0, 87.0)]    # Khumbu (13.03733) and Imja-Lhotse Shar (15.03743)
 #latlon_list = [(28.25, 85.5)]   # Lirung (15.04045)
+latlon_list = [(30.75, 79.25)]  # Satopanth (15.07122)
 #latlon_list = [(29.5, 102.0)]   # Hailuogou (15.07886)
 #latlon_list = [(29.75, 95.75)]  # 24K (15.11758)
 #latlon_list = [(-43.5, 170.25)] # Franz Josef (18.02397)
-latlon_list = 'all'
+#latlon_list = 'all'
 #latlon_list = None
 if latlon_list == 'all':
     latlon_unique_fp = output_fp + 'latlon_unique/'

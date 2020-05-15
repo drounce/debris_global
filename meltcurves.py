@@ -232,6 +232,7 @@ def main(list_packed_vars):
 #        ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + debris_prms.date_start + '.nc'
         ds_meltmodel_fn = debris_prms.fn_prefix + latlon_str + mc_str + debris_prms.date_start + '.nc'
         
+#        print(debris_prms.eb_fp)
 #        print(ds_meltmodel_fn)
         
         # Processed "ostrem" filename, although this is really only daily data to enable each glacier to choose correct
