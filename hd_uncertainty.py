@@ -1062,9 +1062,9 @@ if hd_methods_diagram_ngoz:
     ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(0.1))  
     # Y-label
     ax[0,0].set_ylabel('Melt (m w.e. a$\mathregular{^{-1}}$)', size=12)
-    ax[0,0].set_ylim(0,13)
+    ax[0,0].set_ylim(0,14)
     ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(5))
-    ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(0.5))
+    ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(1))
     # Tick parameters
     ax[0,0].yaxis.set_ticks_position('both')
     ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
@@ -1084,9 +1084,9 @@ if hd_methods_diagram_ngoz:
     ax[0,1].xaxis.set_minor_locator(plt.MultipleLocator(0.1)) 
     # Y-label
     ax[0,1].set_ylabel('$E_d$ (-)', size=12)
-    ax[0,1].set_ylim(0,(int(melt_4curve_norm.max()/0.1)+3)*0.1)
-    ax[0,1].yaxis.set_major_locator(plt.MultipleLocator(0.2))
-    ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.05))
+    ax[0,1].set_ylim(0,1.6)
+    ax[0,1].yaxis.set_major_locator(plt.MultipleLocator(0.5))
+    ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.1))
     # Tick parameters
     ax[0,1].yaxis.set_ticks_position('both')
     ax[0,1].tick_params(axis='both', which='major', labelsize=12, direction='inout')
@@ -1107,6 +1107,9 @@ if hd_methods_diagram_ngoz:
     ax[1,0].xaxis.set_minor_locator(plt.MultipleLocator(0.1))  
     # Y-label
     ax[1,0].set_ylabel('Surface temperature ($^\circ$C)', size=12)
+    ax[1,0].set_ylim(0,19)
+    ax[1,0].yaxis.set_major_locator(plt.MultipleLocator(5))
+    ax[1,0].yaxis.set_minor_locator(plt.MultipleLocator(1))
     # Tick parameters
     ax[1,0].yaxis.set_ticks_position('both')
     ax[1,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
@@ -1141,13 +1144,36 @@ if hd_methods_diagram_ngoz:
 
     # X-label
     ax[1,1].set_xlabel('Surface temperature ($^\circ$C)', size=12)
-    ax[1,1].set_xlim(0,np.round(np.ceil(ts_max/5)*5))
+    ax[1,1].set_xlim(0,19)
+    ax[1,1].xaxis.set_tick_params(labelsize=12)
+    ax[1,1].xaxis.set_major_locator(plt.MultipleLocator(5))
+    ax[1,1].xaxis.set_minor_locator(plt.MultipleLocator(1))  
     # Y-label
     ax[1,1].set_ylabel('Melt (m w.e. a$\mathregular{^{-1}}$)', size=12)
+    ax[1,1].set_ylim(0,14)
+    ax[1,1].yaxis.set_major_locator(plt.MultipleLocator(5))
+    ax[1,1].yaxis.set_minor_locator(plt.MultipleLocator(1))
     # Tick parameters
     ax[1,1].yaxis.set_ticks_position('both')
     ax[1,1].tick_params(axis='both', which='major', labelsize=12, direction='inout')
     ax[1,1].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+    
+    
+    # Tick parameters
+    ax[0,0].yaxis.set_ticks_position('both')
+    ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+    ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+    
+    # Labels
+    ax[0,0].text(0.1, 0.98, 'a', size=12, fontweight='bold',
+                horizontalalignment='right', verticalalignment='top', transform=ax[0,0].transAxes)
+    ax[0,1].text(0.1, 0.98, 'b', size=12, fontweight='bold',
+                horizontalalignment='right', verticalalignment='top', transform=ax[0,1].transAxes)
+    ax[1,0].text(0.1, 0.98, 'c', size=12, fontweight='bold',
+                horizontalalignment='right', verticalalignment='top', transform=ax[1,0].transAxes)
+    ax[1,1].text(0.1, 0.98, 'd', size=12, fontweight='bold',
+                horizontalalignment='right', verticalalignment='top', transform=ax[1,1].transAxes)
+
 
     fig.set_size_inches(6, 6)
     figure_fn = 'ngozumpa_melt_ts_relationships.png'
