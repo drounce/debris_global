@@ -31,9 +31,9 @@ from meltcurves import debris_frommelt_func
 
 #%%% ===== SCRIPT OPTIONS =====
 option_hd_melt_uncertainty = False
-hd_uncertainty_schematic_fig = False
+hd_uncertainty_schematic_fig = True
 option_melt_diagram_template = False
-hd_methods_diagram_ngoz = True
+hd_methods_diagram_ngoz = False
 
 #hd_obs_fp = debris_prms.main_directory + '/../hd_obs/'
 
@@ -160,8 +160,6 @@ if option_hd_melt_uncertainty:
                 '12.01012', '12.01132', '13.05000', '13.43232', '14.06794', '14.16042', '15.03733', '15.03743', 
                 '15.04045', '15.07886', '15.11758', '18.02397']
 #    glaciers = ['10.01732']
-    
-    print('add comparison to Haidong etal 2006')
 
 #    z_value = 1.645 # 5-95%
     z_value = 1     # 16-84%
@@ -214,25 +212,25 @@ if option_hd_melt_uncertainty:
                 hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
     
     # ===== Svinafellsjokull (06.00474) ====
-    if '6.00474' in glaciers:
-        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
-        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/6.00474_moller2016-melt.csv')
-        measured_hd_list = [mb_df.hd_m.values]
-        measured_melt_list = [mb_df['melt_mf'].values]
-        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
-        melt_fn = '6400N-34325E-debris_melt_curve.nc'
-        yearfracs_list = [[2013 + 137/365, 2013 + 150/365]]
-    
-        for n in np.arange(0,len(measured_hd_list)):
-            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
-            
-        hd_wbnds_array_list = hd_melt_uncertainty(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
-        
-        for hd_wbnds_array in hd_wbnds_array_list:
-            if hd_wbnds_array_all is None:
-                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
-            else:
-                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
+#    if '6.00474' in glaciers:
+#        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+#        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/6.00474_moller2016-melt.csv')
+#        measured_hd_list = [mb_df.hd_m.values]
+#        measured_melt_list = [mb_df['melt_mf'].values]
+#        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+#        melt_fn = '6400N-34325E-debris_melt_curve.nc'
+#        yearfracs_list = [[2013 + 137/365, 2013 + 150/365]]
+#    
+#        for n in np.arange(0,len(measured_hd_list)):
+#            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+#            
+#        hd_wbnds_array_list = hd_melt_uncertainty(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
+#        
+#        for hd_wbnds_array in hd_wbnds_array_list:
+#            if hd_wbnds_array_all is None:
+#                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
+#            else:
+#                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
         
     # ===== Larsbreen (7.01044) ====
     if '7.01044' in glaciers:
@@ -256,27 +254,27 @@ if option_hd_melt_uncertainty:
                 hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
         
     # ===== Maliy Aktru (10.01732) ====
-    if '10.01732' in glaciers:
-#        print('\nmelt comparison with Mayer et al (2011)')
-        assert True == False, '10.01732 NEEDS TO DO THE MODELING FIRST!'
-        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
-        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/10.01732_mayer2011-melt.csv')
-        measured_hd_list = [mb_df.hd_m.values]
-        measured_melt_list = [mb_df['melt_mf'].values]
-        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
-        melt_fn = '5000N-8775E-debris_melt_curve.nc'
-        yearfracs_list = [[2007 + 192/365, 2007 + 211/365]]
-    
-        for n in np.arange(0,len(measured_hd_list)):
-            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
-        
-        hd_wbnds_array_list = hd_melt_uncertainty(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
-        
-        for hd_wbnds_array in hd_wbnds_array_list:
-            if hd_wbnds_array_all is None:
-                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
-            else:
-                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
+#    if '10.01732' in glaciers:
+##        print('\nmelt comparison with Mayer et al (2011)')
+#        assert True == False, '10.01732 NEEDS TO DO THE MODELING FIRST!'
+#        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+#        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/10.01732_mayer2011-melt.csv')
+#        measured_hd_list = [mb_df.hd_m.values]
+#        measured_melt_list = [mb_df['melt_mf'].values]
+#        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+#        melt_fn = '5000N-8775E-debris_melt_curve.nc'
+#        yearfracs_list = [[2007 + 192/365, 2007 + 211/365]]
+#    
+#        for n in np.arange(0,len(measured_hd_list)):
+#            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+#        
+#        hd_wbnds_array_list = hd_melt_uncertainty(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
+#        
+#        for hd_wbnds_array in hd_wbnds_array_list:
+#            if hd_wbnds_array_all is None:
+#                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
+#            else:
+#                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
 
     # ===== Vernagtferner (11.00719) ====
     if '11.00719' in glaciers:
@@ -384,48 +382,48 @@ if option_hd_melt_uncertainty:
                 hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
         
     # ===== Zopkhito (12.01012) ====
-    if '12.01012' in glaciers:
-        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
-        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/12.01012_lambrecht2011-melt2008.csv')
-        mb_df2 = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/12.01012_lambrecht2011-melt2009.csv')
-        measured_hd_list = [mb_df.hd_m.values, mb_df2.hd_m.values]
-        measured_melt_list = [mb_df.melt_mmwed.values, mb_df2.melt_mmwed.values]
-#        measured_melt_list = [mb_df['melt_mf'].values, mb_df2['melt_mf'].values]
-        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
-        melt_fn = '4300N-4350E-debris_melt_curve.nc'
-        yearfracs_list = [[2008 + 172/366, 2008 + 179/366], [2009 + 182/365, 2009 + 189/365]]
-    
-        for n in np.arange(0,len(measured_hd_list)):
-            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
-        
-        hd_wbnds_array_list = hd_melt_uncertainty(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
-        
-        for hd_wbnds_array in hd_wbnds_array_list:
-            if hd_wbnds_array_all is None:
-                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
-            else:
-                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
+#    if '12.01012' in glaciers:
+#        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+#        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/12.01012_lambrecht2011-melt2008.csv')
+#        mb_df2 = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/12.01012_lambrecht2011-melt2009.csv')
+#        measured_hd_list = [mb_df.hd_m.values, mb_df2.hd_m.values]
+#        measured_melt_list = [mb_df.melt_mmwed.values, mb_df2.melt_mmwed.values]
+##        measured_melt_list = [mb_df['melt_mf'].values, mb_df2['melt_mf'].values]
+#        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+#        melt_fn = '4300N-4350E-debris_melt_curve.nc'
+#        yearfracs_list = [[2008 + 172/366, 2008 + 179/366], [2009 + 182/365, 2009 + 189/365]]
+#    
+#        for n in np.arange(0,len(measured_hd_list)):
+#            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+#        
+#        hd_wbnds_array_list = hd_melt_uncertainty(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
+#        
+#        for hd_wbnds_array in hd_wbnds_array_list:
+#            if hd_wbnds_array_all is None:
+#                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
+#            else:
+#                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
         
     # ===== Djankuat (12.01132) ====
-    if '12.01132' in glaciers:
-        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
-        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/12.01132_lambrecht2011-melt.csv')
-        measured_hd_list = [mb_df.hd_m.values]
-        measured_melt_list = [mb_df['melt_mf'].values]
-        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
-        melt_fn = '4325N-4275E-debris_melt_curve.nc'
-        yearfracs_list = [[2008 + 172/366, 2008 + 246/366]]
-    
-        for n in np.arange(0,len(measured_hd_list)):
-            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
-        
-        hd_wbnds_array_list = hd_melt_uncertainty(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
-        
-        for hd_wbnds_array in hd_wbnds_array_list:
-            if hd_wbnds_array_all is None:
-                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
-            else:
-                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
+#    if '12.01132' in glaciers:
+#        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+#        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/12.01132_lambrecht2011-melt.csv')
+#        measured_hd_list = [mb_df.hd_m.values]
+#        measured_melt_list = [mb_df['melt_mf'].values]
+#        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+#        melt_fn = '4325N-4275E-debris_melt_curve.nc'
+#        yearfracs_list = [[2008 + 172/366, 2008 + 246/366]]
+#    
+#        for n in np.arange(0,len(measured_hd_list)):
+#            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+#        
+#        hd_wbnds_array_list = hd_melt_uncertainty(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
+#        
+#        for hd_wbnds_array in hd_wbnds_array_list:
+#            if hd_wbnds_array_all is None:
+#                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
+#            else:
+#                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
         
     # ===== S Inylchek (13.05000) ====
     if '13.05000' in glaciers:
@@ -481,25 +479,25 @@ if option_hd_melt_uncertainty:
 #                                   melt_tick_major=melt_tick_major, melt_tick_minor=melt_tick_minor)
         
     # ===== Koxkar (13.43232) ====
-    if '13.43232' in glaciers:
-        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
-        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/13.43232_juen2014-melt.csv')
-        measured_hd_list = [mb_df.hd_m.values]
-        measured_melt_list = [mb_df['melt_mf'].values]
-        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
-        melt_fn = '4175N-8000E-debris_melt_curve.nc'
-        yearfracs_list = [[2010 + 222/365, 2010 + 241/365]]
-    
-        for n in np.arange(0,len(measured_hd_list)):
-            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
-        
-        hd_wbnds_array_list = hd_melt_uncertainty(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
-        
-        for hd_wbnds_array in hd_wbnds_array_list:
-            if hd_wbnds_array_all is None:
-                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
-            else:
-                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
+#    if '13.43232' in glaciers:
+#        # Data: debris thickness (m) and melt rate (mm w.e. d-1)
+#        mb_df = pd.read_csv(debris_prms.main_directory + '/../hd_obs/datasets/13.43232_juen2014-melt.csv')
+#        measured_hd_list = [mb_df.hd_m.values]
+#        measured_melt_list = [mb_df['melt_mf'].values]
+#        melt_fp = debris_prms.output_fp + 'ostrem_curves/exp4/'
+#        melt_fn = '4175N-8000E-debris_melt_curve.nc'
+#        yearfracs_list = [[2010 + 222/365, 2010 + 241/365]]
+#    
+#        for n in np.arange(0,len(measured_hd_list)):
+#            assert len(measured_hd_list[n]) == len(measured_melt_list[n]), 'length of hd differs from melt'
+#        
+#        hd_wbnds_array_list = hd_melt_uncertaintsy(measured_hd_list, yearfracs_list, melt_fp, melt_fn, z_value=z_value)
+#        
+#        for hd_wbnds_array in hd_wbnds_array_list:
+#            if hd_wbnds_array_all is None:
+#                hd_wbnds_array_all = hd_wbnds_array[:,:,np.newaxis]
+#            else:
+#                hd_wbnds_array_all = np.concatenate((hd_wbnds_array_all, hd_wbnds_array[:,:,np.newaxis]), axis=2)
     
     # ===== Baltoro (14.06794) ====
     if '14.06794' in glaciers:
@@ -760,11 +758,18 @@ if option_hd_melt_uncertainty:
     
 #%%
 if hd_uncertainty_schematic_fig:
-    if (os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-IQR.csv') and 
+#    if (os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-IQR.csv') and 
+#        os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-90.csv')):
+#        
+#        # Export regional statistics
+#        hd_wbnds_df = pd.read_csv(debris_prms.output_fp + 'hd_uncertainty_bnds-IQR.csv')
+#        hd_wbnds_df_90 = pd.read_csv(debris_prms.output_fp + 'hd_uncertainty_bnds-90.csv')
+        
+    if (os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-1std.csv') and 
         os.path.exists(debris_prms.output_fp + 'hd_uncertainty_bnds-90.csv')):
         
         # Export regional statistics
-        hd_wbnds_df = pd.read_csv(debris_prms.output_fp + 'hd_uncertainty_bnds-IQR.csv')
+        hd_wbnds_df = pd.read_csv(debris_prms.output_fp + 'hd_uncertainty_bnds-1std.csv')
         hd_wbnds_df_90 = pd.read_csv(debris_prms.output_fp + 'hd_uncertainty_bnds-90.csv')
         
         # ===== Plot the relationship ======
@@ -842,7 +847,7 @@ if hd_uncertainty_schematic_fig:
     #    ax[0,2].axis('off')
         for n in [0,1]:
             ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_debris'] - hd_wbnds_df['hd_m'], zorder=3, 
-                         color='b', linewidth=lw_component, linestyle=':', label='$IQR_{prop}$')
+                         color='b', linewidth=lw_component, linestyle=':', label='$_{prop}$')
             ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndhigh_debris'] - hd_wbnds_df['hd_m'], zorder=3, 
                          color='b', linewidth=lw_component, linestyle=':', label='')
             ax[0,n].plot(hd_wbnds_df['hd_m'], hd_wbnds_df['hd_bndlow_elevchg'] - hd_wbnds_df['hd_m'], zorder=3, 
