@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
 from scipy.stats import linregress
-from scipy.stats import median_absolute_deviation
+from scipy.stats import median_abs_deviation
 import xarray as xr
 
 # Local libraries
@@ -30,8 +30,8 @@ import debrisglobal.globaldebris_input as debris_prms
 from meltcurves import melt_fromdebris_func
 
 #%%% ===== SCRIPT OPTIONS =====
-option_melt_comparison = True
-option_hd_comparison = False
+option_melt_comparison = False
+option_hd_comparison = True
 option_hd_centerline = False
 option_hd_spatial_compare = False
 
@@ -1481,6 +1481,7 @@ if option_melt_comparison:
     
     marker_list = ['P', 'X', 'o', '<', 'v', '>', '^', 'd', 'h', 'p', 'D', '*',  'H', '8']
     marker_dict = {'01':'P', '02':'X', '07':'h', '11':'o', '12':'^', '13':'<', '14':'v', '15':'>', '18':'*'}
+    markers_per_roi = False
 
     fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
     reg_str_list = []
@@ -1493,12 +1494,17 @@ if option_melt_comparison:
             count_reg += 1
         else:
             label_str = None
+        if not markers_per_roi:
+            label_str = None
             
         melt_df_subset = melt_df_all[melt_df_all['reg'] == reg_str].copy()
         melt_df_subset['err'] = (np.abs(melt_df_subset.melt_mod_bndhigh.values - melt_df_subset.melt_mod.values) + 
                                  np.abs(melt_df_subset.melt_mod_bndlow - melt_df_subset.melt_mod) / 2) 
 
-        marker = marker_dict[reg_str]
+        if markers_per_roi:
+            marker = marker_dict[reg_str]
+        else:
+            marker = 'o'
         
         # Size thresholds   
         s_plot = 20
@@ -1549,7 +1555,10 @@ if option_melt_comparison:
     nlabel = 0
     none_count = 5
     # Hack to get proper columns
-    obs_labels = [None, '< 0.05', '0.05-0.10', '0.10-0.20', '0.20-0.40', '>0.40']
+    if markers_per_roi:
+        obs_labels = [None, '< 0.05', '0.05-0.10', '0.10-0.20', '0.20-0.40', '>0.40']
+    else:
+        obs_labels = ['< 0.05', '0.05-0.10', '0.10-0.20', '0.20-0.40', '>0.40']
     colors = ['#2c7bb6', '#abd9e9', '#ffffbf', '#fdae61', '#d7191c']
     for obs_label in obs_labels:
         if obs_label is None:
@@ -1560,20 +1569,25 @@ if option_melt_comparison:
             ax[0,0].scatter([-5],[-5], color=colors[nlabel], marker='s', linewidth=lw, 
                             facecolor=colors[nlabel], s=30, zorder=3, label=obs_label)
             nlabel += 1
-    leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=True, handlelength=1, 
+    
+    if markers_per_roi:
+        leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=True, handlelength=1, 
                          handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
-#                         bbox_to_anchor=(1.035, 1.0), 
-                         bbox_to_anchor=(0.0,1.02),
-                         title='Region            $h_{d}$      ', framealpha=1)
-    for nmarker in np.arange(0,count_reg+1):
-        leg.legendHandles[nmarker]._sizes = [30]
-        leg.legendHandles[nmarker]._linewidths = [0.5]
-        leg.legendHandles[nmarker].set_edgecolor('k')
+                         bbox_to_anchor=(0.0,1.01), title='Region            $h_{d}$      ', framealpha=1)
+    else:
+        leg = ax[0,0].legend(loc='upper left', ncol=1, fontsize=10, frameon=True, handlelength=1, 
+                         handletextpad=0.25, columnspacing=0, borderpad=0.2, labelspacing=0.2, 
+                         bbox_to_anchor=(0.0,1.01), title='$h_{d}$ (m)', framealpha=1)
+    
+#    for nmarker in np.arange(0,count_reg+1):
+#        leg.legendHandles[nmarker]._sizes = [30]
+#        leg.legendHandles[nmarker]._linewidths = [0.5]
+#        leg.legendHandles[nmarker].set_edgecolor('k')
 #    ax[0,0].text(0.17, 0.98, 'Region', size=10, horizontalalignment='center', verticalalignment='top', 
 #                 transform=ax[0,0].transAxes, zorder=4)
 #    ax[0,0].text(1.5, 0.95, '$n_{obs}$', size=10, horizontalalignment='center', verticalalignment='top', 
 #                 transform=ax[0,0].transAxes)
-#    # Create a Rectangle patch
+#    # Create a Rectangle patchss
 #    rect = FancyBboxPatch((4.35,2.35),2.1,1.45,linewidth=1, edgecolor='lightgrey', facecolor='none', clip_on=False,
 #                          boxstyle='round, pad=0.1')
 #    ax[0,0].add_patch(rect)
@@ -1582,11 +1596,7 @@ if option_melt_comparison:
     fig.set_size_inches(3.45,3.45)
     fig_fullfn = melt_compare_fp + 'melt_compare.png'
     fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
-    
-    #%%
-        
-    
-    
+            
     
 
 #%%
@@ -1597,18 +1607,22 @@ if option_hd_comparison:
 #                '15.03733', '15.03743', '15.04045', '15.07122', '15.07886', '15.11758', '17.13720', '18.02397']
     # Good glaciers for publication quality figure
     glaciers = ['1.15645', '2.14297', '11.00106', '11.01604', '11.02472', '11.02810', '11.03005', 
+                '11.01450', '11.01509', '11.01827', '11.02749', '11.02771', '11.02796',
                 '13.43165', '13.43174', '13.43232', '13.43207', '14.06794', '14.15536', '14.16042',
                 '15.03733', '15.03473','15.04045', '15.03743', '15.07122', '15.07886', '15.11758', '17.13720', 
                 '18.02397']
     # roughly estimated from maps
 #    glaciers = ['13.43165', '13.43174', '13.43207']
 #    glaciers = ['14.15536']
+#    glaciers = ['11.03005']
 
     process_files = True
     regional_hd_comparison = True
     bin_width = 50
     n_obs_min = 5
 
+    total_obs_count_all = 0
+    total_obs_count = 0
     if process_files:
         
 #        #%%
@@ -1621,16 +1635,24 @@ if option_hd_comparison:
         
         
         hd_datasets_fp = hd_obs_fp + 'datasets/'
+        hd_datasets_pt_fp = hd_obs_fp + 'datasets/hd_pt_data/'
         hd_ds_dict = {'1.15645': [(hd_datasets_fp + '1.15645_kennicott_anderson_2019-hd.csv', 'Anderson 2019')], 
                       '2.14297': [(hd_datasets_fp + '2.14297_moore2019-melt.csv', 'Moore 2019')], 
                       '7.01044': [(hd_datasets_fp + '7.01044_lukas2005-hd.csv', 'Lukas 2005')],
                       '7.01107': [(hd_datasets_fp + '7.01107_lukas2005-hd.csv', 'Lukas 2005')],
                       '11.00106': [(hd_datasets_fp + '11.00106_kellerer2008-hd.csv', 'Kellerer 2008')],
+                      '11.01450': [(hd_datasets_fp + '11.01450_grosseraletsch_anderson2019-hd.csv', 'Anderson 2020')],
+                      '11.01509': [(hd_datasets_fp + '11.01509_oberaar_anderson2019-hd.csv', 'Anderson 2020')],
                       '11.01604': [(hd_datasets_fp + '11.01604_delGobbo2017-hd.csv', 'Del Gobbo 2017')],
+                      '11.01827': [(hd_datasets_fp + '11.01827_oberaletsch_anderson2019-hd.csv', 'Anderson 2020')],
                       '11.02472': [(hd_datasets_fp + '11.02472_bocchiola2015-melt.csv', 'Bocchiola 2015')],
+                      '11.02749': [(hd_datasets_fp + '11.02749_cheilon_anderson2019-hd.csv', 'Anderson 2020')],
+                      '11.02771': [(hd_datasets_fp + '11.02771_piece_anderson2019-hd.csv', 'Anderson 2020')], 
+                      '11.02796': [(hd_datasets_fp + '11.02796_brenay_anderson2019-hd.csv', 'Anderson 2020')],
                       '11.02810': [(hd_datasets_fp + '11.02810_reid2012-hd.csv', 'Reid 2012')],
                       '11.03005': [(hd_datasets_fp + '11.03005_foster2012-hd.csv', 'Foster 2012'),
-                                   (hd_datasets_fp + '11.03005_mihalcea2008-hd.csv', 'Mihalcea 2008')],
+                                   (hd_datasets_fp + '11.03005_mihalcea2008-hd.csv', 'Mihalcea 2008'),
+                                   (hd_datasets_fp + '11.03005_miage_anderson2019-hd.csv', 'Anderson 2020')],
                       '12.01132': [(hd_datasets_fp + '12.01132_popovnin2002_layers-hd.csv', 'Popovnin 2002')],
                       '13.43165': [(hd_datasets_fp + '13.43165_wang2011-hd.csv', 'Wang 2011')],
                       '13.43174': [(hd_datasets_fp + '13.43174_wang2011-hd.csv', 'Wang 2011')],
@@ -1666,6 +1688,12 @@ if option_hd_comparison:
                 # remove clean ice values because only comparing to debris-covered areas
                 hd_obs = hd_obs[hd_obs['hd_m'] > 0]
                 hd_obs.reset_index(inplace=True, drop=True)
+                
+                # track to record how many are discarded
+                if 'n_obs' in hd_obs.columns:
+                    total_obs_count_all = total_obs_count_all + hd_obs['n_obs'].sum()
+                else:
+                    total_obs_count_all = total_obs_count_all + hd_obs.shape[0]
                 
                 # if lat/lon provided, remove "off-glacier" points, i.e., points not covered by debris cover maps
                 if 'hd_ts_cal' in hd_obs.columns:
@@ -1744,12 +1772,14 @@ if option_hd_comparison:
                                 
                             hdts_array = np.array(hdts_list)
                             hdts_df_med = np.median(hdts_array)
-                            hdts_df_mad = median_absolute_deviation(hdts_array)
+                            hdts_df_mad = median_abs_deviation(hdts_array)
                             
                             # Ensure the glacier has data as well
                             if not np.isnan(hdts_df_med):
                                 
                                 bin_dcarea_km2 = hdts_df.loc[hdts_df_idxs,'dc_bin_area_valid_km2'].sum()
+                                
+                                total_obs_count = total_obs_count + obs_count
                                 
                                 if obs_count > n_obs_min:
                                     print(glac_str, int(zbincenter), obs_count,
@@ -1806,7 +1836,7 @@ if option_hd_comparison:
                             if len(hdts_list) > 0:
                                 hdts_array = np.array(hdts_list)
                                 hdts_df_med = np.median(hdts_array)
-                                hdts_df_mad = median_absolute_deviation(hdts_array)
+                                hdts_df_mad = median_abs_deviation(hdts_array)
                                 
                                 bin_dcarea_km2 = hdts_df.loc[hdts_df_idxs,'dc_bin_area_valid_km2'].sum()
                                 
@@ -1829,7 +1859,7 @@ if option_hd_comparison:
                     # Observations
                     if hd_obs.shape[0] > 1:
                         hd_bin_med = np.median(hd_obs['hd_m'])
-                        hd_bin_mad = median_absolute_deviation(hd_obs['hd_m'].values)
+                        hd_bin_mad = median_abs_deviation(hd_obs['hd_m'].values)
                         obs_count = len(hd_obs['hd_m'].values)
                     else:
                         hd_bin_med = hd_obs.loc[0,'hd_m_med']
@@ -1856,7 +1886,7 @@ if option_hd_comparison:
 
                     hdts_array = np.array(hdts_list)
                     hdts_df_med = np.median(hdts_array)
-                    hdts_df_mad = median_absolute_deviation(hdts_array)
+                    hdts_df_mad = median_abs_deviation(hdts_array)
                     
                     zbincenter = ((hdts_df['dc_bin_count_valid'] * hdts_df['bin_center_elev_m']).sum() / 
                                   hdts_df['dc_bin_count_valid'].sum())
@@ -1880,6 +1910,11 @@ if option_hd_comparison:
                 hd_compare_all = pd.DataFrame(hd_compare_all_array, columns=hd_compare_all_cns)
                 hd_compare_all['hd_ds_name'] = ds_name
                 hd_compare_all['glac_str'] = glac_str
+                
+                print('obs count (total):', int(hd_compare_all.obs_count.sum()),
+                      'n_density (pts/km2):', 
+                      np.round(hd_compare_all.obs_count.sum() / hd_compare_all.dc_bin_area_km2.sum(),0))
+                
                 # Filename
                 hd_processed_fp = hd_obs_fp + 'hd_processed/'
                 hd_processed_fn = hd_ds_fn.split('/')[-1].replace('.csv','-processed.csv')
@@ -1901,7 +1936,7 @@ if option_hd_comparison:
 #    print('hd_mean:', np.round(hd_array.mean(),3))
 #    print('hd_std: ', np.round(hd_array.std(),3))
 #    print('hd_med: ', np.round(np.median(hd_array), 3))
-#    print('hd_mad: ', np.round(median_absolute_deviation(hd_array),3))
+#    print('hd_mad: ', np.round(median_abs_deviation(hd_array),3))
     
 #    # MANUALLY PROCESS AREA-WEIGHTED MAP! (Brock 2013)
 #    hd_obs = pd.read_csv(hd_obs_fp + 'datasets/18.02397_brook2013-hd_map_binned.csv')
@@ -1923,7 +1958,7 @@ if option_hd_comparison:
 #            hd_mean = np.mean(hd_list)
 #            hd_std = np.std(hd_list)
 ##            hd_med = np.median(hd_list)
-##            hd_mad = median_absolute_deviation(hd_list)
+##            hd_mad = median_abs_deviation(hd_list)
 #            # use the mean and standard deviation for med and mad because just repeating one or two values
 #            hd_med = hd_mean
 #            hd_mad = hd_std / 1.483
@@ -2067,41 +2102,50 @@ if option_hd_comparison:
                 hd_compare_all.shape[0])**0.5
         print('RMSE analysis:')
         # subset
-        rmse_hd_list = [(0,0.1), (0.1,0.5), (0.5,10)]
+#        rmse_hd_list = [(0,0.1), (0.1,0.5), (0.5,10)]
+        rmse_hd_list = [(0,0.05), (0.05,0.1), (0.1, 0.25), (0.25,10)]
+#        rmse_hd_list = [(0,0.05), (0.05,0.1), (0.1, 0.25), (0.25,0.5), (0.5,10)]
         for rmse_hd in rmse_hd_list:
             hd_compare_all_subset = hd_compare_all[(hd_compare_all['hd_obs_med'] >= rmse_hd[0]) & 
                                                    (hd_compare_all['hd_obs_med'] < rmse_hd[1])]
-            rmse = (np.sum((hd_compare_all_subset['hd_ts_med_m'].values - hd_compare_all_subset['hd_obs_med'])**2) / 
-                    hd_compare_all_subset.shape[0])**0.5
-            print('  hd:', rmse_hd, '(n=' + str(hd_compare_all_subset.shape[0]) + ')', 'RMSE:', np.round(rmse,2))
-            
-            # Correlation
-            slope, intercept, r_value, p_value, std_err = linregress(hd_compare_all_subset['hd_obs_med'].values, 
-                                                                     hd_compare_all_subset['hd_ts_med_m'].values)
-            print('     r = ' + str(np.round(r_value,2)), '(p = ' + str(np.round(p_value,3)) + 
-                  ', slope = ' + str(np.round(slope,2)) + ', intercept = ' + str(np.round(intercept,2)) + ')')
+            if hd_compare_all_subset.shape[0] > 0:
+                rmse = (np.sum((hd_compare_all_subset['hd_ts_med_m'].values - hd_compare_all_subset['hd_obs_med'])**2) / 
+                        hd_compare_all_subset.shape[0])**0.5
+                print('  hd:', rmse_hd, '(n=' + str(hd_compare_all_subset.shape[0]) + ')', 'RMSE:', np.round(rmse,2))
+                
+                # Correlation
+                slope, intercept, r_value, p_value, std_err = linregress(hd_compare_all_subset['hd_obs_med'].values, 
+                                                                         hd_compare_all_subset['hd_ts_med_m'].values)
+                print('     r = ' + str(np.round(r_value,2)), '(p = ' + str(np.round(p_value,3)) + 
+                      ', slope = ' + str(np.round(slope,2)) + ', intercept = ' + str(np.round(intercept,2)) + ')')
         
         hd_min, hd_max = 0, 4
         hd_tick_major, hd_tick_minor = 0.5, 0.25
         
         marker_list = ['P', 'X', 'o', '<', 'v', '>', '^', 'd', 'h', 'p', 'D', '*',  'H', '8']
         marker_dict = {'01':'P', '02':'X', '07':'h', '11':'o', '12':'^', '13':'<', '14':'v', '15':'>', '18':'*'}
+        label_regions = False
 
         fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
         ax_inset = plt.axes([1.01, 0.125, 0.38, 0.38])
         reg_str_list = []
         count_reg = -1
         for ndata in hd_compare_all.index.values:
-            reg_str = str(int(hd_compare_all.loc[ndata,'region'])).zfill(2)
-            if reg_str not in reg_str_list:
-                label_str = reg_str
-                reg_str_list.append(reg_str)
-                count_reg += 1
+            if label_regions:
+                reg_str = str(int(hd_compare_all.loc[ndata,'region'])).zfill(2)
+                if reg_str not in reg_str_list:
+                    label_str = reg_str
+                    reg_str_list.append(reg_str)
+                    count_reg += 1
+                else:
+                    label_str = None
             else:
                 label_str = None
 
-#            marker = marker_list[count_reg]
-            marker = marker_dict[reg_str]
+            if label_regions:
+                marker = marker_dict[reg_str]
+            else:
+                marker = 'o'
             
             # Size thresholds   
             s_sizes = [20, 40, 80]
@@ -2181,36 +2225,464 @@ if option_hd_comparison:
         nlabel = 0
         none_count = 5
         # Hack to get proper columns
-        obs_labels = [None, str(n_obs_min) + '-25', '25-100', '> 100', None]
-        for obs_label in obs_labels:
-            if obs_label is None:
-                none_count += 1
-                ax[0,0].scatter([10],[10], color='k', marker='s', linewidth=1, 
-                                edgecolor='white', facecolor='white', s=1, zorder=3, label=' '*none_count)
-            else:
-                ax[0,0].scatter([10],[10], color=colors[nlabel], marker='s', linewidth=lws[nlabel], 
-                                facecolor=colors[nlabel], s=s_sizes[nlabel], zorder=3, label=obs_label)
-                nlabel += 1
-        leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=False, handlelength=1, 
-                             handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
-                             bbox_to_anchor=(1.035, 1.0), title=' ')
-        for nmarker in np.arange(0,count_reg+1):
-            leg.legendHandles[nmarker]._sizes = [30]
-            leg.legendHandles[nmarker]._linewidths = [0.5]
-            leg.legendHandles[nmarker].set_edgecolor('k')
-        ax[0,0].text(1.21, 0.95, 'Region', size=10, horizontalalignment='center', verticalalignment='top', 
-                     transform=ax[0,0].transAxes)
-        ax[0,0].text(1.5, 0.95, '$n_{obs}$', size=10, horizontalalignment='center', verticalalignment='top', 
-                     transform=ax[0,0].transAxes)
-        # Create a Rectangle patch
-        rect = FancyBboxPatch((4.35,2.35),2.1,1.45,linewidth=1, edgecolor='lightgrey', facecolor='none', clip_on=False,
-                              boxstyle='round, pad=0.1')
-        ax[0,0].add_patch(rect)
-        ax[0,0].axvline(x=5.45, ymin=0.565, ymax=0.97, clip_on=False, color='lightgrey', linewidth=1)
+        if label_regions:
+            obs_labels = [None, str(n_obs_min) + '-25', '25-100', '> 100', None]
+            for obs_label in obs_labels:
+                if obs_label is None:
+                    none_count += 1
+                    ax[0,0].scatter([10],[10], color='k', marker='s', linewidth=1, 
+                                    edgecolor='white', facecolor='white', s=1, zorder=3, label=' '*none_count)
+                else:
+                    ax[0,0].scatter([10],[10], color=colors[nlabel], marker='s', linewidth=lws[nlabel], 
+                                    facecolor=colors[nlabel], s=s_sizes[nlabel], zorder=3, label=obs_label)
+                    nlabel += 1
+            leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=False, handlelength=1, 
+                                 handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
+                                 bbox_to_anchor=(1.035, 1.0), title=' ')
+            for nmarker in np.arange(0,count_reg+1):
+                leg.legendHandles[nmarker]._sizes = [30]
+                leg.legendHandles[nmarker]._linewidths = [0.5]
+                leg.legendHandles[nmarker].set_edgecolor('k')
+            ax[0,0].text(1.21, 0.95, 'Region', size=10, horizontalalignment='center', verticalalignment='top', 
+                         transform=ax[0,0].transAxes)
+            ax[0,0].text(1.5, 0.95, '$n_{obs}$', size=10, horizontalalignment='center', verticalalignment='top', 
+                         transform=ax[0,0].transAxes)
+            # Create a Rectangle patch
+            rect = FancyBboxPatch((4.35,2.35),2.1,1.45,linewidth=1, edgecolor='lightgrey', facecolor='none', 
+                                  clip_on=False, boxstyle='round, pad=0.1')
+            ax[0,0].add_patch(rect)
+            ax[0,0].axvline(x=5.45, ymin=0.565, ymax=0.97, clip_on=False, color='lightgrey', linewidth=1)
+        else:
+            obs_labels = [str(n_obs_min) + '-25', '25-100', '> 100']
+            for obs_label in obs_labels:
+                    ax[0,0].scatter([10],[10], color=colors[nlabel], marker='o', linewidth=lws[nlabel], 
+                                    facecolor='none', s=s_sizes[nlabel], zorder=3, label=obs_label)
+                    nlabel += 1
+            leg = ax[0,0].legend(loc='upper left', ncol=1, fontsize=10, frameon=False, handlelength=1, 
+                                 handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
+                                 bbox_to_anchor=(1.2, 0.98), title='$n_{obs}$')
+            for nmarker in np.arange(0,count_reg+1):
+                leg.legendHandles[nmarker]._sizes = [30]
+                leg.legendHandles[nmarker]._linewidths = [0.5]
+                leg.legendHandles[nmarker].set_edgecolor('k')
         fig.set_size_inches(3.45,3.45)
         fig_fullfn = hd_compare_fp + 'hd_compare-wellmeasured.png'
         fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
         
+        #%%
+        hd_min, hd_max = 0, 4
+        hd_tick_major, hd_tick_minor = 0.5, 0.25
+        
+        marker_list = ['P', 'X', 'o', '<', 'v', '>', '^', 'd', 'h', 'p', 'D', '*',  'H', '8']
+        marker_dict = {'01':'P', '02':'X', '07':'h', '11':'o', '12':'^', '13':'<', '14':'v', '15':'>', '18':'*'}
+        label_regions = False
+
+        fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
+        ax_inset = plt.axes([0.595, 0.19, 0.27, 0.27])
+        reg_str_list = []
+        count_reg = -1
+        for ndata in hd_compare_all.index.values:
+            if label_regions:
+                reg_str = str(int(hd_compare_all.loc[ndata,'region'])).zfill(2)
+                if reg_str not in reg_str_list:
+                    label_str = reg_str
+                    reg_str_list.append(reg_str)
+                    count_reg += 1
+                else:
+                    label_str = None
+            else:
+                label_str = None
+
+            if label_regions:
+                marker = marker_dict[reg_str]
+            else:
+                marker = 'o'
+            
+            # Size thresholds   
+            s_sizes = [20, 40, 80]
+            lws = [0.5, 1, 1]
+            lws_err = [0.1, 0.5, 0.5]
+            colors = ['grey', '#31a354', '#3182bd']
+            zorders = [3,4,5]
+            obs_count = hd_compare_all.loc[ndata,'obs_count']
+            if obs_count >= n_obs_min and obs_count < 25:
+                s_plot = s_sizes[0]
+                lw = lws[0]
+                lw_err = lws_err[0]
+                color = colors[0]
+                zorder = zorders[0]
+            elif obs_count >= 25 and obs_count < 100:
+                s_plot = s_sizes[1]
+                lw = lws[1]
+                lw_err = lws_err[1]
+                color = colors[1]
+                zorder = zorders[1]
+            elif obs_count >= 100:
+                s_plot = s_sizes[2]
+                lw = lws[2]
+                lw_err = lws_err[2]
+                color = colors[2]
+                zorder = zorders[2]
+            else:
+                print('NO COLOR')
+            
+            ax[0,0].scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
+                            hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+                            color=color, marker=marker, linewidth=lw, facecolor='none', s=s_plot, zorder=zorder, 
+                            label=label_str, clip_on=True)
+            ax[0,0].errorbar(hd_compare_all.loc[ndata,'hd_obs_med'], 
+                             hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+                             xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
+                             yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
+                             capsize=1, capthick=lw_err, elinewidth=lw_err, linewidth=0, color=color, alpha=1, zorder=2)
+               
+            if hd_compare_all.loc[ndata,'hd_obs_med'] < 0.5 and hd_compare_all.loc[ndata,'hd_ts_med_m'] < 0.5:
+                ax_inset.scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
+                                 hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+                                 color=color, marker=marker, linewidth=lw/2, facecolor='none', s=s_plot, zorder=zorder, 
+                                 clip_on=True)
+                ax_inset.errorbar(hd_compare_all.loc[ndata,'hd_obs_med'], 
+                                  hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+                                  xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
+                                  yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
+                                  capsize=1, capthick=lw_err, elinewidth=lw_err, linewidth=0, 
+                                  color=color, alpha=1, zorder=2)
+                
+        # Inset plot
+        ax_inset.plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
+        ax_inset.set_xlim([0,0.5])
+        ax_inset.set_ylim([0,0.5])
+        ax_inset.xaxis.set_major_locator(plt.MultipleLocator(0.25))
+        ax_inset.yaxis.set_major_locator(plt.MultipleLocator(0.25))
+        ax_inset.xaxis.set_minor_locator(plt.MultipleLocator(0.05))
+        ax_inset.yaxis.set_minor_locator(plt.MultipleLocator(0.05))
+        ax_inset.set_xticklabels(['', '0.0','','0.5']) 
+        ax_inset.set_yticklabels(['', '0.0','','0.5']) 
+        ax_inset.tick_params(axis='both', which='major', labelsize=10, direction='inout', pad=2)
+            
+        # Labels
+        ax[0,0].set_xlabel('Observed $h_{d}$ (m)', size=12)    
+        ax[0,0].set_ylabel('Modeled $h_{d}$ (m)', size=12)
+        ax[0,0].set_xlim(hd_min,hd_max)
+        ax[0,0].set_ylim(hd_min,hd_max)
+        ax[0,0].plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
+        ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
+        ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))  
+        ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(hd_tick_major))
+        ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(hd_tick_minor))
+#        # Tick parameters
+        ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+        ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+        # Legend
+        nlabel = 0
+        none_count = 5
+        # Hack to get proper columns
+        if label_regions:
+            obs_labels = [None, str(n_obs_min) + '-25', '25-100', '> 100', None]
+            for obs_label in obs_labels:
+                if obs_label is None:
+                    none_count += 1
+                    ax[0,0].scatter([10],[10], color='k', marker='s', linewidth=1, 
+                                    edgecolor='white', facecolor='white', s=1, zorder=3, label=' '*none_count)
+                else:
+                    ax[0,0].scatter([10],[10], color=colors[nlabel], marker='s', linewidth=lws[nlabel], 
+                                    facecolor=colors[nlabel], s=s_sizes[nlabel], zorder=3, label=obs_label)
+                    nlabel += 1
+            leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=False, handlelength=1, 
+                                 handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
+                                 bbox_to_anchor=(1.035, 1.0), title=' ')
+            for nmarker in np.arange(0,count_reg+1):
+                leg.legendHandles[nmarker]._sizes = [30]
+                leg.legendHandles[nmarker]._linewidths = [0.5]
+                leg.legendHandles[nmarker].set_edgecolor('k')
+            ax[0,0].text(1.21, 0.95, 'Region', size=10, horizontalalignment='center', verticalalignment='top', 
+                         transform=ax[0,0].transAxes)
+            ax[0,0].text(1.5, 0.95, '$n_{obs}$', size=10, horizontalalignment='center', verticalalignment='top', 
+                         transform=ax[0,0].transAxes)
+            # Create a Rectangle patch
+            rect = FancyBboxPatch((4.35,2.35),2.1,1.45,linewidth=1, edgecolor='lightgrey', facecolor='none', 
+                                  clip_on=False, boxstyle='round, pad=0.1')
+            ax[0,0].add_patch(rect)
+            ax[0,0].axvline(x=5.45, ymin=0.565, ymax=0.97, clip_on=False, color='lightgrey', linewidth=1)
+        else:
+            obs_labels = [str(n_obs_min) + '-25', '25-100', '> 100']
+            for obs_label in obs_labels:
+                    ax[0,0].scatter([10],[10], color=colors[nlabel], marker='o', linewidth=lws[nlabel], 
+                                    facecolor='none', s=s_sizes[nlabel], zorder=3, label=obs_label)
+                    nlabel += 1
+            leg = ax[0,0].legend(loc='upper left', ncol=1, fontsize=10, frameon=True, handlelength=1, 
+                                 handletextpad=0.15, columnspacing=0.25, borderpad=0.2, labelspacing=0.2, 
+                                 bbox_to_anchor=(0.0, 1.01), title='$n_{obs}$')
+            for nmarker in np.arange(0,count_reg+1):
+                leg.legendHandles[nmarker]._sizes = [30]
+                leg.legendHandles[nmarker]._linewidths = [0.5]
+                leg.legendHandles[nmarker].set_edgecolor('k')
+        fig.set_size_inches(3.45,3.45)
+        fig_fullfn = hd_compare_fp + 'hd_compare-wellmeasured-winset.png'
+        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
+        
+        #%%
+        # ===== USE OF A LOG SCALE! =====
+        hd_min, hd_max = 0.004, 5
+        hd_tick_major, hd_tick_minor = 0.5, 0.25
+        
+        marker_list = ['P', 'X', 'o', '<', 'v', '>', '^', 'd', 'h', 'p', 'D', '*',  'H', '8']
+        marker_dict = {'01':'P', '02':'X', '07':'h', '11':'o', '12':'^', '13':'<', '14':'v', '15':'>', '18':'*'}
+        label_regions = False
+
+        fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
+        reg_str_list = []
+        count_reg = -1
+        for ndata in hd_compare_all.index.values:
+            if label_regions:
+                reg_str = str(int(hd_compare_all.loc[ndata,'region'])).zfill(2)
+                if reg_str not in reg_str_list:
+                    label_str = reg_str
+                    reg_str_list.append(reg_str)
+                    count_reg += 1
+                else:
+                    label_str = None
+            else:
+                label_str = None
+
+            if label_regions:
+                marker = marker_dict[reg_str]
+            else:
+                marker = 'o'
+            
+            # Size thresholds   
+            s_sizes = [20, 40, 80]
+            lws = [0.5, 1, 1]
+            lws_err = [0.1, 0.5, 0.5]
+            colors = ['grey', '#31a354', '#3182bd']
+            zorders = [3,4,5]
+            obs_count = hd_compare_all.loc[ndata,'obs_count']
+            if obs_count >= n_obs_min and obs_count < 25:
+                s_plot = s_sizes[0]
+                lw = lws[0]
+                lw_err = lws_err[0]
+                color = colors[0]
+                zorder = zorders[0]
+            elif obs_count >= 25 and obs_count < 100:
+                s_plot = s_sizes[1]
+                lw = lws[1]
+                lw_err = lws_err[1]
+                color = colors[1]
+                zorder = zorders[1]
+            elif obs_count >= 100:
+                s_plot = s_sizes[2]
+                lw = lws[2]
+                lw_err = lws_err[2]
+                color = colors[2]
+                zorder = zorders[2]
+            else:
+                print('NO COLOR')
+            
+            ax[0,0].scatter(hd_compare_all.loc[ndata,'hd_obs_med'], 
+                            hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+                            color=color, marker=marker, linewidth=lw, facecolor='none', s=s_plot, zorder=zorder, 
+                            label=label_str, clip_on=True)
+            ax[0,0].errorbar(hd_compare_all.loc[ndata,'hd_obs_med'], 
+                             hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+                             xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
+                             yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
+                             capsize=1, capthick=lw_err, elinewidth=lw_err, linewidth=0, color=color, alpha=1, zorder=2)
+        
+        # Log scale
+        ax[0,0].set_xscale('log')
+        ax[0,0].set_yscale('log')
+            
+        # Labels
+        ax[0,0].set_xlabel('Observed $h_{d}$ (m)', size=12)    
+        ax[0,0].set_ylabel('Modeled $h_{d}$ (m)', size=12)
+        ax[0,0].set_xlim(hd_min,hd_max)
+        ax[0,0].set_ylim(hd_min,hd_max)
+        ax[0,0].plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
+        
+        # Legend
+        nlabel = 0
+        none_count = 5
+        # Hack to get proper columns
+        if label_regions:
+            obs_labels = [None, str(n_obs_min) + '-25', '25-100', '> 100', None]
+            for obs_label in obs_labels:
+                if obs_label is None:
+                    none_count += 1
+                    ax[0,0].scatter([10],[10], color='k', marker='s', linewidth=1, 
+                                    edgecolor='white', facecolor='white', s=1, zorder=3, label=' '*none_count)
+                else:
+                    ax[0,0].scatter([10],[10], color=colors[nlabel], marker='s', linewidth=lws[nlabel], 
+                                    facecolor=colors[nlabel], s=s_sizes[nlabel], zorder=3, label=obs_label)
+                    nlabel += 1
+            leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=False, handlelength=1, 
+                                 handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
+                                 bbox_to_anchor=(1.035, 1.0), title=' ')
+            for nmarker in np.arange(0,count_reg+1):
+                leg.legendHandles[nmarker]._sizes = [30]
+                leg.legendHandles[nmarker]._linewidths = [0.5]
+                leg.legendHandles[nmarker].set_edgecolor('k')
+            ax[0,0].text(1.21, 0.95, 'Region', size=10, horizontalalignment='center', verticalalignment='top', 
+                         transform=ax[0,0].transAxes)
+            ax[0,0].text(1.5, 0.95, '$n_{obs}$', size=10, horizontalalignment='center', verticalalignment='top', 
+                         transform=ax[0,0].transAxes)
+            # Create a Rectangle patch
+            rect = FancyBboxPatch((4.35,2.35),2.1,1.45,linewidth=1, edgecolor='lightgrey', facecolor='none', 
+                                  clip_on=False, boxstyle='round, pad=0.1')
+            ax[0,0].add_patch(rect)
+            ax[0,0].axvline(x=5.45, ymin=0.565, ymax=0.97, clip_on=False, color='lightgrey', linewidth=1)
+        else:
+            obs_labels = [str(n_obs_min) + '-25', '25-100', '> 100']
+            for obs_label in obs_labels:
+                    ax[0,0].scatter([10],[10], color=colors[nlabel], marker='o', linewidth=lws[nlabel], 
+                                    facecolor='none', s=s_sizes[nlabel], zorder=3, label=obs_label)
+                    nlabel += 1
+            leg = ax[0,0].legend(loc='upper left', ncol=1, fontsize=10, frameon=True, handlelength=1, 
+                                 handletextpad=0.15, columnspacing=0.25, borderpad=0.2, labelspacing=0.2, 
+                                 bbox_to_anchor=(0.0, 1.01), title='$n_{obs}$')
+            for nmarker in np.arange(0,count_reg+1):
+                leg.legendHandles[nmarker]._sizes = [30]
+                leg.legendHandles[nmarker]._linewidths = [0.5]
+                leg.legendHandles[nmarker].set_edgecolor('k')
+        fig.set_size_inches(3.45,3.45)
+        fig_fullfn = hd_compare_fp + 'hd_compare-wellmeasured-log.png'
+        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
+        
+        
+        #%% ====== POINT COMPARISON FOR THOSE THAT HAVE DATA =====
+        hd_pt_df_all = None
+        hd_pt_cns_subset = ['glac_str', 'hd_obs_m', 'hd_mod_m']
+        for hd_pt_fn in os.listdir(hd_datasets_pt_fp):
+            if hd_pt_fn.endswith('hd_pt.csv'):
+                print(hd_pt_fn)
+                hd_pt_df = pd.read_csv(hd_datasets_pt_fp + hd_pt_fn)
+                glac_str = hd_pt_fn.split('_')[0]
+                hd_pt_df['glac_str'] = glac_str
+                # non-debris cover pixels are 0
+                hd_pt_df.loc[hd_pt_df['hd_mod_m'] > 5, 'hd_mod_m'] = 0
+                
+                hd_pt_df_subset = hd_pt_df.loc[:,hd_pt_cns_subset]
+                
+                
+                if hd_pt_df_all is None:
+                    hd_pt_df_all = hd_pt_df_subset
+                else:
+                    hd_pt_df_all = pd.concat([hd_pt_df_all, hd_pt_df_subset], axis=0)
+                    
+                hd_pt_df_all = hd_pt_df_all.dropna(subset=['hd_mod_m'])
+                hd_pt_df_all.reset_index(inplace=True, drop=True)
+            
+        #%%
+        # ===== USE OF A LOG SCALE! =====
+        hd_min, hd_max = 0.004, 5
+        hd_tick_major, hd_tick_minor = 0.5, 0.25
+        
+        marker_list = ['P', 'X', 'o', '<', 'v', '>', '^', 'd', 'h', 'p', 'D', '*',  'H', '8']
+        marker_dict = {'01':'P', '02':'X', '07':'h', '11':'o', '12':'^', '13':'<', '14':'v', '15':'>', '18':'*'}
+        label_regions = False
+
+        fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})
+            
+        ax[0,0].scatter(hd_pt_df_all['hd_obs_m'].values, 
+                        hd_pt_df_all['hd_mod_m'].values, 
+                        color=color, marker=marker, linewidth=lw, facecolor='none', s=s_plot, zorder=zorder, 
+                        label=label_str, clip_on=True)
+#        ax[0,0].errorbar(hd_compare_all.loc[ndata,'hd_obs_med'], 
+#                         hd_compare_all.loc[ndata,'hd_ts_med_m'], 
+#                         xerr=1.483*hd_compare_all.loc[ndata,'hd_obs_mad'], 
+#                         yerr=1.483*hd_compare_all.loc[ndata,'hd_ts_mad_m'], 
+#                         capsize=1, capthick=lw_err, elinewidth=lw_err, linewidth=0, color=color, alpha=1, zorder=2)
+        
+        # Log scale
+        ax[0,0].set_xscale('log')
+        ax[0,0].set_yscale('log')
+            
+        # Labels
+        ax[0,0].set_xlabel('Observed $h_{d}$ (m)', size=12)    
+        ax[0,0].set_ylabel('Modeled $h_{d}$ (m)', size=12)
+        ax[0,0].set_xlim(hd_min,hd_max)
+        ax[0,0].set_ylim(hd_min,hd_max)
+        ax[0,0].plot([hd_min, hd_max], [hd_min, hd_max], color='k', linewidth=0.5, zorder=1)
+        
+#        # Legend
+#        nlabel = 0
+#        none_count = 5
+#        # Hack to get proper columns
+#        if label_regions:
+#            obs_labels = [None, str(n_obs_min) + '-25', '25-100', '> 100', None]
+#            for obs_label in obs_labels:
+#                if obs_label is None:
+#                    none_count += 1
+#                    ax[0,0].scatter([10],[10], color='k', marker='s', linewidth=1, 
+#                                    edgecolor='white', facecolor='white', s=1, zorder=3, label=' '*none_count)
+#                else:
+#                    ax[0,0].scatter([10],[10], color=colors[nlabel], marker='s', linewidth=lws[nlabel], 
+#                                    facecolor=colors[nlabel], s=s_sizes[nlabel], zorder=3, label=obs_label)
+#                    nlabel += 1
+#            leg = ax[0,0].legend(loc='upper left', ncol=3, fontsize=10, frameon=False, handlelength=1, 
+#                                 handletextpad=0.15, columnspacing=0.25, borderpad=0.25, labelspacing=0.5, 
+#                                 bbox_to_anchor=(1.035, 1.0), title=' ')
+#            for nmarker in np.arange(0,count_reg+1):
+#                leg.legendHandles[nmarker]._sizes = [30]
+#                leg.legendHandles[nmarker]._linewidths = [0.5]
+#                leg.legendHandles[nmarker].set_edgecolor('k')
+#            ax[0,0].text(1.21, 0.95, 'Region', size=10, horizontalalignment='center', verticalalignment='top', 
+#                         transform=ax[0,0].transAxes)
+#            ax[0,0].text(1.5, 0.95, '$n_{obs}$', size=10, horizontalalignment='center', verticalalignment='top', 
+#                         transform=ax[0,0].transAxes)
+#            # Create a Rectangle patch
+#            rect = FancyBboxPatch((4.35,2.35),2.1,1.45,linewidth=1, edgecolor='lightgrey', facecolor='none', 
+#                                  clip_on=False, boxstyle='round, pad=0.1')
+#            ax[0,0].add_patch(rect)
+#            ax[0,0].axvline(x=5.45, ymin=0.565, ymax=0.97, clip_on=False, color='lightgrey', linewidth=1)
+#        else:
+#            obs_labels = [str(n_obs_min) + '-25', '25-100', '> 100']
+#            for obs_label in obs_labels:
+#                    ax[0,0].scatter([10],[10], color=colors[nlabel], marker='o', linewidth=lws[nlabel], 
+#                                    facecolor='none', s=s_sizes[nlabel], zorder=3, label=obs_label)
+#                    nlabel += 1
+#            leg = ax[0,0].legend(loc='upper left', ncol=1, fontsize=10, frameon=True, handlelength=1, 
+#                                 handletextpad=0.15, columnspacing=0.25, borderpad=0.2, labelspacing=0.2, 
+#                                 bbox_to_anchor=(0.0, 1.01), title='$n_{obs}$')
+#            for nmarker in np.arange(0,count_reg+1):
+#                leg.legendHandles[nmarker]._sizes = [30]
+#                leg.legendHandles[nmarker]._linewidths = [0.5]
+#                leg.legendHandles[nmarker].set_edgecolor('k')
+        fig.set_size_inches(3.45,3.45)
+        fig_fullfn = hd_compare_fp + 'hd_compare-wellmeasured-log-pts.png'
+        fig.savefig(fig_fullfn, bbox_inches='tight', dpi=300)
+        
+        #%%
+        # Root mean square error
+        # All 
+        hd_pt_df_all.loc[hd_pt_df_all['hd_mod_m'] == 0, 'hd_mod_m'] = np.nan
+        hd_pt_df_all = hd_pt_df_all.dropna(subset=['hd_mod_m', 'hd_obs_m'])
+        hd_pt_df_all.reset_index(inplace=True, drop=True)
+        rmse = (np.sum((hd_pt_df_all.hd_obs_m.values - hd_pt_df_all.hd_mod_m.values)**2) / hd_pt_df_all.shape[0])**0.5
+        print('RMSE analysis (hd_pts):', rmse)
+            #%%
+        
+        # subset
+#        rmse_hd_list = [(0,0.05), (0.05,0.1), (0.1,0.2), (0.2, 1)]
+        rmse_cns = ['hd_min', 'hd_max', 'rmse']
+        rmse_df = pd.DataFrame(np.zeros((len(rmse_hd_list), len(rmse_cns))), columns=rmse_cns)
+        for nhd, rmse_hd in enumerate(rmse_hd_list):
+            rmse_df.loc[nhd, 'hd_min'] = rmse_hd[0]
+            rmse_df.loc[nhd, 'hd_max'] = rmse_hd[1]
+            hd_pt_df_all_subset = hd_pt_df_all[(hd_pt_df_all['hd_obs_m'] >= rmse_hd[0]) &
+                                               (hd_pt_df_all['hd_obs_m'] < rmse_hd[1])]
+            rmse = (np.sum((hd_pt_df_all_subset.hd_obs_m.values - hd_pt_df_all_subset.hd_mod_m.values)**2) / 
+                    hd_pt_df_all.shape[0])**0.5
+            rmse_df.loc[nhd, 'rmse'] = rmse
+            print('  hd:', rmse_hd, '(n=' + str(hd_pt_df_all_subset.shape[0]) + ')', 'RMSE:', np.round(rmse,2))
+            
+            # Correlation
+            slope, intercept, r_value, p_value, std_err = linregress(hd_pt_df_all_subset['hd_obs_m'].values, 
+                                                                     hd_pt_df_all_subset['hd_mod_m'].values)
+            print('     r = ' + str(np.round(r_value,2)), '(p = ' + str(np.round(p_value,3)) + 
+                  ', slope = ' + str(np.round(slope,2)) + ', intercept = ' + str(np.round(intercept,2)) + ')')
+        
+        rmse_fn = 'hd_pts_rmse_table.csv'
+        rmse_df.to_csv(hd_compare_fp + rmse_fn, index=False)
         #%%
         # Comparison of observation density and difference with observation --> no relationship
 #        fig, ax = plt.subplots(1, 1, squeeze=False, gridspec_kw = {'wspace':0, 'hspace':0})

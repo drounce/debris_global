@@ -31,7 +31,7 @@ from meltcurves import debris_frommelt_func
 
 #%%% ===== SCRIPT OPTIONS =====
 option_hd_melt_uncertainty = False
-hd_uncertainty_schematic_fig = True
+hd_uncertainty_schematic_fig = False
 option_melt_diagram_template = False
 hd_methods_diagram_ngoz = False
 
@@ -902,9 +902,9 @@ if hd_uncertainty_schematic_fig:
         ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.05))
         
         # Labels
-        ax[0,0].text(0.1, 0.98, 'a', size=12, fontweight='bold',
+        ax[0,0].text(0.1, 0.98, 'A', size=12, fontweight='bold',
                     horizontalalignment='right', verticalalignment='top', transform=ax[0,0].transAxes)
-        ax[0,1].text(0.1, 0.98, 'b', size=12, fontweight='bold',
+        ax[0,1].text(0.1, 0.98, 'B', size=12, fontweight='bold',
                     horizontalalignment='right', verticalalignment='top', transform=ax[0,1].transAxes)
         
         # Save plot
@@ -1186,3 +1186,103 @@ if hd_methods_diagram_ngoz:
     if not os.path.exists(ostrem_fig_fp):
         os.makedirs(ostrem_fig_fp)
     fig.savefig(ostrem_fig_fp + figure_fn, bbox_inches='tight', dpi=300)
+    
+    
+    #%% ===== VERSION 2 (ONLY 3 SUBPLOTS - NOT COMBINED) =====
+    fig, ax = plt.subplots(1, 3, squeeze=False, sharex=False, sharey=False, gridspec_kw = {'wspace':0.4, 'hspace':0.3})
+    # Fitted curves
+    debris_4curve = np.arange(0.02,2.11,0.01)
+    melt_4curve = melt_fromdebris_func(debris_4curve, func_coeff[0], func_coeff[1])
+    melt_4curve[melt_4curve > melt_2cm] = melt_2cm
+    melt_4curve_norm = melt_4curve / melt_cleanice
+    
+    debris_melt_df = debris_melt_df[debris_melt_df['debris_thickness'] <= 2.1]
+    
+    # ===== MELT =====
+    ax[0,0].plot(debris_melt_df['debris_thickness'], debris_melt_df['melt_mwea'], 'o', 
+                 color='k', markersize=3, markerfacecolor="None", markeredgewidth=0.75, zorder=3, clip_on = False)
+    ax[0,0].plot(debris_4curve, melt_4curve, color='k', linewidth=1, linestyle='-', zorder=4, clip_on = False)
+    ax[0,0].plot([0,0.02], [melt_cleanice, melt_2cm], color='k', linewidth=1, linestyle='-', zorder=4, clip_on = False)
+    # X-label
+#    ax[0,0].set_xlabel('Debris thickness (m)', size=12)
+    ax[0,0].set_xlim(0, 2.1)
+    ax[0,0].xaxis.set_tick_params(labelsize=12)
+    ax[0,0].xaxis.set_major_locator(plt.MultipleLocator(0.5))
+    ax[0,0].xaxis.set_minor_locator(plt.MultipleLocator(0.1))  
+    # Y-label
+    ax[0,0].set_ylabel('Melt (m w.e. a$\mathregular{^{-1}}$)', size=12)
+    ax[0,0].set_ylim(0,14)
+    ax[0,0].yaxis.set_major_locator(plt.MultipleLocator(5))
+    ax[0,0].yaxis.set_minor_locator(plt.MultipleLocator(1))
+    # Tick parameters
+    ax[0,0].yaxis.set_ticks_position('both')
+    ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+    ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+    
+    # ===== MELT FACTOR =====
+    ax[0,1].plot(debris_melt_df['debris_thickness'], debris_melt_df['melt_mwea'] / melt_cleanice, 'o', 
+                 color='k', markersize=3, markerfacecolor="None", markeredgewidth=0.75, zorder=3, clip_on = False)
+    ax[0,1].plot(debris_4curve, melt_4curve_norm, color='k', linewidth=1, linestyle='-', zorder=4, clip_on = False)
+    ax[0,1].plot(np.array([0,0.02]), np.array([1, melt_2cm/melt_cleanice]), 
+                 color='k', linewidth=1, linestyle='-', zorder=4, clip_on = False)
+    # X-label
+    ax[0,1].set_xlabel('Debris thickness (m)', size=12)
+    ax[0,1].set_xlim(0, 2.1)
+    ax[0,1].xaxis.set_tick_params(labelsize=12)
+    ax[0,1].xaxis.set_major_locator(plt.MultipleLocator(0.5))
+    ax[0,1].xaxis.set_minor_locator(plt.MultipleLocator(0.1)) 
+    # Y-label
+    ax[0,1].set_ylabel('$E_d$ (-)', size=12)
+    ax[0,1].set_ylim(0,1.6)
+    ax[0,1].yaxis.set_major_locator(plt.MultipleLocator(0.5))
+    ax[0,1].yaxis.set_minor_locator(plt.MultipleLocator(0.1))
+    # Tick parameters
+    ax[0,1].yaxis.set_ticks_position('both')
+    ax[0,1].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+    ax[0,1].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+    
+    func_coeff_ts = [df_hdopt_prms.loc[0,'a'], df_hdopt_prms.loc[0,'b'], df_hdopt_prms.loc[0,'c']]
+    
+    debris_4curve = np.arange(0.,debris_prms.hd_max+0.01,0.01)
+    ts_day_mod = ts_fromdebris_func(debris_4curve, func_coeff_ts[0], func_coeff_ts[1], 
+                                    func_coeff_ts[2])
+    ax[0,2].plot(debris_4curve, ts_day_mod, color='k', linewidth=1, linestyle='-', zorder=4)
+    
+    # X-label
+#    ax[0,2].set_xlabel('Debris thickness (m)', size=12)
+    ax[0,2].set_xlim(0, 2.1)
+    ax[0,2].xaxis.set_tick_params(labelsize=12)
+    ax[0,2].xaxis.set_major_locator(plt.MultipleLocator(0.5))
+    ax[0,2].xaxis.set_minor_locator(plt.MultipleLocator(0.1))  
+    # Y-label
+    ax[0,2].set_ylabel('Surface temperature ($^\circ$C)', size=12)
+    ax[0,2].set_ylim(0,19)
+    ax[0,2].yaxis.set_major_locator(plt.MultipleLocator(5))
+    ax[0,2].yaxis.set_minor_locator(plt.MultipleLocator(1))
+    # Tick parameters
+    ax[0,2].yaxis.set_ticks_position('both')
+    ax[0,2].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+    ax[0,2].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+    
+    
+    # Tick parameters
+    ax[0,0].yaxis.set_ticks_position('both')
+    ax[0,0].tick_params(axis='both', which='major', labelsize=12, direction='inout')
+    ax[0,0].tick_params(axis='both', which='minor', labelsize=10, direction='in') 
+    
+    # Labels
+    ax[0,0].text(0.1, 0.98, 'a', size=12, fontweight='bold',
+                horizontalalignment='right', verticalalignment='top', transform=ax[0,0].transAxes)
+    ax[0,1].text(0.1, 0.98, 'b', size=12, fontweight='bold',
+                horizontalalignment='right', verticalalignment='top', transform=ax[0,1].transAxes)
+    ax[0,2].text(0.1, 0.98, 'c', size=12, fontweight='bold',
+                horizontalalignment='right', verticalalignment='top', transform=ax[0,2].transAxes)
+
+
+    fig.set_size_inches(8,2.5)
+    figure_fn = 'ngozumpa_melt_ts_relationships-3plots.png'
+    ostrem_fig_fp = debris_prms.output_fp
+    if not os.path.exists(ostrem_fig_fp):
+        os.makedirs(ostrem_fig_fp)
+    fig.savefig(ostrem_fig_fp + figure_fn, bbox_inches='tight', dpi=300)
+    

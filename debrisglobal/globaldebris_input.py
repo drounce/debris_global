@@ -17,34 +17,35 @@ date_start = '20200313'
 overwrite_batches = True
 rgi_fp = main_directory + '/../00_rgi60_attribs/'
 output_fp = main_directory + '/../output/'
+
 ostrem_fp = main_directory + '/../output/ostrem_curves/'
 ostrem_fn_sample = 'XXXXdebris_melt_curve.nc'
 
 # Region of Interest Data (lat, long, elevation, hr of satellite data acquisition)
-#roi = '01' 
+#roi = '01'
 #roi = '02'
-#roi = '03'
+roi = '03'
 #roi = '04'
 #roi = '05'
 #roi = '06'
 #roi = '07'
-#roi = '08' 
+#roi = '08'
 #roi = '09'
 #roi = '10'
 #roi = '11'
 #roi = '12'
-roi = 'HMA'
+#roi = 'HMA'
 #roi = '16'
 #roi = '17'
 #roi = '18'
 
 # ===== Debris thickness =====
-#debris_thickness_all = np.array([0]) 
+#debris_thickness_all = np.array([0])
 #debris_thickness_all = np.array([0, 0.02])
 debris_thickness_all = np.concatenate((np.array([0]), np.arange(0,3.001,0.05)))
 debris_thickness_all[1] = 0.02
 
-# Experiment number 3 is single run, 4 is Monte Carlo simulations 
+# Experiment number 3 is single run, 4 is Monte Carlo simulations
 experiment_no = 4
 if experiment_no == 4:
     mc_simulations = 100
@@ -75,7 +76,7 @@ eb_fp = output_fp + 'exp' + str(experiment_no) + '/spc/' + roi + '/'
 #latlon_list = [(41.75, 80.0)]   # Koxkar (13.43232) and Qingbingtan (13.43165)
 #latlon_list = [(35.75, 76.5)]   # Baltoro (14.06794)
 #latlon_list = [(32.25, 77.5)]   # Batal (14.16042)
-#latlon_list = [(28.0, 87.0)]    # Khumbu (13.03733) and Imja-Lhotse Shar (15.03743)
+#latlon_list = [(28.0, 87.0)]    # Khumbu (15.03733) and Imja-Lhotse Shar (15.03743)
 #latlon_list = [(28.25, 85.5)]   # Lirung (15.04045)
 latlon_list = [(30.75, 79.25)]  # Satopanth (15.07122)
 #latlon_list = [(29.5, 102.0)]   # Hailuogou (15.07886)
@@ -106,7 +107,6 @@ if latlon_list == 'all':
 
 
 #%% ===== OTHER PARAMETERS =====
-
 roi_latlon_dict = {'01':[71, 50, 233, 180],
                    '02':[66, 36, 256, 225],
                    '03':[84, 74, 300, 237],
@@ -191,22 +191,6 @@ mb_fp_list_roi = {'01': [mcnabb_fp + '01/'],
                   '16': [braun_fp + 'SouthAmerica/'],
                   '17': [braun_fp + 'SouthAmerica/'],
                   '18': [braun_fp + '18/']}
-#mb_yrfrac_dict = {'01': [2000.6, 2018.6],
-#                  '02': [2000.128, 2012],
-#                  '03': [2000.6, 2018.6],
-#                  '04': [2000.6, 2018.6],
-#                  '05': [2000.6, 2018.6],
-#                  '06': [2000.6, 2018.6],
-#                  '07': [2000.6, 2018.6],
-#                  '08': [2000.6, 2018.6],
-#                  '09': [2000.6, 2018.6],
-#                  '10': [2000.128, 2012],
-#                  '11': [2000.128, 2013],
-#                  '12': [2000.128, 2012],
-#                  'HMA': [2000.6, 2018.6],
-#                  '16': [2000.128, 2013.128],
-#                  '17': [2000.128, 2013.128],
-#                  '18': [2000.128, 2013]}
 mb_yrfrac_dict = {'01': [2000.419, 2018.419],
                   '02': [2000.128, 2012],
                   '03': [2000.419, 2018.419],
@@ -408,6 +392,8 @@ dc_area_threshold = 1       # debris-covered area threshold (km2) for large glac
 min_glac_area = 2           # minimum glacier area (only work with large glaciers)
 term_elevrange_perc = 0.1   # Terminus elevation range (ex. 0.1 = lower 10% of glacier)
 term_area_perc = 10         # Terminus area percentage (ex. 10 = lower 10% of glacier by area)
+#option_melt_coldest_bin = 'melt_2cm'  # Option for the amount of melt to use
+option_melt_coldest_bin = 'melt_clean'  # Option for the amount of melt to use
 
 # Glacier data
 glac_shp_fn_dict = {
@@ -454,7 +440,7 @@ vx_dir_dict_list = {'01': [sat_img_dir + 'ITS_Live/ALA_G0120_0000_vx.tif'],
                     '17': [sat_img_dir + 'romain_velocity/17_mosaic_romain_itslive_vx.tif'],
                     '18': [sat_img_dir + 'romain_velocity/NEWZEALAND/Mosaic__vxo.tif']
                     }
-dhdt_vel_fns_fp = output_fp + 'dhdt_vel_fns/'
+dhdt_vel_fns_fp = main_directory + '/../output/dhdt_vel_fns_all/'
 dhdt_vel_fns_fn = 'XXXX-dhdt_vel_fns.csv'
 
 # Emergence Velocity data
@@ -485,7 +471,7 @@ roi_datedict = {'01': ['1994-01-01', '2018-12-31'],
                 '07': ['2000-01-01', '2018-12-31'],
                 '08': ['2000-01-01', '2018-12-31'],
                 '09': ['2000-01-01', '2018-12-31'],
-                '10': ['2000-01-01', '2018-12-31'],                
+                '10': ['2000-01-01', '2018-12-31'],
                 '11': ['2000-01-01', '2018-12-31'],
                 '12': ['2000-01-01', '2018-12-31'],
                 'HMA': ['2000-01-01', '2018-12-31'],
@@ -508,7 +494,7 @@ if experiment_no == 3:
     z0_random_snow = np.array([z0_random_ice])    # Hock and Holmgren (2005) - 0.0001 to 0.0027, z0_ice = z0_snow
     albedo_random_ice = np.array([0.4])           # Gardner and Sharp (2010); Hock (2005)
     sin_factor_random = np.array([1.])            # multiplicative factor
-    
+
 elif experiment_no == 4:
     debris_properties_fp = output_fp + 'debris_properties/'
     debris_properties_fn = 'debris_properties_global.csv'
@@ -535,8 +521,8 @@ elif experiment_no == 4:
         z0_random_snow = z0_random_ice
         # Sin multiplicative factor to adjust Sin for topography, etc. (uniform distribution 0.8 - 1.2)
         sin_factor_random = np.random.uniform(low=0.8, high=1.2, size=mc_simulations)
-        
-        debris_properties_values = np.column_stack((albedo_random, k_random, z0_random, 
+
+        debris_properties_values = np.column_stack((albedo_random, k_random, z0_random,
                                                     albedo_random_ice, z0_random_ice, sin_factor_random))
         # Export properties
         debris_properties_cns = ['albedo', 'k', 'z0', 'albedo_ice', 'z0_ice', 'Sin_factor']
